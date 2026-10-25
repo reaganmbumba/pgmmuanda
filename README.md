@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PGM MUANDA DIGITAL — EBNM KCC
 
-## Getting Started
+Plateforme web de la Présidence générale de la musique (PGM) de Muanda :
+gestion des choristes, cartes de membres avec QR code, programmes, présences,
+communication, commissions, formations, projets et hébergement.
 
-First, run the development server:
+## État d'avancement
+
+| Étape | Contenu | État |
+| --- | --- | --- |
+| 1 | Maquettes et interface responsive, PWA installable | **Terminée** |
+| 2 | Base de données Supabase et authentification | À venir |
+| 3 | Gestion des membres et matricules | À venir |
+| 4 | Cartes PDF et QR codes fonctionnels | À venir |
+| 5 | Espace choriste et espace staff reliés aux données | À venir |
+| 6 | Programmes, annonces et présences | À venir |
+| 7 | Commissions, formations, projets et hébergement | À venir |
+| 8 | Sécurité, tests et déploiement en ligne | À venir |
+
+À l'Étape 1, les écrans affichent un **jeu de démonstration fictif**
+(`src/lib/demo-data.ts`), signalé par un bandeau doré en haut de chaque page.
+Aucune donnée n'est enregistrée.
+
+## Démarrer en local
+
+Prérequis : Node.js 20 ou plus récent.
 
 ```bash
+npm install
+cp .env.example .env.local   # facultatif à l'Étape 1
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Puis ouvrir http://localhost:3000 :
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `/connexion` : page de connexion, avec les accès de démonstration ;
+- `/staff` : tableau de bord administratif (optimisé ordinateur) ;
+- `/choriste` : espace personnel du choriste (optimisé téléphone) ;
+- `/verifier/demo-7Hq2LmZx9Kp4Rt` : page publique de vérification d'une carte.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Technologies
 
-## Learn More
+Next.js 15 (routeur App) · TypeScript · Tailwind CSS 4 · lucide-react (icônes)
+· qrcode.react (QR codes). Supabase sera ajouté à l'Étape 2.
 
-To learn more about Next.js, take a look at the following resources:
+## Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+public/              logo PGM (clé de sol), icônes PWA
+src/app/(auth)/      connexion, mot de passe oublié
+src/app/staff/       espace staff (menu latéral de 18 entrées)
+src/app/choriste/    espace choriste (barre d'onglets mobile)
+src/app/verifier/    vérification publique d'une carte
+src/components/      composants d'interface, carte de membre
+src/lib/             navigation, types, données de démonstration
+```
