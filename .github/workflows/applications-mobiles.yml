@@ -1,0 +1,104 @@
+name: Applications mobiles
+
+# Construit l'APK et l'AAB Android, et une archive iOS non signée.
+# Les fichiers produits sont téléchargeables dans l'onglet « Actions » de GitHub
+# (section « Artifacts » de chaque exécution).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  web:
+    name: Version HTML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - name: Générer la version HTML
+        run: |
+          npx next start -p 3000 &
+          npx wait-on http://localhost:3000/connexion
+          npm run export:html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: version-html
+          path: export-html
+
+  android:
+    name: Android (APK et AAB)
+    needs: web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: version-html
+          path: export-html
+      - run: npx cap sync android
+      - name: Préparer la clé de signature (si configurée)
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/pgm-upload.jks
+          fi
+      - name: Compiler
+        working-directory: android
+        env:
+          PGM_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          PGM_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          PGM_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleDebug assembleRelease bundleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pgm-muanda-android
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+
+  ios:
+    name: iOS (archive non signée)
+    needs: web
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: version-html
+          path: export-html
+      - run: npx cap sync ios
+      - name: Compiler sans signature
+        working-directory: ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            -sdk iphoneos -archivePath build/App.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          mkdir -p build/Payload
+          cp -R build/App.xcarchive/Products/Applications/App.app build/Payload/
+          cd build && zip -qr PGM-Muanda-non-signee.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pgm-muanda-ios
+          path: ios/App/build/PGM-Muanda-non-signee.ipa

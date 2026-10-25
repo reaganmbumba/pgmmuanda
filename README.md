@@ -40,7 +40,7 @@ Puis ouvrir http://localhost:3000 :
 
 ## Technologies
 
-Next.js 15 (routeur App) · TypeScript · Tailwind CSS 4 · lucide-react (icônes)
+Next.js 16 (routeur App) · TypeScript · Tailwind CSS 4 · lucide-react (icônes)
 · qrcode.react (QR codes). Supabase sera ajouté à l'Étape 2.
 
 ## Structure
@@ -54,3 +54,36 @@ src/app/verifier/    vérification publique d'une carte
 src/components/      composants d'interface, carte de membre
 src/lib/             navigation, types, données de démonstration
 ```
+
+## Version HTML (sans installation)
+
+Le dossier `export-html/` contient une copie statique de la maquette :
+double-cliquer sur `export-html/index.html` suffit. Pour la régénérer :
+
+```bash
+npm run build && npm start      # dans un premier terminal
+npm run export:html             # dans un second terminal
+```
+
+## Applications mobiles (Android et iOS)
+
+L'application mobile est construite avec [Capacitor](https://capacitorjs.com) :
+elle embarque la version HTML et fonctionne hors connexion.
+
+La compilation se fait automatiquement sur GitHub, à chaque envoi sur `main`
+(workflow « Applications mobiles »). Les fichiers sont à télécharger dans
+l'onglet **Actions** › dernière exécution › **Artifacts** :
+
+| Fichier | Usage |
+| --- | --- |
+| `app-debug.apk` | À installer directement sur un téléphone Android (test) |
+| `app-release.aab` | À déposer sur le Google Play Store |
+| `PGM-Muanda-non-signee.ipa` | iPhone : doit être signée avec un compte Apple Developer |
+
+Pour signer l'APK et l'AAB de publication, ajouter dans *Settings › Secrets and
+variables › Actions* : `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS` et `ANDROID_KEY_PASSWORD`. Sans ces secrets, seuls l'APK de
+test et des fichiers de publication non signés sont produits.
+
+Sur iPhone, en attendant, l'application s'installe depuis Safari :
+**Partager › Sur l'écran d'accueil**.

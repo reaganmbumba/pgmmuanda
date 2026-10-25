@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="fr"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#0b1f4b"/><title>Vérification d&#x27;une carte · PGM MUANDA DIGITAL</title><meta name="description" content="Plateforme de gestion de la Présidence générale de la musique de Muanda (EBNM-KCC)."/><meta name="robots" content="noindex"/><meta name="mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-title" content="PGM Muanda"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><link rel="stylesheet" href="styles.css"/><link rel="icon" href="logo-pgm.svg"/></head><body class="antialiased"><div hidden=""><!--$--><!--/$--></div><div class="flex items-center justify-center gap-2 bg-or-100 px-4 py-1.5 text-center text-xs font-medium text-or-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flask-conical size-3.5 shrink-0" aria-hidden="true"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"></path><path d="M6.453 15h11.094"></path><path d="M8.5 2h7"></path></svg>Maquette — données de démonstration fictives, aucune donnée réelle n&#x27;est enregistrée.</div><main class="mx-auto flex min-h-dvh max-w-md flex-col px-4 py-8"><div class="mb-6 flex justify-center"><span class="inline-flex items-center gap-3"><img alt="Logo PGM Muanda" width="48" height="48" decoding="async" data-nimg="1" style="color:transparent" src="logo-pgm.svg"/><span class="leading-tight"><span class="block text-sm font-bold tracking-wide text-marine-900">PGM MUANDA DIGITAL</span><span class="block text-xs font-medium tracking-[0.2em] text-or-500">EBNM KCC</span></span></span></div><h1 class="mb-4 text-center text-lg font-semibold text-marine-900">Vérification d&#x27;une carte de choriste</h1><div class="rounded-2xl border border-slate-200 bg-white p-6 text-center"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-question-mark lucide-help-circle lucide-circle-help mx-auto size-12 text-slate-400" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg><p class="mt-3 text-lg font-semibold text-marine-900">Référence inconnue</p><p class="mt-1 text-sm text-slate-500">Cette carte n&#x27;existe pas dans la base de la PGM Muanda.</p></div><p class="mt-6 text-center text-xs text-slate-400">Les informations personnelles ne sont jamais affichées sur cette page publique.</p></main><!--$--><!--/$--><script>window.__REFS__={"PGM-MUA-0001":"demo-7Hq2LmZx9Kp4Rt","PGM-MUA-0002":"demo-Vc8nWq3Ty6Bm2D","PGM-MUA-0003":"demo-Pz4Xk9Lr2Hs7Qa","PGM-MUA-0004":"demo-Jm6Tn1Wy8Fe3Ku","PGM-MUA-0005":"demo-Rb5Gs8Cv2Nx6Lp","PGM-MUA-0006":"demo-Hk3Dm7Qw9Zr4Ty","PGM-MUA-0007":"demo-Lq2Wf6Bn8Ms3Vc","PGM-MUA-0008":"demo-Ty9Kp3Hx7Dw2Qs","PGM-MUA-0009":"demo-Mx4Rn8Gk2Bv6Wp","PGM-MUA-0010":"demo-Qs7Vb3Lz9Hn2Kt"};// Interactions de la version HTML statique (sans React).
+(function () {
+  // Menu latéral staff sur téléphone
+  var aside = document.querySelector("aside");
+  document.querySelectorAll('[aria-label="Ouvrir le menu"]').forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (aside) aside.classList.add("menu-ouvert");
+    });
+  });
+  document.addEventListener("click", function (e) {
+    if (aside && aside.classList.contains("menu-ouvert") && !aside.contains(e.target))
+      aside.classList.remove("menu-ouvert");
+  });
+
+  // Afficher / masquer le mot de passe
+  document.querySelectorAll('[aria-label="Afficher le mot de passe"]').forEach(function (b) {
+    b.addEventListener("click", function () {
+      var i = document.getElementById("mdp");
+      i.type = i.type === "password" ? "text" : "password";
+    });
+  });
+
+  // Formulaire de connexion
+  var mdp = document.getElementById("mdp");
+  if (mdp) {
+    mdp.form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (document.getElementById("msg-demo")) return;
+      var p = document.createElement("p");
+      p.id = "msg-demo";
+      p.className = "rounded-xl bg-or-100 p-3 text-xs text-or-600";
+      p.textContent =
+        "Maquette : la connexion réelle sera branchée à l'Étape 2. Utilisez les accès de démonstration ci-dessous.";
+      mdp.form.appendChild(p);
+    });
+  }
+
+  // Recherche et filtres des membres
+  var recherche = document.querySelector('input[placeholder="Nom, matricule ou téléphone"]');
+  if (recherche) {
+    var selects = recherche.closest("div").parentElement.querySelectorAll("select");
+    var lignes = document.querySelectorAll("tbody tr, ul.md\\:hidden > li");
+    var compteur = Array.from(document.querySelectorAll("p")).find(function (p) {
+      return / membres? sur /.test(p.textContent);
+    });
+    var total = document.querySelectorAll("tbody tr").length;
+    var filtrer = function () {
+      var q = recherche.value.trim().toLowerCase();
+      var n = 0;
+      lignes.forEach(function (l) {
+        var t = l.textContent;
+        var ok = (!q || t.toLowerCase().indexOf(q) >= 0);
+        selects.forEach(function (s) {
+          if (s.value && s.selectedIndex > 0) {
+            var re = new RegExp("(^|[^A-Za-zÀ-ÿ])" + s.value + "($|[^A-Za-zÀ-ÿ])");
+            if (!re.test(t)) ok = false;
+          }
+        });
+        l.style.display = ok ? "" : "none";
+        if (ok && l.tagName === "TR") n++;
+      });
+      if (compteur) compteur.textContent = n + " membre" + (n > 1 ? "s" : "") + " sur " + total;
+    };
+    recherche.addEventListener("input", filtrer);
+    selects.forEach(function (s) { s.addEventListener("change", filtrer); });
+  }
+
+  // Scanner : recherche manuelle par matricule
+  var champ = document.getElementById("matricule");
+  if (champ) {
+    var refs = window.__REFS__ || {};
+    champ.form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var r = refs[champ.value.trim().toUpperCase()];
+      window.location.href = "verifier-" + (r || "inconnue") + ".html";
+    });
+  }
+})();
+</script></body></html>

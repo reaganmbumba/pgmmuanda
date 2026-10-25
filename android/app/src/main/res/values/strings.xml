@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PGM Muanda</string>
+    <string name="title_activity_main">PGM Muanda</string>
+    <string name="package_name">org.ebnmkcc.pgmmuanda</string>
+    <string name="custom_url_scheme">org.ebnmkcc.pgmmuanda</string>
+</resources>

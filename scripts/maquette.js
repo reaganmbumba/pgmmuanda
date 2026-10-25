@@ -5,7 +5,7 @@
   document.querySelectorAll('[aria-label="Ouvrir le menu"]').forEach(function (b) {
     b.addEventListener("click", function (e) {
       e.stopPropagation();
-      aside && aside.classList.add("menu-ouvert");
+      if (aside) aside.classList.add("menu-ouvert");
     });
   });
   document.addEventListener("click", function (e) {
