@@ -10,6 +10,7 @@ import { estEmail, schemaConnexion, schemaEmail, schemaNouveauMotDePasse } from 
 export type EtatFormulaire = { erreur?: string; succes?: string } | undefined;
 
 const ERREUR_IDENTIFIANTS = "Identifiant ou mot de passe incorrect.";
+const ERREUR_BLOCAGE = "Trop d'essais avec un mot de passe faux. Pour votre sécurité, attendez 15 minutes avant de réessayer.";
 
 export async function connexion(_: EtatFormulaire, form: FormData): Promise<EtatFormulaire> {
   if (!supabaseActif) return { erreur: "La base de données n'est pas encore configurée." };
@@ -20,12 +21,21 @@ export async function connexion(_: EtatFormulaire, form: FormData): Promise<Etat
   if (!donnees.success) return { erreur: donnees.error.issues[0].message };
 
   let email = donnees.data.identifiant;
+  // Protection contre les essais de mots de passe en série (si la clé serveur est configurée)
+  const admin = creerClientAdmin();
+  const cle = donnees.data.identifiant;
+  if (admin) {
+    const { data: bloque } = await admin.rpc("connexion_bloquee", { p_cle: cle });
+    if (bloque) return { erreur: ERREUR_BLOCAGE };
+  }
   if (!estEmail(email)) {
     // L'identifiant est converti en e-mail côté serveur uniquement (clé service_role).
-    const admin = creerClientAdmin();
     if (!admin) return { erreur: "Connectez-vous avec votre adresse e-mail." };
     const { data } = await admin.rpc("email_pour_identifiant", { p_identifiant: email });
-    if (!data) return { erreur: ERREUR_IDENTIFIANTS };
+    if (!data) {
+      await admin.rpc("noter_echec_connexion", { p_cle: cle });
+      return { erreur: ERREUR_IDENTIFIANTS };
+    }
     email = data as string;
   }
 
@@ -35,8 +45,11 @@ export async function connexion(_: EtatFormulaire, form: FormData): Promise<Etat
     return { erreur: "Le service est momentanément injoignable. Vérifiez votre connexion Internet." };
   }
   if (error || !data.user) {
+    if (admin && error?.code !== "email_not_confirmed") await admin.rpc("noter_echec_connexion", { p_cle: cle });
     return { erreur: error?.code === "email_not_confirmed" ? "Votre adresse e-mail n'est pas encore confirmée." : ERREUR_IDENTIFIANTS };
   }
+
+  if (admin) await admin.rpc("effacer_echecs_connexion", { p_cle: cle });
 
   const { data: profil } = await supabase.from("profils").select("role, actif").eq("id", data.user.id).single();
   if (!profil?.actif) {

@@ -39,6 +39,8 @@ async function session(identifiant) {
   const ctx = await navigateur.newContext({ acceptDownloads: true });
   const p = await ctx.newPage();
   p.on("pageerror", (e) => erreursPage.push(e.message));
+  // Une ressource bloquée par la politique de sécurité du contenu compte comme une erreur
+  p.on("console", (m) => { if (/Content Security Policy/i.test(m.text())) erreursPage.push(m.text()); });
   pages.push(p);
   await p.goto(`${APP}/connexion`);
   await p.fill("input[name=identifiant]", identifiant);
@@ -684,6 +686,28 @@ try {
   await capture(c, "10-mes-chants", "/choriste/chants", true);
   await capture(c, "11-chant", pageChant, true);
   await capture(c, "12-ma-paroisse", "/choriste/paroisse", true);
+
+  // --- Étape 8 : sécurité -------------------------------------------------
+  console.log("Sécurité");
+  rep = await a.request.get(`${APP}/connexion`);
+  const h = rep.headers();
+  ok(h["content-security-policy"]?.includes("frame-ancestors 'none'") && h["x-frame-options"] === "DENY"
+    && h["x-content-type-options"] === "nosniff" && !h["x-powered-by"], "les en-têtes de sécurité sont envoyés");
+  const pirate = await navigateur.newPage();
+  pages.push(pirate);
+  async function essai(mdp) {
+    await pirate.goto(`${APP}/connexion`);
+    await pirate.fill("input[name=identifiant]", "resp.art");
+    await pirate.fill("input[name=motDePasse]", mdp);
+    await pirate.click("button[type=submit]");
+    await pirate.waitForSelector("p[role=alert]", { timeout: 15000 });
+    return pirate.textContent("p[role=alert]");
+  }
+  let refus = 0;
+  for (let i = 0; i < 5; i++) if ((await essai("mauvais")).includes("incorrect")) refus++;
+  ok(refus === 5, "5 mots de passe faux de suite sont refusés");
+  ok((await essai(MDP)).includes("attendez 15 minutes"), "après 5 essais faux, même le bon mot de passe est bloqué 15 minutes");
+  await admin.from("tentatives_connexion").delete().neq("id", 0);
 
   // --- Export, archivage, suppression protégée ---------------------------
   console.log("Export et archives");
