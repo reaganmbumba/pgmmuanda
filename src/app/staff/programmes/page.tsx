@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Bouton } from "@/components/ui/Bouton";
 import { EnTete } from "@/components/ui/Carte";
 import { activites } from "@/lib/demo-data";
+import { exigerAcces } from "@/lib/auth/session";
 
 export const metadata = { title: "Programmes" };
 
@@ -10,7 +11,8 @@ const jour = new Intl.DateTimeFormat("fr-FR", { day: "2-digit" });
 const mois = new Intl.DateTimeFormat("fr-FR", { month: "short" });
 const heure = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
-export default function PageProgrammes() {
+export default async function PageProgrammes() {
+  await exigerAcces("/staff/programmes");
   return (
     <>
       <EnTete

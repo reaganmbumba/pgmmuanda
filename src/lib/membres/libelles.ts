@@ -26,6 +26,8 @@ export const CHAMPS_MEMBRE: Record<string, string> = {
   archive: "Archivé",
   profil_id: "Compte de connexion",
   photo_url: "Photo",
+  carte: "Carte",
+  motif: "Motif",
 };
 
 /** Champs qu'un choriste peut demander à corriger. */
@@ -50,6 +52,7 @@ export const TYPES_HISTORIQUE: Record<string, string> = {
   nomination: "Nomination",
   statut: "Changement de statut",
   archivage: "Archivage",
+  carte: "Carte de membre",
 };
 
 export const STATUTS_DEMANDE: Record<string, string> = {

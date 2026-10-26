@@ -12,6 +12,10 @@ import { comptesNonRelies, lireDemandes, lireHistorique, lireMembre, lireOrganis
 import { CHAMPS_CORRIGEABLES, CHAMPS_MEMBRE, STATUTS, STATUTS_DEMANDE, TYPES_HISTORIQUE, VOIX } from "@/lib/membres/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
+import { CarteMembre } from "@/components/carte/CarteMembre";
+import { GestionCarte } from "@/components/carte/GestionCarte";
+import { PhotoMembre } from "@/components/carte/PhotoMembre";
+import { cartesDuMembre } from "@/lib/cartes/depot";
 import { ActionsStatut, RelierCompte, TraiterDemande } from "./ActionsFiche";
 
 export const metadata = { title: "Fiche membre" };
@@ -29,12 +33,14 @@ export default async function FicheMembrePage({ params, searchParams }: {
 
   const gestion = peutGererMembres(moi?.role);
   const admin = estAdmin(moi?.role);
-  const [historique, demandes, organisation, comptes] = await Promise.all([
+  const [historique, demandes, organisation, comptes, cartes] = await Promise.all([
     lireHistorique(id),
     gestion ? lireDemandes({ membreId: id }) : Promise.resolve([]),
     lireOrganisation(),
     admin ? comptesNonRelies() : Promise.resolve([]),
+    cartesDuMembre(id),
   ]);
+  const carteActive = cartes.find((c) => c.statutCode === "active") ?? null;
   let compteActuel: string | null = null;
   if (admin && membre.profilId) {
     const supabase = await creerClientServeur();
@@ -53,6 +59,7 @@ export default async function FicheMembrePage({ params, searchParams }: {
     if (champ === "paroisse_id" || champ === "chorale_id") return noms.get(String(v)) ?? "—";
     if (champ === "archive") return v ? "Oui" : "Non";
     if (champ === "profil_id") return "compte relié";
+    if (champ === "photo_url") return "photo";
     if (champ === "date_adhesion") return formatDate(String(v));
     return String(v);
   };
@@ -169,6 +176,33 @@ export default async function FicheMembrePage({ params, searchParams }: {
         </div>
 
         <div className="space-y-5">
+          <Carte titre="Carte de membre">
+            <div className="space-y-4">
+              {carteActive && <CarteMembre membre={{ ...membre, carte: carteActive }} />}
+              {!carteActive && <p className="text-sm text-slate-500">Aucune carte active.</p>}
+              {gestion && !membre.archive && (
+                <GestionCarte membreId={id} carteId={carteActive?.id ?? null} membreActif={membre.statutCode === "actif"} />
+              )}
+              {cartes.length > 0 && (
+                <ul className="divide-y divide-slate-100 text-xs">
+                  {cartes.map((c) => (
+                    <li key={c.id} className="flex items-center justify-between gap-2 py-2">
+                      <span className="text-slate-600">
+                        Émise le {formatDate(c.dateEmission)}
+                        {c.motif && <span className="block text-slate-400">{c.statut} : {c.motif}</span>}
+                      </span>
+                      <Badge>{c.statut}</Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Carte>
+          {gestion && !membre.archive && (
+            <Carte titre="Photo">
+              <PhotoMembre membre={membre} id={id} />
+            </Carte>
+          )}
           {gestion && (
             <Carte titre="Statut">
               <ActionsStatut id={id} statut={membre.statutCode} archive={membre.archive} />

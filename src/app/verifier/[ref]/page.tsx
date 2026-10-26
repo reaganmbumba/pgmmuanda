@@ -3,17 +3,11 @@ import { depuisMembreDemo, ResultatVerification, type CarteVerifiee } from "@/co
 import { BandeauDemo } from "@/components/ui/BandeauDemo";
 import { trouverParReference } from "@/lib/demo-data";
 import { supabaseActif } from "@/lib/supabase/config";
-import { creerClientServeur } from "@/lib/supabase/server";
+import { verifierReference } from "@/lib/cartes/verification";
 
 async function verifier(ref: string): Promise<CarteVerifiee | undefined> {
   if (!supabaseActif) return depuisMembreDemo(trouverParReference(ref));
-  const supabase = await creerClientServeur();
-  const { data } = await supabase.rpc("verifier_carte", { p_reference: ref }).single<{
-    resultat: "valide" | "revoquee" | "inconnue";
-    prenom: string; nom: string; postnom: string; matricule: string; paroisse: string;
-  }>();
-  if (!data || data.resultat === "inconnue") return undefined;
-  return { ...data, valide: data.resultat === "valide" };
+  return verifierReference(decodeURIComponent(ref));
 }
 
 export const metadata = { title: "Vérification d'une carte", robots: { index: false } };

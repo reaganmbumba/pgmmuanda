@@ -25,7 +25,8 @@ export const estAdmin = (role: Role | null | undefined) =>
   role === "super_admin" || role === "presidence";
 
 /** Page d'arrivée après connexion. */
-export const accueilPourRole = (role: Role) => (estStaff(role) ? "/staff" : "/choriste");
+export const accueilPourRole = (role: Role) =>
+  role === "controleur" ? "/staff/scanner" : estStaff(role) ? "/staff" : "/choriste";
 
 /** Le contrôleur n'a accès qu'au scanner dans l'espace staff. */
 export function peutOuvrir(role: Role, chemin: string): boolean {

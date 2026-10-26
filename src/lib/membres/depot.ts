@@ -25,6 +25,8 @@ export type FicheMembre = {
   archive: boolean;
   estDemo: boolean;
   profilId: string | null;
+  /** Photo (image intégrée) : chargée seulement pour une fiche, pas pour les listes. */
+  photo?: string | null;
 };
 
 const COLONNES =
@@ -34,7 +36,7 @@ type Ligne = {
   id: string; matricule: string; nom: string; postnom: string; prenom: string; sexe: "M" | "F" | null;
   telephone: string | null; email: string | null; paroisse_id: string; chorale_id: string | null;
   voix: CodeVoix | null; fonction: string; date_adhesion: string; statut: CodeStatut; archive: boolean;
-  est_demo: boolean; profil_id: string | null;
+  est_demo: boolean; profil_id: string | null; photo_url?: string | null;
   paroisses: { nom: string } | null; chorales: { nom: string } | null;
 };
 
@@ -60,6 +62,7 @@ const versFiche = (l: Ligne): FicheMembre => ({
   archive: l.archive,
   estDemo: l.est_demo,
   profilId: l.profil_id,
+  photo: l.photo_url,
 });
 
 /** Membres visibles par l'utilisateur connecté (la base applique les règles d'accès). */
@@ -73,14 +76,14 @@ export async function listerMembres({ archives = false } = {}): Promise<FicheMem
 
 export async function lireMembre(id: string): Promise<FicheMembre | null> {
   const supabase = await creerClientServeur();
-  const { data } = await supabase.from("membres").select(COLONNES).eq("id", id).maybeSingle();
+  const { data } = await supabase.from("membres").select(`${COLONNES}, photo_url`).eq("id", id).maybeSingle();
   return data ? versFiche(data as unknown as Ligne) : null;
 }
 
 /** Fiche du choriste connecté, s'il est relié à un membre. */
 export async function maFiche(profilId: string): Promise<FicheMembre | null> {
   const supabase = await creerClientServeur();
-  const { data } = await supabase.from("membres").select(COLONNES).eq("profil_id", profilId).maybeSingle();
+  const { data } = await supabase.from("membres").select(`${COLONNES}, photo_url`).eq("profil_id", profilId).maybeSingle();
   return data ? versFiche(data as unknown as Ligne) : null;
 }
 

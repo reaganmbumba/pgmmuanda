@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
   }
   const role = profil.role as Role;
   if (!peutOuvrir(role, chemin)) {
-    return rediriger(request, reponse, role === "controleur" ? "/staff/scanner" : accueilPourRole(role));
+    return rediriger(request, reponse, accueilPourRole(role));
   }
   return reponse;
 }

@@ -44,6 +44,6 @@ export async function exigerAcces(chemin: string): Promise<UtilisateurConnecte |
   if (!supabaseActif) return null;
   const u = await utilisateurCourant();
   if (!u) redirect(`/connexion?suite=${encodeURIComponent(chemin)}`);
-  if (!peutOuvrir(u.role, chemin)) redirect(u.role === "controleur" ? "/staff/scanner" : accueilPourRole(u.role));
+  if (!peutOuvrir(u.role, chemin)) redirect(accueilPourRole(u.role));
   return u;
 }

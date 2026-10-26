@@ -5,6 +5,7 @@ describe("accès par rôle", () => {
   it("envoie le staff vers /staff et le choriste vers /choriste", () => {
     expect(accueilPourRole("presidence")).toBe("/staff");
     expect(accueilPourRole("choriste")).toBe("/choriste");
+    expect(accueilPourRole("controleur")).toBe("/staff/scanner");
   });
 
   it("interdit l'espace staff au choriste et l'espace choriste au staff", () => {

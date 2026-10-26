@@ -24,7 +24,7 @@ function Valider({ libelle, danger }: { libelle: string; danger?: boolean }) {
  * le message de résultat visible quand l'action ne s'applique plus.
  */
 export function ActionConfirmee({
-  action, champs, libelle, question, danger, icone, masquer, className = "",
+  action, champs, libelle, question, danger, icone, masquer, choix, className = "",
 }: {
   action: (etat: Etat, form: FormData) => Promise<Etat>;
   champs: Record<string, string>;
@@ -33,6 +33,8 @@ export function ActionConfirmee({
   danger?: boolean;
   icone?: React.ReactNode;
   masquer?: boolean;
+  /** Liste déroulante à remplir avant de confirmer (ex. motif d'une révocation). */
+  choix?: { nom: string; libelle: string; options: string[] };
   className?: string;
 }) {
   const [etat, envoyer] = useActionState(action, undefined);
@@ -48,6 +50,12 @@ export function ActionConfirmee({
         <form action={(f) => { setOuvert(false); envoyer(f); }} className="flex flex-wrap items-center gap-2 rounded-xl bg-slate-50 p-2">
           {Object.entries(champs).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
           <span className="text-xs text-slate-700">{question}</span>
+          {choix && (
+            <select name={choix.nom} aria-label={choix.libelle} defaultValue={choix.options[0]}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs">
+              {choix.options.map((o) => <option key={o}>{o}</option>)}
+            </select>
+          )}
           <Valider libelle="Confirmer" danger={danger} />
           <button type="button" onClick={() => setOuvert(false)} className="rounded-lg px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100">Annuler</button>
         </form>

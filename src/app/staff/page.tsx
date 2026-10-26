@@ -14,12 +14,15 @@ import { Avatar } from "@/components/ui/Avatar";
 import { activites, annonces, membres, paroisses } from "@/lib/demo-data";
 import { formatDate, formatDateHeure, nomComplet } from "@/lib/format";
 import type { Voix } from "@/lib/types";
+import { exigerAcces } from "@/lib/auth/session";
 
 export const metadata = { title: "Tableau de bord" };
 
 const TAUX_PRESENCE_DEMO = 84;
 
-export default function TableauDeBord() {
+export default async function TableauDeBord() {
+  // Le contrôleur n'a accès qu'au scanner (vérifié ici aussi : une redirection après connexion ne repasse pas par le proxy).
+  await exigerAcces("/staff");
   const actifs = membres.filter((m) => m.statut === "Actif");
   const enAttente = membres.filter((m) => m.statut === "En attente");
   const parParoisse = paroisses

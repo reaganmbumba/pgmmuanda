@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ModulePrevu } from "@/components/ui/ModulePrevu";
+import { exigerAcces } from "@/lib/auth/session";
 import { menuStaff } from "@/lib/navigation";
 
 // Modules qui ont déjà leur propre page : exclus de cette route générique.
@@ -23,5 +24,6 @@ export default async function PageModule({ params }: { params: Promise<{ module:
   const { module } = await params;
   const e = entree(module);
   if (!e || PAGES_DEDIEES.includes(module)) notFound();
+  await exigerAcces(e.href);
   return <ModulePrevu entree={e} />;
 }

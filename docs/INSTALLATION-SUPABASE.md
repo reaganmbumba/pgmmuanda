@@ -9,7 +9,8 @@ du projet PGM Muanda (`https://wkokqwuqctgzxpbvyaxp.supabase.co`).
 2. Copier tout le contenu de
    `supabase/migrations/20261026000100_schema_initial.sql`, coller, puis **Run**.
 3. Recommencer avec `supabase/migrations/20261026000200_securite_rls.sql`.
-4. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
+4. Recommencer avec `supabase/migrations/20261027000100_cartes.sql` (Étape 4 : cartes, photos).
+5. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
    Ces données sont fictives (« démo ») et s'effacent avec les commandes
    données à la fin du fichier.
 
@@ -52,6 +53,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://wkokqwuqctgzxpbvyaxp.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<clé « publishable » ou « anon »>
 SUPABASE_SERVICE_ROLE_KEY=<clé « secret » ou « service_role »>
 ```
+
+`NEXT_PUBLIC_SITE_URL` est l'adresse écrite dans les QR codes des cartes. Tant qu'elle vaut
+`http://localhost:3000`, les cartes ne se vérifient que depuis votre ordinateur : n'imprimez pas
+de cartes définitives avant d'y mettre l'adresse publique du site (Étape 8).
 
 La clé `SUPABASE_SERVICE_ROLE_KEY` (Project Settings › API Keys) est **secrète** :
 elle ne doit jamais être envoyée par message, mise sur GitHub ni dans une variable
@@ -99,8 +104,8 @@ Avec PostgreSQL 15 ou plus récent installé localement :
 PGURL=postgres://postgres:motdepasse@localhost:5432/postgres npm run test:db
 ```
 
-Le script crée une base jetable, applique les migrations et vérifie 34 règles
-(matricules, historique, accès par rôle, vérification publique des cartes).
+Le script crée une base jetable, applique les migrations et vérifie 53 règles
+(matricules, historique, accès par rôle, cartes, photos, vérification publique).
 
 Note : un numéro de matricule n'est jamais réutilisé, même si une inscription
 échoue ; il peut donc y avoir des trous dans la numérotation. C'est voulu.

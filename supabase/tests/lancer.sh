@@ -10,7 +10,7 @@ trap 'psql "$PGURL" -qc "drop database if exists $BASE" >/dev/null' EXIT
 URL="${PGURL%/*}/$BASE"
 psql "$URL" -q -v ON_ERROR_STOP=1 -f tests/00_stub_supabase.sql
 for f in migrations/*.sql; do psql "$URL" -q -v ON_ERROR_STOP=1 -f "$f"; done
-psql "$URL" -q -t -o /dev/null -v ON_ERROR_STOP=1 -f tests/10_tests_securite.sql 2>&1 | sed "s/^psql:[^ ]* //"
+for t in tests/[1-9]*.sql; do psql "$URL" -q -t -o /dev/null -v ON_ERROR_STOP=1 -f "$t" 2>&1 | sed "s/^psql:[^ ]* //"; done
 # Le jeu de démonstration doit se charger sans erreur
 psql "$URL" -q -v ON_ERROR_STOP=1 -f seed-demo.sql -o /dev/null
 psql "$URL" -qtA -c "select 'Démo : ' || count(*) || ' membres, matricules ' || min(matricule) || ' à ' || max(matricule) from public.membres where est_demo"

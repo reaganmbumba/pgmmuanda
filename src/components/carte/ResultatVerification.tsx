@@ -10,6 +10,7 @@ export type CarteVerifiee = {
   postnom: string;
   matricule: string;
   paroisse: string;
+  photo?: string | null;
 };
 
 export const depuisMembreDemo = (m?: Membre): CarteVerifiee | undefined =>
