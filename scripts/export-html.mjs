@@ -34,7 +34,7 @@ const lien = (href) => {
 
 await fs.rm(SORTIE, { recursive: true, force: true });
 await fs.mkdir(SORTIE, { recursive: true });
-await fs.copyFile("public/logo-pgm.svg", path.join(SORTIE, "logo-pgm.svg"));
+await fs.copyFile("public/logo-pgm.png", path.join(SORTIE, "logo-pgm.png"));
 
 let css = "";
 const { correspondances } = await import("./routes.mjs");
@@ -57,9 +57,9 @@ for (const route of routes) {
     .replace(/<link rel="(?:preload|stylesheet|modulepreload)"[^>]*>/g, "")
     .replace(/<link rel="manifest"[^>]*>/g, "")
     .replace(/<link rel="(?:icon|apple-touch-icon)"[^>]*>/g, "")
-    .replace(/src="\/logo-pgm\.svg"/g, 'src="logo-pgm.svg"')
+    .replace(/src="\/logo-pgm\.png"/g, 'src="logo-pgm.png"')
     .replace(/href="(\/[^"]*)"/g, (_, h) => `href="${lien(h)}"`)
-    .replace("</head>", '<link rel="stylesheet" href="styles.css"/><link rel="icon" href="logo-pgm.svg"/></head>')
+    .replace("</head>", '<link rel="stylesheet" href="styles.css"/><link rel="icon" href="logo-pgm.png"/></head>')
     .replace("</body>", `<script>${interactif}</script></body>`);
   await fs.writeFile(path.join(SORTIE, fichier(route)), html);
 }

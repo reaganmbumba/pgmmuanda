@@ -56,5 +56,5 @@ function rediriger(request: NextRequest, reponse: NextResponse, vers: string, su
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|icons/|logo-pgm.svg|icon.png|apple-icon.png|manifest.webmanifest).*)"],
+  matcher: ["/((?!_next/static|_next/image|icons/|logo-pgm.png|icon.png|apple-icon.png|manifest.webmanifest).*)"],
 };

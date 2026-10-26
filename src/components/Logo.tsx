@@ -10,11 +10,12 @@ export function Logo({ size = 40, avecTexte = false, clair = false }: Props) {
   return (
     <span className="inline-flex items-center gap-3">
       <Image
-        src="/logo-pgm.svg"
+        src="/logo-pgm.png"
         alt="Logo PGM Muanda"
         width={size}
         height={size}
         priority
+        unoptimized
       />
       {avecTexte && (
         <span className="leading-tight">
