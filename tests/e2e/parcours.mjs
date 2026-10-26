@@ -5,11 +5,25 @@
  *   APP=http://localhost:3000 node tests/e2e/parcours.mjs
  */
 import fs from "node:fs";
-import { execFileSync } from "node:child_process";
 import { chromium } from "playwright";
 import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
 import { createClient } from "@supabase/supabase-js";
+
+/** Vidéo Y4M (640×480, 2 s) qui montre un QR code, pour la caméra simulée de Chromium. */
+function videoQr(texte, fichier) {
+  const W = 640, H = 480;
+  const { size, data } = QRCode.create(texte).modules;
+  const marge = 6, echelle = Math.floor(H / (size + 2 * marge));
+  const cote = size * echelle, x0 = (W - cote) >> 1, y0 = (H - cote) >> 1;
+  const y = Buffer.alloc(W * H, 255);
+  for (let r = 0; r < size; r++)
+    for (let c = 0; c < size; c++)
+      if (data[r * size + c])
+        for (let dy = 0; dy < echelle; dy++) y.fill(0, (y0 + r * echelle + dy) * W + x0 + c * echelle, (y0 + r * echelle + dy) * W + x0 + (c + 1) * echelle);
+  const image = Buffer.concat([Buffer.from("FRAME\n"), y, Buffer.alloc(W * H / 2, 128)]);
+  fs.writeFileSync(fichier, Buffer.concat([Buffer.from(`YUV4MPEG2 W${W} H${H} F10:1 Ip A1:1 C420jpeg\n`), ...Array(20).fill(image)]));
+}
 
 const APP = process.env.APP ?? "http://localhost:3000";
 const env = Object.fromEntries(
@@ -291,8 +305,7 @@ try {
 
   // Lecture par caméra : une webcam simulée filme le QR code de la carte
   await creerCompte("controle@e2e.test", "Contrôleur E2E", "controleur", { identifiant: "controleur.e2e" });
-  await QRCode.toFile(".e2e/qr.png", lien1, { width: 480, margin: 6 });
-  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-loop", "1", "-i", ".e2e/qr.png", "-vf", "pad=640:480:(ow-iw)/2:(oh-ih)/2:white,format=yuv420p", "-t", "2", "-r", "10", ".e2e/qr.y4m"]);
+  videoQr(lien1, ".e2e/qr.y4m");
   const camera = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--use-file-for-fake-video-capture=.e2e/qr.y4m"] });
   try {
     const ctx = await camera.newContext({ permissions: ["camera"] });
@@ -387,8 +400,7 @@ try {
   // Pointage par caméra (contrôleur), puis par matricule (administration)
   await a.goto(fiche1);
   const lienCarte = await a.locator("svg[data-qr]").first().getAttribute("data-qr");
-  await QRCode.toFile(".e2e/qr2.png", lienCarte, { width: 480, margin: 6 });
-  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-loop", "1", "-i", ".e2e/qr2.png", "-vf", "pad=640:480:(ow-iw)/2:(oh-ih)/2:white,format=yuv420p", "-t", "2", "-r", "10", ".e2e/qr2.y4m"]);
+  videoQr(lienCarte, ".e2e/qr2.y4m");
   const camera2 = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--use-file-for-fake-video-capture=.e2e/qr2.y4m"] });
   try {
     const k = await (await camera2.newContext({ permissions: ["camera"] })).newPage();
