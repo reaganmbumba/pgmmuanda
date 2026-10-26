@@ -59,7 +59,7 @@ export default async function FicheMembrePage({ params, searchParams }: {
     if (champ === "paroisse_id" || champ === "chorale_id") return noms.get(String(v)) ?? "—";
     if (champ === "archive") return v ? "Oui" : "Non";
     if (champ === "profil_id") return "compte relié";
-    if (champ === "photo_url") return "photo";
+    if (champ === "photo_url") return v === true ? "présente" : "aucune";
     if (champ === "date_adhesion") return formatDate(String(v));
     return String(v);
   };
