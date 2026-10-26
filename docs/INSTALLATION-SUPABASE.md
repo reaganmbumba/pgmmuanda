@@ -23,8 +23,16 @@ Dans **Authentication** › **URL Configuration** :
   puis l'adresse définitive à l'Étape 8).
 - **Redirect URLs** : ajouter `http://localhost:3000/**` (et plus tard l'adresse définitive).
 
-Dans **Authentication** › **Emails** › **Templates**, remplacer le lien des modèles
-suivants pour qu'ils passent par la page sécurisée `/auth/confirm` :
+**E-mails.** L'application fonctionne avec les modèles d'e-mail par défaut de
+Supabase : les liens d'invitation et de réinitialisation sont reçus par
+`/auth/confirm` puis `/auth/session`. Attention, le service d'envoi intégré de
+Supabase est très limité (quelques e-mails par heure, et seulement vers les
+adresses des membres de l'équipe Supabase). Pour inviter les choristes, il faut
+configurer un SMTP personnalisé (**Authentication** › **Emails** › **SMTP Settings**),
+prévu à l'Étape 8.
+
+Facultatif, une fois le SMTP configuré : dans **Authentication** › **Emails** › **Templates**,
+remplacer le lien des modèles suivants pour qu'ils passent directement par `/auth/confirm` :
 
 | Modèle | Lien à mettre dans le bouton |
 | --- | --- |
