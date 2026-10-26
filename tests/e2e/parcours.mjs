@@ -745,6 +745,8 @@ try {
   await capture(c, "14-mes-documents", "/choriste/documents", true);
   await capture(c, "15-chant-partition", pageChant, true);
   await capture(rc, "16-projet-recu", chemin(projet));
+  await capture(c, "17-accueil-choriste", "/choriste", true);
+  await capture(c, "18-menu-choriste", "/choriste/menu", true);
 
   // --- Étape 8 : sécurité -------------------------------------------------
   console.log("Sécurité");
@@ -767,6 +769,20 @@ try {
   ok(refus === 5, "5 mots de passe faux de suite sont refusés");
   ok((await essai(MDP)).includes("attendez 15 minutes"), "après 5 essais faux, même le bon mot de passe est bloqué 15 minutes");
   await admin.from("tentatives_connexion").delete().neq("id", 0);
+
+  async function changerMdp(actuel, nouveau, attendu) {
+    await c.goto(`${APP}/choriste/parametres`);
+    await c.fill("input[name=actuel]", actuel);
+    await c.fill("input[name=motDePasse]", nouveau);
+    await c.fill("input[name=confirmation]", nouveau);
+    await c.click("text=Changer le mot de passe >> nth=-1");
+    await c.locator("p[role=alert], p[role=status]", { hasText: attendu }).first().waitFor({ timeout: 15000 });
+  }
+  await changerMdp("faux-mot-de-passe", "NouveauMdp2026", "actuel est incorrect");
+  ok(true, "le changement de mot de passe exige le mot de passe actuel");
+  await changerMdp(MDP, "NouveauMdp2026", "a été changé");
+  ok(true, "la choriste change elle-même son mot de passe");
+  await changerMdp("NouveauMdp2026", MDP, "a été changé");
 
   // --- Export, archivage, suppression protégée ---------------------------
   console.log("Export et archives");

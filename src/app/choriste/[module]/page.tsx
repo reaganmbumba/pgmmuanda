@@ -4,7 +4,7 @@ import { menuChoriste } from "@/lib/navigation";
 
 // Modules qui ont déjà leur propre page : exclus de cette route générique.
 const PAGES_DEDIEES = [
-  "annonces", "carte", "chambre", "chants", "documents", "formations", "menu", "notifications", "paroisse", "presences", "profil", "programme", "qr",
+  "annonces", "carte", "chambre", "chants", "documents", "formations", "menu", "notifications", "parametres", "paroisse", "presences", "profil", "programme", "qr",
 ];
 
 const entree = (slug: string) => menuChoriste.find((e) => e.href === `/choriste/${slug}`);

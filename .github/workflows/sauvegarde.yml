@@ -1,0 +1,54 @@
+# Sauvegarde chiffrée quotidienne de la base Supabase (données, fichiers et comptes).
+# À activer en ajoutant deux secrets au dépôt (voir docs/SAUVEGARDE.md) :
+#   SUPABASE_DB_URL  : chaîne de connexion « Session pooler » de Supabase
+#   PHRASE_SECRETE   : phrase qui chiffre la sauvegarde (à garder précieusement)
+name: Sauvegarde de la base
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # chaque nuit à 2 h, heure de Muanda
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sauvegarde:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Vérifier la configuration
+        id: config
+        env:
+          URL: ${{ secrets.SUPABASE_DB_URL }}
+          PHRASE: ${{ secrets.PHRASE_SECRETE }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$PHRASE" ]; then
+            echo "::notice::Sauvegarde non configurée : ajoutez les secrets SUPABASE_DB_URL et PHRASE_SECRETE (docs/SAUVEGARDE.md)."
+            echo "actif=non" >> "$GITHUB_OUTPUT"
+          else
+            echo "actif=oui" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.actif == 'oui'
+      - name: Installer pg_dump 17 (même version que Supabase)
+        if: steps.config.outputs.actif == 'oui'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+      - name: Sauvegarder et chiffrer
+        if: steps.config.outputs.actif == 'oui'
+        env:
+          BASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PHRASE_SECRETE: ${{ secrets.PHRASE_SECRETE }}
+        run: |
+          mkdir -p sauvegarde
+          bash scripts/sauvegarde.sh sauvegarde
+      - uses: actions/upload-artifact@v4
+        if: steps.config.outputs.actif == 'oui'
+        with:
+          name: pgm-sauvegarde-${{ github.run_number }}
+          path: sauvegarde/*.gpg
+          retention-days: 30

@@ -13,8 +13,6 @@ import { listerActivites, listerAnnonces, presencesMembre, taux } from "@/lib/pr
 import { dansJours, depuisSaisieLocale, jourLocal } from "@/lib/programmes/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
 
-const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
-
 export const metadata = { title: "Accueil" };
 
 export default async function AccueilChoriste() {
@@ -175,20 +173,20 @@ function DernieresAnnonces({ liste }: { liste: { id: string; titre: string; type
 }
 
 function Raccourcis() {
-  const raccourcis = menuChoriste.filter((e) =>
-    ["/choriste/qr", "/choriste/profil", "/choriste/paroisse", "/choriste/notifications"].includes(e.href),
-  );
+  // Grandes cases, avec un libellé complet : faciles à toucher et à comprendre
+  const raccourcis = ["/choriste/qr", "/choriste/chants", "/choriste/formations", "/choriste/documents", "/choriste/chambre", "/choriste/profil"]
+    .map((h) => menuChoriste.find((e) => e.href === h)!);
   return (
     <section>
       <h2 className="mb-3 font-semibold text-marine-900">Accès rapide</h2>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         {raccourcis.map(({ href, label, icone: Icone }) => (
-          <Link key={href} href={href} className="flex flex-col items-center gap-2 rounded-2xl bg-white p-3 text-center shadow-sm">
+          <Link key={href} href={href} className="flex min-h-16 items-center gap-3 rounded-2xl bg-white p-3 shadow-sm active:bg-slate-50">
             <span className="rounded-xl bg-marine-50 p-2.5 text-marine-800">
-              <Icone className="size-5" aria-hidden />
+              <Icone className="size-6" aria-hidden />
             </span>
-            <span className="text-[11px] font-medium leading-tight text-slate-600">
-              {capitaliser(label.replace(/^(Mon|Ma|Mes) /, ""))}
+            <span className="text-sm font-semibold leading-tight text-marine-900">
+              {label.replace(" et partitions", "")}
             </span>
           </Link>
         ))}

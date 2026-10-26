@@ -6,7 +6,7 @@ import { menuStaff } from "@/lib/navigation";
 // Modules qui ont déjà leur propre page : exclus de cette route générique.
 const PAGES_DEDIEES = [
   "cartes", "chants", "chorales", "commissions", "communication", "documents", "finances", "formations", "hebergement", "membres",
-  "paroisses", "presences", "programmes", "projets", "rapports", "scanner", "utilisateurs",
+  "parametres", "paroisses", "presences", "programmes", "projets", "rapports", "scanner", "utilisateurs",
 ];
 
 const entree = (slug: string) => menuStaff.find((e) => e.href === `/staff/${slug}`);

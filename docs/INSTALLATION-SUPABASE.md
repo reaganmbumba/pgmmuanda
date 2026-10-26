@@ -117,3 +117,9 @@ blocage des connexions après 5 mots de passe faux).
 
 Note : un numéro de matricule n'est jamais réutilisé, même si une inscription
 échoue ; il peut donc y avoir des trous dans la numérotation. C'est voulu.
+
+## Sauvegardes
+
+Une fois la base en place, activez la sauvegarde chiffrée de chaque nuit :
+voir [SAUVEGARDE.md](SAUVEGARDE.md). Test local :
+`PGURL=… npm run test:sauvegarde`.

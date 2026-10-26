@@ -55,7 +55,11 @@ dépense ; un document n'est visible que par les choristes visés.
 
 Sécurité (Étape 8) : en-têtes de protection (politique de contenu, interdiction
 d'affichage dans un autre site, HTTPS obligatoire) et blocage d'un compte pendant
-15 minutes après 5 mots de passe faux.
+15 minutes après 5 mots de passe faux. Chacun peut changer son mot de passe dans
+« Paramètres » (l'ancien mot de passe est demandé).
+
+Sauvegardes (Étape 8) : copie chiffrée de toute la base chaque nuit, gardée 30 jours
+par GitHub. À activer en suivant [docs/SAUVEGARDE.md](docs/SAUVEGARDE.md).
 
 Les notifications sont internes à l'application (cloche et page « Notifications ») :
 aucun message WhatsApp, SMS ou e-mail n'est envoyé automatiquement. Le bouton

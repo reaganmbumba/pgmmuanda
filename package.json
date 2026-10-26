@@ -11,7 +11,8 @@
     "admin:creer": "node scripts/creer-premier-admin.mjs",
     "test": "vitest run",
     "test:db": "bash supabase/tests/lancer.sh",
-    "test:e2e": "bash tests/e2e/lancer.sh"
+    "test:e2e": "bash tests/e2e/lancer.sh",
+    "test:sauvegarde": "bash supabase/tests/sauvegarde.sh"
   },
   "dependencies": {
     "@capacitor/core": "^7.6.9",

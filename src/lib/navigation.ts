@@ -55,7 +55,7 @@ export const menuStaff: EntreeMenu[] = [
   { href: "/staff/finances", label: "Finances", icone: Wallet, etape: 7, description: "Budgets, dépenses et justificatifs." },
   { href: "/staff/rapports", label: "Rapports", icone: BarChart3, etape: 6, description: "Statistiques et rapports exportables." },
   { href: "/staff/utilisateurs", label: "Utilisateurs et permissions", icone: ShieldCheck, etape: 2, description: "Comptes du staff, rôles et accès." },
-  { href: "/staff/parametres", label: "Paramètres", icone: Settings, etape: 8, description: "Configuration de la plateforme." },
+  { href: "/staff/parametres", label: "Paramètres", icone: Settings, etape: 8, description: "Votre compte et votre mot de passe." },
 ];
 
 export const menuChoriste: EntreeMenu[] = [
