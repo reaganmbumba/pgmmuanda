@@ -1,11 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Archive, Download, Pencil, Search } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, Download, Search } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { formatDate } from "@/lib/format";
-import type { Membre } from "@/lib/types";
+
+/** Ce dont le tableau a besoin : convient aux membres de la base comme à ceux de la démonstration. */
+export type LigneMembre = {
+  id?: string;
+  matricule: string;
+  nom: string;
+  postnom: string;
+  prenom: string;
+  telephone: string;
+  fonction: string;
+  paroisse: string;
+  voix: string;
+  dateAdhesion: string;
+  statut: string;
+  estDemo?: boolean;
+};
 
 const champ =
   "rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-marine-700";
@@ -13,9 +29,11 @@ const champ =
 export function TableMembres({
   membres,
   paroisses,
+  lienExport,
 }: {
-  membres: Membre[];
+  membres: LigneMembre[];
   paroisses: string[];
+  lienExport?: string;
 }) {
   const [q, setQ] = useState("");
   const [paroisse, setParoisse] = useState("");
@@ -70,9 +88,11 @@ export function TableMembres({
             ))}
           </select>
         </div>
-        <button className="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-marine-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
-          <Download className="size-4" aria-hidden /> Exporter
-        </button>
+        {lienExport && (
+          <a href={lienExport} className="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-marine-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+            <Download className="size-4" aria-hidden /> Exporter (Excel)
+          </a>
+        )}
       </div>
 
       {/* Tableau sur ordinateur */}
@@ -97,7 +117,14 @@ export function TableMembres({
                     <Avatar membre={m} taille="sm" />
                     <div>
                       <p className="font-medium text-marine-900">
-                        {m.prenom} {m.nom} {m.postnom}
+                        {m.id ? (
+                          <Link href={`/staff/membres/${m.id}`} className="hover:underline">
+                            {m.prenom} {m.nom} {m.postnom}
+                          </Link>
+                        ) : (
+                          <>{m.prenom} {m.nom} {m.postnom}</>
+                        )}
+                        {m.estDemo && <span className="ml-2 text-xs font-normal text-or-600">(démo)</span>}
                       </p>
                       <p className="text-xs text-slate-500">{m.fonction}</p>
                     </div>
@@ -105,18 +132,15 @@ export function TableMembres({
                 </td>
                 <td className="px-4 py-3 font-mono text-xs font-semibold text-marine-800">{m.matricule}</td>
                 <td className="px-4 py-3 text-slate-600">{m.paroisse}</td>
-                <td className="px-4 py-3 text-slate-600">{m.voix}</td>
+                <td className="px-4 py-3 text-slate-600">{m.voix || "—"}</td>
                 <td className="px-4 py-3 text-slate-600">{formatDate(m.dateAdhesion)}</td>
                 <td className="px-4 py-3"><Badge>{m.statut}</Badge></td>
                 <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    <button className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-marine-900" aria-label={`Modifier ${m.prenom} ${m.nom}`}>
-                      <Pencil className="size-4" />
-                    </button>
-                    <button className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-marine-900" aria-label={`Archiver ${m.prenom} ${m.nom}`}>
-                      <Archive className="size-4" />
-                    </button>
-                  </div>
+                  {m.id && (
+                    <Link href={`/staff/membres/${m.id}`} className="flex justify-end text-slate-400 hover:text-marine-900" aria-label={`Ouvrir la fiche de ${m.prenom} ${m.nom}`}>
+                      <ChevronRight className="size-4" />
+                    </Link>
+                  )}
                 </td>
               </tr>
             ))}
@@ -127,14 +151,20 @@ export function TableMembres({
       {/* Cartes sur téléphone */}
       <ul className="divide-y divide-slate-100 md:hidden">
         {resultats.map((m) => (
-          <li key={m.matricule} className="flex items-center gap-3 p-4">
+          <li key={m.matricule} className="relative flex items-center gap-3 p-4">
             <Avatar membre={m} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium text-marine-900">
-                {m.prenom} {m.nom} {m.postnom}
+                {m.id ? (
+                  <Link href={`/staff/membres/${m.id}`} className="after:absolute after:inset-0">
+                    {m.prenom} {m.nom} {m.postnom}
+                  </Link>
+                ) : (
+                  <>{m.prenom} {m.nom} {m.postnom}</>
+                )}
               </p>
               <p className="font-mono text-xs text-marine-700">{m.matricule}</p>
-              <p className="text-xs text-slate-500">{m.paroisse} · {m.voix}</p>
+              <p className="text-xs text-slate-500">{m.paroisse}{m.voix && ` · ${m.voix}`}</p>
             </div>
             <Badge>{m.statut}</Badge>
           </li>

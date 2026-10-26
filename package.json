@@ -10,7 +10,8 @@
     "export:html": "node scripts/export-html.mjs",
     "admin:creer": "node scripts/creer-premier-admin.mjs",
     "test": "vitest run",
-    "test:db": "bash supabase/tests/lancer.sh"
+    "test:db": "bash supabase/tests/lancer.sh",
+    "test:e2e": "bash tests/e2e/lancer.sh"
   },
   "dependencies": {
     "@capacitor/core": "^7.6.9",
@@ -34,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.4.3",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.5",

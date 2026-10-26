@@ -44,3 +44,4 @@ next-env.d.ts
 # Clés de signature : ne jamais les committer
 *.jks
 *.keystore
+/.e2e/

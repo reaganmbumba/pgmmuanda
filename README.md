@@ -10,7 +10,7 @@ communication, commissions, formations, projets et hébergement.
 | --- | --- | --- |
 | 1 | Maquettes et interface responsive, PWA installable | **Terminée** |
 | 2 | Base de données Supabase et authentification | **Terminée** |
-| 3 | Gestion des membres et matricules | À venir |
+| 3 | Gestion des membres et matricules | **Terminée** |
 | 4 | Cartes PDF et QR codes fonctionnels | À venir |
 | 5 | Espace choriste et espace staff reliés aux données | À venir |
 | 6 | Programmes, annonces et présences | À venir |
@@ -51,7 +51,15 @@ Next.js 16 (routeur App) · TypeScript · Tailwind CSS 4 · lucide-react (icône
 ```bash
 npm test          # règles d'accès et validation des formulaires
 npm run test:db   # migrations et règles de sécurité sur un PostgreSQL local
+npm run test:e2e  # parcours complet dans un navigateur, sur une copie locale de Supabase
 ```
+
+`test:e2e` démarre Supabase Auth et l'API REST sur un PostgreSQL local
+(`PGURL=postgres://postgres:motdepasse@localhost:5432/postgres`), compile
+l'application et vérifie 30 points : paroisses, inscription avec matricule
+automatique, historique, espace choriste, demandes de correction, périmètre
+du responsable de paroisse, export et archives. Le vrai projet Supabase
+n'est jamais touché.
 
 ## Structure
 

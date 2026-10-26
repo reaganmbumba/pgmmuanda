@@ -37,6 +37,10 @@ export function peutOuvrir(role: Role, chemin: string): boolean {
   return true;
 }
 
+/** Inscrire et modifier des membres (la base limite le responsable à sa paroisse). */
+export const peutGererMembres = (role: Role | null | undefined) =>
+  estAdmin(role) || role === "responsable_paroisse";
+
 /** Rôles qu'un administrateur peut attribuer (la présidence ne crée pas de super admin). */
 export const rolesAttribuables = (role: Role): Role[] =>
   role === "super_admin" ? [...ROLES] : role === "presidence" ? ROLES.filter((r) => r !== "super_admin") : [];
