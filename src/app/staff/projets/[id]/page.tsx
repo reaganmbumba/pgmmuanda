@@ -17,6 +17,8 @@ import { lireCommissions } from "@/lib/programmes/depot";
 import { supabaseActif } from "@/lib/supabase/config";
 import { enregistrerOperation } from "../../finances/actions";
 import { ChampsOperation } from "../../finances/ChampsOperation";
+import { LigneOperation, recusParOperation } from "../../finances/LigneOperation";
+import { listerDocuments } from "@/lib/documents/depot";
 import { ajouterRapport, ajouterTache, changerStatutProjet, changerStatutTache, enregistrerProjet, supprimerTache } from "../actions";
 import { ChampsProjet } from "../ChampsProjet";
 
@@ -32,6 +34,7 @@ export default async function PageProjet({ params }: { params: Promise<{ id: str
     tachesProjet(id), rapportsProjet(id), listerOperations({ projetId: id }), lireCommissions(),
   ]);
   const b = bilan(operations);
+  const recus = recusParOperation(await listerDocuments({ operations: operations.map((o) => o.id) }));
   const budgets: Record<Devise, number> = { CDF: p.budgetCdf, USD: p.budgetUsd };
   const faites = taches.filter((t) => t.statutCode === "terminee").length;
 
@@ -143,14 +146,7 @@ export default async function PageProjet({ params }: { params: Promise<{ id: str
           <Carte titre="Argent du projet" action={<Link href="/staff/finances" className="inline-flex items-center gap-1 text-sm text-marine-700 hover:underline"><Wallet className="size-4" aria-hidden />Finances</Link>}>
             {operations.length > 0 && (
               <ul className="mb-4 divide-y divide-slate-100 text-sm">
-                {operations.map((o) => (
-                  <li key={o.id} className="flex justify-between gap-3 py-2" data-operation={o.libelle}>
-                    <span><span className="font-medium text-marine-900">{o.libelle}</span><br />
-                      <span className="text-xs text-slate-500">{formatJour(o.date)} · {o.categorie}{o.piece && ` · Reçu ${o.piece}`}</span></span>
-                    <span className={`whitespace-nowrap font-semibold ${o.sens === "recette" ? "text-emerald-700" : "text-red-700"}`}>
-                      {o.sens === "recette" ? "+" : "−"} {formatMontant(o.montant, o.devise)}</span>
-                  </li>
-                ))}
+                {operations.map((o) => <LigneOperation key={o.id} o={o} recus={recus.get(o.id)} supprimable={estAdmin(moi.role)} joindre />)}
               </ul>
             )}
             <Repliable titre="Enregistrer une dépense ou une entrée">

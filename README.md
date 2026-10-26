@@ -22,7 +22,7 @@ affichent un jeu de démonstration fictif (`src/lib/demo-data.ts`), signalé par
 bandeau doré. Avec Supabase configuré, plus aucune donnée de démonstration n'est affichée : la
 connexion, les rôles, les membres, les cartes, le tableau de bord, l'accueil du
 choriste et les notifications utilisent la vraie base. Les modules pas encore
-construits (documents à télécharger, paramètres) indiquent l'étape où ils arriveront.
+construits (paramètres) indiquent l'étape où ils arriveront.
 
 Programmes, annonces et présences (Étape 6) : chaque activité ou annonce vise toute la
 PGM ou une paroisse, et tous les membres ou seulement certaines paroisses, chorales ou
@@ -46,8 +46,16 @@ Commissions, formations, projets, finances, hébergement et chants (Étape 7) :
 - **Chants** : répertoire avec paroles et liens https vers les partitions et
   enregistrements (Google Drive, YouTube…). Le choriste voit d'abord les chants de sa voix.
 
-Le dépôt de fichiers (partitions PDF, justificatifs, « Mes documents ») demande le
-stockage de fichiers Supabase : il est prévu à l'Étape 8.
+Fichiers (Étape 8) : partitions des chants, photos des reçus et documents pour les
+choristes (PDF, photo JPEG/PNG ou MP3, 4 Mo au plus). Le type réel de chaque fichier
+est vérifié (un programme renommé en « .pdf » est refusé). Les fichiers sont rangés
+dans la base elle-même : les mêmes règles d'accès s'appliquent, et une sauvegarde de
+la base contient aussi les fichiers. Un reçu n'est visible que par ceux qui voient la
+dépense ; un document n'est visible que par les choristes visés.
+
+Sécurité (Étape 8) : en-têtes de protection (politique de contenu, interdiction
+d'affichage dans un autre site, HTTPS obligatoire) et blocage d'un compte pendant
+15 minutes après 5 mots de passe faux.
 
 Les notifications sont internes à l'application (cloche et page « Notifications ») :
 aucun message WhatsApp, SMS ou e-mail n'est envoyé automatiquement. Le bouton

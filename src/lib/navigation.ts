@@ -50,6 +50,7 @@ export const menuStaff: EntreeMenu[] = [
   { href: "/staff/chants", label: "Chants et partitions", icone: BookOpen, etape: 7, description: "Répertoire, partitions et enregistrements." },
   { href: "/staff/formations", label: "Formations", icone: GraduationCap, etape: 7, description: "Formations, supports et évaluations." },
   { href: "/staff/communication", label: "Communication", icone: Megaphone, etape: 6, description: "Annonces, communiqués et invitations." },
+  { href: "/staff/documents", label: "Documents", icone: FileText, etape: 8, description: "Documents à disposition des choristes." },
   { href: "/staff/projets", label: "Projets", icone: FolderKanban, etape: 7, description: "Projets, calendrier et rapports d'avancement." },
   { href: "/staff/finances", label: "Finances", icone: Wallet, etape: 7, description: "Budgets, dépenses et justificatifs." },
   { href: "/staff/rapports", label: "Rapports", icone: BarChart3, etape: 6, description: "Statistiques et rapports exportables." },

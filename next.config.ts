@@ -34,8 +34,14 @@ const entetes = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Fichiers déposés : 4 Mo au plus (+ marge pour l'enveloppe du formulaire)
+  experimental: { serverActions: { bodySizeLimit: "4.5mb" } },
   async headers() {
-    return [{ source: "/:chemin*", headers: entetes }];
+    return [
+      { source: "/((?!fichiers/).*)", headers: entetes },
+      // Les fichiers téléchargés reçoivent leur propre politique (voir app/fichiers/[id]/route.ts)
+      { source: "/fichiers/:id", headers: entetes.filter((e) => e.key !== "Content-Security-Policy") },
+    ];
   },
 };
 

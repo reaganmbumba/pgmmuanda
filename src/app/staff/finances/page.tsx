@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowDownLeft, ArrowUpRight, Download, Save } from "lucide-react";
-import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
 import { Bouton } from "@/components/ui/Bouton";
 import { Carte, EnTete } from "@/components/ui/Carte";
 import { Vide } from "@/components/ui/Champ";
@@ -8,11 +7,13 @@ import { FormulaireRapide, Repliable } from "@/components/ui/FormulaireRapide";
 import { estAdmin } from "@/lib/auth/roles";
 import { exigerAcces } from "@/lib/auth/session";
 import { operationsDemo } from "@/lib/demo-data";
+import { listerDocuments, type Document } from "@/lib/documents/depot";
+import { LigneOperation, recusParOperation } from "./LigneOperation";
 import { listerOperations, listerProjets, type Operation } from "@/lib/organisation/depot";
-import { bilan, formatJour, formatMontant, SENS_OPERATION, type Devise } from "@/lib/organisation/libelles";
+import { bilan, formatMontant, type Devise } from "@/lib/organisation/libelles";
 import { jourLocal } from "@/lib/programmes/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
-import { enregistrerOperation, supprimerOperation } from "./actions";
+import { enregistrerOperation } from "./actions";
 import { ChampsOperation } from "./ChampsOperation";
 
 export const metadata = { title: "Finances" };
@@ -38,29 +39,15 @@ function Bilans({ operations }: { operations: Operation[] }) {
   );
 }
 
-function Tableau({ operations, supprimable }: { operations: Operation[]; supprimable: boolean }) {
+function Tableau({ operations, supprimable, recus = new Map(), joindre }: {
+  operations: Operation[]; supprimable: boolean; recus?: Map<string, Document[]>; joindre?: boolean;
+}) {
   if (operations.length === 0) return <Vide>Aucune opération sur cette période.</Vide>;
   return (
     <Carte>
       <ul className="divide-y divide-slate-100">
         {operations.map((o) => (
-          <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 py-3" data-operation={o.libelle}>
-            <div className="flex items-center gap-3">
-              <span className={`rounded-full p-2 ${o.sens === "recette" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
-                {o.sens === "recette" ? <ArrowDownLeft className="size-4" aria-label={SENS_OPERATION.recette} /> : <ArrowUpRight className="size-4" aria-label={SENS_OPERATION.depense} />}
-              </span>
-              <div>
-                <p className="font-medium text-marine-900">{o.libelle}</p>
-                <p className="text-xs text-slate-500">{formatJour(o.date)} · {o.categorie}{o.projet && ` · ${o.projet}`}{o.piece && ` · Reçu ${o.piece}`}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className={`whitespace-nowrap font-semibold ${o.sens === "recette" ? "text-emerald-700" : "text-red-700"}`}>
-                {o.sens === "recette" ? "+" : "−"} {formatMontant(o.montant, o.devise)}
-              </span>
-              {supprimable && <ActionConfirmee action={supprimerOperation} champs={{ id: o.id }} danger libelle="Supprimer" question="Supprimer cette opération (erreur de saisie) ?" />}
-            </div>
-          </li>
+          <LigneOperation key={o.id} o={o} recus={recus.get(o.id)} supprimable={supprimable} joindre={joindre} />
         ))}
       </ul>
     </Carte>
@@ -81,6 +68,7 @@ export default async function PageFinances({ searchParams }: { searchParams: Pro
     listerProjets(),
   ]);
   const admin = estAdmin(moi.role);
+  const recus = recusParOperation(await listerDocuments({ operations: operations.map((o) => o.id) }));
   const ouverts = projets.filter((p) => p.statutCode !== "annule" && p.statutCode !== "termine");
 
   return (
@@ -110,7 +98,7 @@ export default async function PageFinances({ searchParams }: { searchParams: Pro
         )}
       </div>
       <h2 className="mb-3 text-lg font-semibold text-marine-900">Opérations {annee}</h2>
-      <Tableau operations={operations} supprimable={admin} />
+      <Tableau operations={operations} supprimable={admin} recus={recus} joindre />
       {!admin && <p className="mt-4 text-xs text-slate-500">Vous voyez seulement l&apos;argent des projets de votre commission. Pour corriger une erreur, contactez l&apos;administration.</p>}
     </>
   );

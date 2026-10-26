@@ -687,6 +687,65 @@ try {
   await capture(c, "11-chant", pageChant, true);
   await capture(c, "12-ma-paroisse", "/choriste/paroisse", true);
 
+  // --- Étape 8 : fichiers -------------------------------------------------
+  console.log("Fichiers");
+  fs.writeFileSync(".e2e/partition.pdf", "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n");
+  fs.writeFileSync(".e2e/faux.pdf", "MZ\x90 programme deguise");
+  fs.writeFileSync(".e2e/gros.pdf", "%PDF-1.4\n" + "%".repeat(3.8 * 1024 * 1024) + "\n%%EOF\n");
+  // Renvoie le message affiché s'il contient le texte attendu (sinon le test échoue après 15 s)
+  const deposer = async (p, zone, fichier, attendu) => {
+    await zone.locator("input[name=fichier]").setInputFiles(fichier);
+    await zone.locator("button[type=submit]").click();
+    const msg = zone.locator("p[role=alert], p[role=status]", { hasText: attendu });
+    await msg.first().waitFor({ timeout: 15000 });
+    return msg.first().textContent();
+  };
+  await rc.goto(`${APP}${pageChant.replace("/choriste/", "/staff/")}`);
+  let zf = rc.locator("section", { hasText: "Partitions et fichiers" });
+  ok((await deposer(rc, zf, ".e2e/faux.pdf", "Format non accepté")).includes("Format non accepté"), "un programme déguisé en PDF est refusé");
+  await zf.locator("input[name=titre]").fill("Partition SATB");
+  ok((await deposer(rc, zf, ".e2e/partition.pdf", "« Partition SATB » est déposé")).length > 0, "le responsable dépose la partition d'un chant");
+  await c.goto(`${APP}${pageChant}`);
+  const lienPartition = await c.getAttribute("[data-fichier='Partition SATB'] a", "href");
+  rep = await c.request.get(`${APP}${lienPartition}`);
+  ok(rep.status() === 200 && rep.headers()["content-type"] === "application/pdf" && (await rep.text()).startsWith("%PDF"),
+    "la choriste ouvre la partition depuis son téléphone");
+  rep = await navigateur.newContext().then((x) => x.request.get(`${APP}${lienPartition}`, { maxRedirects: 0 }));
+  ok([401, 302, 307].includes(rep.status()), "un visiteur non connecté ne peut pas télécharger le fichier");
+
+  await rc.goto(projet);
+  const ligneOp = rc.locator("[data-operation='Acompte menuisier']");
+  await ligneOp.locator("summary", { hasText: "Joindre la photo du reçu" }).click();
+  ok((await deposer(rc, ligneOp, "tests/e2e/photo-test.jpg", "est déposé")).length > 0, "le responsable joint la photo du reçu à la dépense");
+  await rc.reload();
+  const lienRecu = await rc.getAttribute("[data-operation='Acompte menuisier'] [data-recu] >> nth=0", "href");
+  ok(!!lienRecu, "le reçu apparaît à côté de la dépense");
+  rep = await c.request.get(`${APP}${lienRecu}`);
+  ok(rep.status() === 404, "une choriste ne peut pas ouvrir un reçu, même avec le lien");
+  rep = await a.request.get(`${APP}${lienRecu}`);
+  ok(rep.status() === 200 && rep.headers()["content-type"] === "image/jpeg" && rep.headers()["content-security-policy"]?.includes("sandbox"),
+    "l'administration l'ouvre (image protégée contre l'exécution de scripts)");
+
+  await r.goto(`${APP}/staff/documents`);
+  zf = await ouvrir(r, "Déposer un document");
+  await zf.locator("input[name=titre]").fill("Règlement de la paroisse Beta");
+  ok((await deposer(r, zf, ".e2e/partition.pdf", "est déposé")).length > 0, "le responsable de paroisse dépose un document pour sa paroisse");
+  await a.goto(`${APP}/staff/documents`);
+  zf = await ouvrir(a, "Déposer un document");
+  await zf.locator("input[name=titre]").fill("Programme du concert de Noël");
+  ok((await deposer(a, zf, ".e2e/gros.pdf", "est déposé")).length > 0, "l'administration dépose un document de 3,8 Mo pour toute la PGM");
+  await c.goto(`${APP}/choriste/documents`);
+  rep = await c.request.get(`${APP}${await c.getAttribute("[data-fichier='Programme du concert de Noël'] a", "href")}`);
+  ok((await rep.body()).length > 3.8 * 1024 * 1024, "le gros fichier est téléchargé en entier");
+  t = await texte(c);
+  ok(t.includes("Programme du concert de Noël") && !t.includes("Règlement de la paroisse Beta"), "la choriste ne voit que les documents qui la concernent");
+  await c.goto(`${APP}/choriste/notifications`);
+  ok((await texte(c)).includes("Nouveau document : Programme du concert de Noël"), "elle est prévenue du nouveau document");
+  await capture(a, "13-documents", "/staff/documents");
+  await capture(c, "14-mes-documents", "/choriste/documents", true);
+  await capture(c, "15-chant-partition", pageChant, true);
+  await capture(rc, "16-projet-recu", chemin(projet));
+
   // --- Étape 8 : sécurité -------------------------------------------------
   console.log("Sécurité");
   rep = await a.request.get(`${APP}/connexion`);
