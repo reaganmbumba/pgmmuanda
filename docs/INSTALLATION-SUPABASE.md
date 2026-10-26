@@ -12,7 +12,8 @@ du projet PGM Muanda (`https://wkokqwuqctgzxpbvyaxp.supabase.co`).
 4. Recommencer avec `supabase/migrations/20261027000100_cartes.sql` (Étape 4 : cartes, photos).
 5. Recommencer avec `supabase/migrations/20261028000100_notifications.sql` (Étape 5 : notifications).
 6. Recommencer avec `supabase/migrations/20261029000100_programmes.sql` (Étape 6 : programmes, annonces, présences).
-7. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
+7. Recommencer avec `supabase/migrations/20261030000100_organisation.sql` (Étape 7 : commissions, formations, projets, finances, hébergement, chants).
+8. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
    Ces données sont fictives (« démo ») et s'effacent avec les commandes
    données à la fin du fichier.
 
@@ -89,9 +90,9 @@ Ouvrir http://localhost:3000 et se connecter avec l'e-mail ou l'identifiant choi
 | Rôle | Accès |
 | --- | --- |
 | Super administrateur | Tout, y compris la création d'autres super administrateurs |
-| Présidence PGM | Tout sauf les comptes super administrateur |
+| Présidence PGM | Tout sauf les comptes super administrateur (dont finances et hébergement) |
 | Responsable de paroisse | Membres et cartes de sa paroisse |
-| Responsable de commission | Lecture des membres, sa commission (Étape 7) |
+| Responsable de commission | Lecture des membres ; sa commission, ses formations, ses projets et leurs dépenses ; le répertoire des chants |
 | Contrôleur | Scanner uniquement, sans accès aux fiches |
 | Choriste | Son espace personnel ; demandes de correction |
 
@@ -106,9 +107,10 @@ Avec PostgreSQL 15 ou plus récent installé localement :
 PGURL=postgres://postgres:motdepasse@localhost:5432/postgres npm run test:db
 ```
 
-Le script crée une base jetable, applique les migrations et vérifie 105 règles
+Le script crée une base jetable, applique les migrations et vérifie 159 règles
 (matricules, historique, accès par rôle, cartes, photos, vérification publique,
-notifications, ciblage des activités et annonces, présences et pointage).
+notifications, ciblage des activités et annonces, présences et pointage,
+commissions, formations, projets, finances, hébergement et chants).
 
 Note : un numéro de matricule n'est jamais réutilisé, même si une inscription
 échoue ; il peut donc y avoir des trous dans la numérotation. C'est voulu.

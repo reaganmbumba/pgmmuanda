@@ -34,7 +34,8 @@ export function peutOuvrir(role: Role, chemin: string): boolean {
   if (!chemin.startsWith("/staff")) return true;
   if (!estStaff(role)) return false;
   if (role === "controleur") return chemin === "/staff/scanner" || chemin === "/staff/presences";
-  if (chemin.startsWith("/staff/utilisateurs")) return estAdmin(role);
+  if (chemin.startsWith("/staff/utilisateurs") || chemin.startsWith("/staff/hebergement")) return estAdmin(role);
+  if (chemin.startsWith("/staff/projets") || chemin.startsWith("/staff/finances")) return peutGererCommission(role);
   return true;
 }
 
@@ -45,6 +46,9 @@ export const peutGererMembres = (role: Role | null | undefined) =>
 /** Créer et modifier des activités (la base limite chacun à sa paroisse ou à sa commission). */
 export const peutGererProgramme = (role: Role | null | undefined) =>
   estAdmin(role) || role === "responsable_paroisse" || role === "responsable_commission";
+
+/** Gérer formations, projets et chants (la base limite le responsable à sa commission). */
+export const peutGererCommission = (role: Role | null | undefined) => estAdmin(role) || role === "responsable_commission";
 
 /** Publier des annonces (le responsable de paroisse publie vers sa paroisse). */
 export const peutPublier = (role: Role | null | undefined) => estAdmin(role) || role === "responsable_paroisse";

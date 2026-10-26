@@ -4,6 +4,7 @@
  * par la base Supabase à l'Étape 2 et ne doivent jamais servir en production.
  */
 import type { Activite, Annonce, Membre } from "./types";
+import type { Affectation, Chambre, Chant, Commission, MaFormation, Operation, Projet } from "./organisation/depot";
 
 export const MODE_DEMO = true;
 
@@ -273,3 +274,61 @@ export function trouverParMatricule(matricule: string) {
   const m = matricule.trim().toUpperCase();
   return membres.find((x) => x.matricule === m);
 }
+
+// ---------------------------------------------------------------------
+// Étape 7 (maquette uniquement)
+// ---------------------------------------------------------------------
+export const commissionsDemo: Commission[] = [
+  { id: "com-1", nom: "Commission artistique", description: "Répertoire, répétitions et direction musicale", nbMembres: 8 },
+  { id: "com-2", nom: "Commission formation", description: "Solfège, technique vocale et évaluations", nbMembres: 5 },
+  { id: "com-3", nom: "Commission événements", description: "Concerts, accueil et hébergement", nbMembres: 6 },
+];
+
+const formation = {
+  description: "", formateur: "Daniel Nkanga", fin: null, commissionId: "com-2", commission: "Commission formation",
+} as const;
+export const formationsDemo: MaFormation[] = [
+  { ...formation, id: "for-1", titre: "Solfège pour débutants", lieu: "Salle de la PGM", debut: "2026-11-07T09:00:00+01:00",
+    places: 20, statutCode: "planifiee", statut: "Planifiée", nbInscrits: 14, resultatCode: "inscrit", resultat: "Inscrit", note: null, appreciation: "" },
+  { ...formation, id: "for-2", titre: "Technique vocale : la respiration", lieu: "Temple de Muanda-Centre", debut: "2026-09-12T09:00:00+01:00",
+    places: null, statutCode: "terminee", statut: "Terminée", nbInscrits: 22, resultatCode: "valide", resultat: "Validé", note: 15.5,
+    appreciation: "Bonne maîtrise du souffle." },
+];
+export const mesFormationsDemo = formationsDemo;
+
+export const projetsDemo: Projet[] = [
+  { id: "pro-1", titre: "Achat de pupitres et d'un clavier", description: "", commissionId: "com-1", commission: "Commission artistique",
+    responsable: "Esther Lusala", debut: "2026-09-01", finPrevue: "2026-12-15", budgetCdf: 1_500_000, budgetUsd: 350,
+    statutCode: "en_cours", statut: "En cours", avancement: 45 },
+  { id: "pro-2", titre: "Concert de Noël 2026", description: "", commissionId: "com-3", commission: "Commission événements",
+    responsable: "Samuel Phanzu", debut: "2026-10-15", finPrevue: "2026-12-24", budgetCdf: 800_000, budgetUsd: 0,
+    statutCode: "planifie", statut: "Planifié", avancement: 10 },
+];
+
+export const operationsDemo: Operation[] = [
+  { id: "op-1", sens: "recette", libelle: "Cotisations d'octobre", categorie: "Cotisations", montant: 450_000, devise: "CDF", date: "2026-10-20", projetId: null, projet: "", piece: "R-014" },
+  { id: "op-2", sens: "depense", libelle: "Acompte menuisier (pupitres)", categorie: "Matériel", montant: 300_000, devise: "CDF", date: "2026-10-18", projetId: "pro-1", projet: "Achat de pupitres et d'un clavier", piece: "F-203" },
+  { id: "op-3", sens: "recette", libelle: "Don d'un fidèle", categorie: "Dons", montant: 200, devise: "USD", date: "2026-10-12", projetId: null, projet: "", piece: "" },
+  { id: "op-4", sens: "depense", libelle: "Transport des choristes", categorie: "Transport", montant: 45, devise: "USD", date: "2026-10-05", projetId: null, projet: "", piece: "R-011" },
+];
+
+export const chambresDemo: Chambre[] = [
+  { id: "ch-1", nom: "Chambre 1", site: "Internat de Muanda", capacite: 4, sexe: "M", notes: "", active: true },
+  { id: "ch-2", nom: "Chambre 2", site: "Internat de Muanda", capacite: 4, sexe: "F", notes: "", active: true },
+  { id: "ch-3", nom: "Chambre familiale", site: "Maison d'accueil", capacite: 3, sexe: null, notes: "Rez-de-chaussée", active: true },
+];
+export const affectationsDemo: Affectation[] = [
+  { id: "af-1", chambreId: "ch-1", chambre: "Chambre 1", site: "Internat de Muanda", membreId: "m1", nom: "Daniel Nkanga Mavungu",
+    matricule: "PGM-MUA-0001", paroisse: "Muanda-Centre", du: "2026-12-22", au: "2026-12-26", notes: "Apportez vos draps." },
+  { id: "af-2", chambreId: "ch-2", chambre: "Chambre 2", site: "Internat de Muanda", membreId: "m2", nom: "Esther Lusala Mbuku",
+    matricule: "PGM-MUA-0002", paroisse: "Muanda-Centre", du: "2026-12-22", au: "2026-12-26", notes: "" },
+];
+
+export const chantsDemo: Chant[] = [
+  { id: "cha-1", titre: "Nzambe azali malamu", auteur: "Traditionnel", langue: "Lingala", categorie: "Louange", paroles: "",
+    voixCodes: [], voix: "Toutes les voix", lienPartition: "https://exemple.org/partition.pdf", lienAudio: null, archive: false },
+  { id: "cha-2", titre: "Yesu kele ntinu", auteur: "", langue: "Kikongo", categorie: "Adoration", paroles: "",
+    voixCodes: [], voix: "Toutes les voix", lienPartition: null, lienAudio: "https://exemple.org/audio", archive: false },
+  { id: "cha-3", titre: "Gloire à Dieu", auteur: "Chorale de Muanda", langue: "Français", categorie: "Noël", paroles: "",
+    voixCodes: ["tenor", "basse"], voix: "Ténor, Basse", lienPartition: "https://exemple.org/p2.pdf", lienAudio: null, archive: false },
+];

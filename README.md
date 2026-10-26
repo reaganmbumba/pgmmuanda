@@ -14,21 +14,40 @@ communication, commissions, formations, projets et hébergement.
 | 4 | Cartes PDF et QR codes fonctionnels | **Terminée** |
 | 5 | Espace choriste et espace staff reliés aux données | **Terminée** |
 | 6 | Programmes, annonces et présences | **Terminée** |
-| 7 | Commissions, formations, projets et hébergement | À venir |
+| 7 | Commissions, formations, projets, finances, hébergement et chants | **Terminée** |
 | 8 | Sécurité, tests et déploiement en ligne | À venir |
 
 Sans configuration Supabase, l'application tourne en **mode maquette** : les écrans
 affichent un jeu de démonstration fictif (`src/lib/demo-data.ts`), signalé par un
 bandeau doré. Avec Supabase configuré, plus aucune donnée de démonstration n'est affichée : la
 connexion, les rôles, les membres, les cartes, le tableau de bord, l'accueil du
-choriste et les notifications utilisent la vraie base, et les modules pas encore
-construits (commissions, formations, chants, hébergement…) indiquent l'étape où ils arriveront.
+choriste et les notifications utilisent la vraie base. Les modules pas encore
+construits (documents à télécharger, paramètres) indiquent l'étape où ils arriveront.
 
 Programmes, annonces et présences (Étape 6) : chaque activité ou annonce vise toute la
 PGM ou une paroisse, et tous les membres ou seulement certaines paroisses, chorales ou
 voix. La base calcule elle-même qui est concerné : un choriste ne voit que ce qui le
 concerne. Les présences se saisissent sur une feuille ou en scannant la carte QR du
 choriste (le contrôleur peut pointer), et s'exportent pour Excel depuis « Rapports ».
+
+Commissions, formations, projets, finances, hébergement et chants (Étape 7) :
+
+- **Commissions** : membres et fonctions (responsable, secrétaire…), gérés par
+  l'administration et par le responsable de la commission.
+- **Formations** : inscriptions (avec nombre de places), note sur 20, résultat et
+  appréciation ; le choriste voit ses formations et ses résultats.
+- **Projets** : tâches, rapports d'avancement (en %), budget et dépenses.
+- **Finances** : entrées et sorties d'argent en francs congolais et en dollars,
+  toujours comptées séparément, avec export Excel. Visibles seulement par
+  l'administration et, pour leurs projets, par les responsables de commission.
+- **Hébergement** : chambres (places, hommes/femmes/mixte) et séjours ; la base refuse
+  une chambre pleine ou un double hébergement. Visible seulement par l'administration
+  et par le choriste concerné, qui ne voit que sa propre chambre.
+- **Chants** : répertoire avec paroles et liens https vers les partitions et
+  enregistrements (Google Drive, YouTube…). Le choriste voit d'abord les chants de sa voix.
+
+Le dépôt de fichiers (partitions PDF, justificatifs, « Mes documents ») demande le
+stockage de fichiers Supabase : il est prévu à l'Étape 8.
 
 Les notifications sont internes à l'application (cloche et page « Notifications ») :
 aucun message WhatsApp, SMS ou e-mail n'est envoyé automatiquement. Le bouton

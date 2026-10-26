@@ -3,7 +3,9 @@ import { ModulePrevu } from "@/components/ui/ModulePrevu";
 import { menuChoriste } from "@/lib/navigation";
 
 // Modules qui ont déjà leur propre page : exclus de cette route générique.
-const PAGES_DEDIEES = ["annonces", "carte", "menu", "notifications", "paroisse", "presences", "profil", "programme", "qr"];
+const PAGES_DEDIEES = [
+  "annonces", "carte", "chambre", "chants", "formations", "menu", "notifications", "paroisse", "presences", "profil", "programme", "qr",
+];
 
 const entree = (slug: string) => menuChoriste.find((e) => e.href === `/choriste/${slug}`);
 

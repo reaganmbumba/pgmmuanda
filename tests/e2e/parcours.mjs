@@ -47,6 +47,15 @@ async function session(identifiant) {
   await p.waitForURL((u) => !u.pathname.startsWith("/connexion"), { timeout: 15000 });
   return p;
 }
+/** Captures d'écran facultatives (CAPTURES=dossier) pour la documentation. */
+async function capture(p, nom, chemin, mobile = false) {
+  if (!process.env.CAPTURES) return;
+  const taille = p.viewportSize();
+  if (mobile) await p.setViewportSize({ width: 390, height: 844 });
+  await p.goto(`${APP}${chemin}`);
+  await p.screenshot({ path: `${process.env.CAPTURES}/${nom}.png`, fullPage: true });
+  if (mobile) await p.setViewportSize(taille);
+}
 const texte = async (p) => (await p.textContent("main")) ?? "";
 const confirmer = async (p, libelle) => {
   await p.getByRole("button", { name: libelle, exact: true }).first().click();
@@ -472,6 +481,209 @@ try {
     "les présences s'exportent pour Excel");
   rep = await r.request.get(`${APP}/staff/rapports/presences?jours=30`);
   ok(!(await rep.text()).includes("PGM-MUA-0001"), "l'export du responsable ne contient que sa paroisse");
+
+  // --- Étape 7 : commissions, formations, projets, finances, hébergement, chants ---
+  console.log("Commissions, formations, projets, finances, hébergement, chants");
+  const ouvrir = async (p, titre) => {
+    const d = p.locator("details", { has: p.locator("summary", { hasText: titre }) }).first();
+    await d.locator("summary").first().click();
+    return d;
+  };
+  const choisir = async (zone, nom, contient) => {
+    const sel = zone.locator(`select[name=${nom}]`);
+    await sel.selectOption(await sel.locator("option", { hasText: contient }).first().getAttribute("value"));
+  };
+  const jourDans = (j) => new Date(Date.now() + j * 86400_000).toISOString().slice(0, 10);
+
+  await a.goto(`${APP}/staff/commissions`);
+  let z = await ouvrir(a, "Créer une commission");
+  await z.locator("input[name=nom]").fill("Commission artistique");
+  await z.locator("input[name=description]").fill("Répertoire et répétitions");
+  await z.locator("button[type=submit]").click();
+  await a.waitForSelector("text=Commission « Commission artistique » créée.");
+  ok(true, "l'administration crée une commission");
+  const { data: coms } = await admin.from("commissions").select("id").eq("nom", "Commission artistique");
+  await creerCompte("resp.art@e2e.test", "Resp Artistique", "responsable_commission", { identifiant: "resp.art", commission_id: coms[0].id });
+  const rc = await session("resp.art");
+  await rc.goto(`${APP}/staff/commissions`);
+  await rc.click("[data-commission='Commission artistique'] a");
+  await rc.waitForURL(/\/staff\/commissions\/[0-9a-f-]{36}$/);
+  z = await ouvrir(rc, "Ajouter un membre");
+  await choisir(z, "membreId", "PGM-MUA-0001");
+  await z.locator("select[name=fonction]").selectOption("Secrétaire");
+  await z.locator("button[type=submit]").click();
+  await rc.waitForSelector("text=Membre ajouté.");
+  await rc.reload();
+  ok((await rc.textContent("[data-membre='PGM-MUA-0001']")).includes("Secrétaire"), "le responsable de commission y ajoute une choriste comme secrétaire");
+  await rc.goto(`${APP}/staff/hebergement`);
+  ok(!new URL(rc.url()).pathname.startsWith("/staff/hebergement"), "le responsable de commission n'a pas accès à l'hébergement");
+  await c.goto(`${APP}/choriste/paroisse`);
+  t = await texte(c);
+  ok(t.includes("Mes commissions") && t.includes("Commission artistique") && t.includes("Secrétaire"), "la choriste voit sa commission et sa fonction");
+
+  // Formations
+  await rc.goto(`${APP}/staff/formations`);
+  z = await ouvrir(rc, "Nouvelle formation");
+  await z.locator("input[name=titre]").fill("Solfège niveau 1");
+  await z.locator("input[name=debut]").fill(demain);
+  await z.locator("input[name=places]").fill("1");
+  await z.locator("button[type=submit]").click();
+  await rc.waitForURL(/\/staff\/formations\/[0-9a-f-]{36}$/);
+  const formation = rc.url();
+  ok((await texte(rc)).includes("Commission artistique"), "le responsable crée une formation pour sa commission");
+  z = await ouvrir(rc, "Inscrire des membres");
+  await z.locator("label", { hasText: "PGM-MUA-0001" }).locator("input").check();
+  await z.locator("button[type=submit]").click();
+  await rc.waitForSelector("text=1 membre inscrit.");
+  ok(true, "il inscrit une choriste");
+  await rc.reload();
+  const li = rc.locator("[data-inscrit='PGM-MUA-0001']");
+  await li.locator("summary", { hasText: "Évaluer" }).click();
+  await li.locator("select[name=statut]").selectOption("valide");
+  await li.locator("input[name=note]").fill("15,5");
+  await li.locator("input[name=appreciation]").fill("Bonne lecture rythmique");
+  await li.getByRole("button", { name: "Enregistrer l'évaluation" }).click();
+  await rc.waitForSelector("text=Évaluation enregistrée.");
+  await rc.reload();
+  t = await rc.textContent("[data-inscrit='PGM-MUA-0001']");
+  ok(t.includes("15,5 / 20") && t.includes("Validé"), "il enregistre la note (15,5/20) et le résultat");
+  await c.goto(`${APP}/choriste/formations`);
+  t = await texte(c);
+  ok(t.includes("Solfège niveau 1") && t.includes("15,5") && t.includes("Bonne lecture rythmique"), "la choriste voit sa formation, sa note et l'appréciation");
+  await r.goto(formation);
+  t = await texte(r);
+  ok(t.includes("Solfège niveau 1") && (await r.locator("summary", { hasText: "Évaluer" }).count()) === 0,
+    "un responsable de paroisse peut consulter la formation, sans pouvoir évaluer");
+
+  // Projets et finances
+  await rc.goto(`${APP}/staff/projets`);
+  z = await ouvrir(rc, "Nouveau projet");
+  await z.locator("input[name=titre]").fill("Achat de pupitres");
+  await z.locator("input[name=budgetCdf]").fill("500 000");
+  await z.locator("button[type=submit]").click();
+  await rc.waitForURL(/\/staff\/projets\/[0-9a-f-]{36}$/);
+  const projet = rc.url();
+  ok(true, "le responsable crée un projet avec un budget de 500 000 FC");
+  await rc.fill("input[name=titre][placeholder='Ex. Demander trois devis']", "Demander trois devis");
+  await rc.getByRole("button", { name: "Ajouter la tâche" }).click();
+  await rc.waitForSelector("text=Tâche ajoutée.");
+  await rc.reload();
+  await rc.locator("[data-tache='Demander trois devis']").getByRole("button", { name: "Terminer" }).click();
+  await rc.waitForSelector("text=Tâches (1/1 terminées)");
+  ok(true, "il ajoute une tâche puis la marque terminée");
+  z = await ouvrir(rc, "Écrire un rapport");
+  await z.locator("input[name=avancement]").fill("40");
+  await z.locator("textarea[name=contenu]").fill("Trois devis reçus.");
+  await z.locator("button[type=submit]").click();
+  await rc.waitForSelector("text=Rapport enregistré : le projet est à 40 %.");
+  await rc.reload();
+  ok((await rc.getAttribute("[role=progressbar] >> nth=0", "aria-valuenow")) === "40" && (await texte(rc)).includes("En cours"),
+    "le rapport d'avancement met le projet à 40 % et « En cours »");
+  z = await ouvrir(rc, "Enregistrer une dépense ou une entrée");
+  await z.locator("input[name=libelle]").fill("Acompte menuisier");
+  await z.locator("input[name=montant]").fill("150 000");
+  await z.locator("button[type=submit]").click();
+  await rc.waitForSelector("text=Sortie de 150 000 FC enregistrée.");
+  await rc.reload();
+  t = await rc.textContent("[data-devise=CDF]");
+  ok(t.includes("150 000 FC") && t.includes("350 000 FC"), "la dépense est déduite du budget (reste 350 000 FC)");
+
+  await a.goto(`${APP}/staff/finances`);
+  z = await ouvrir(a, "Enregistrer une entrée ou une sortie");
+  await z.locator("input[name=sens][value=recette]").check();
+  await z.locator("input[name=libelle]").fill("Cotisations d'octobre");
+  await z.locator("input[name=montant]").fill("300");
+  await z.locator("select[name=devise]").selectOption("USD");
+  await z.locator("button[type=submit]").click();
+  await a.waitForSelector("text=Entrée de 300,00 $ enregistrée.");
+  await a.reload();
+  ok((await a.textContent("[data-bilan=USD]")).includes("300,00 $") && (await a.textContent("[data-bilan=CDF]")).includes("-150 000 FC"),
+    "les caisses en francs et en dollars sont comptées séparément");
+  rep = await a.request.get(`${APP}/staff/finances/export?annee=${new Date().getFullYear()}`);
+  t = await rep.text();
+  ok(t.startsWith("﻿Date;") && t.includes("Acompte menuisier") && t.includes("-150000,00;CDF") && t.includes("300,00;USD"), "export Excel des finances");
+  await rc.goto(`${APP}/staff/finances`);
+  t = await texte(rc);
+  ok(t.includes("Acompte menuisier") && !t.includes("Cotisations d'octobre"), "le responsable de commission ne voit que l'argent de ses projets");
+  await r.goto(`${APP}/staff/finances`);
+  ok(!new URL(r.url()).pathname.startsWith("/staff/finances"), "un responsable de paroisse n'a pas accès aux finances");
+  rep = await r.request.get(`${APP}/staff/finances/export?annee=${new Date().getFullYear()}`);
+  ok(!(await rep.text()).includes("Acompte menuisier") && !rep.url().includes("/export"), "ni à leur export (renvoyé vers son espace)");
+
+  // Hébergement
+  await a.goto(`${APP}/staff/hebergement`);
+  for (const [nom, places, sexe] of [["Chambre 1", "1", ""], ["Chambre des femmes", "2", "F"]]) {
+    z = await ouvrir(a, "Ajouter une chambre");
+    await z.locator("input[name=nom]").fill(nom);
+    await z.locator("input[name=site]").fill("Internat");
+    await z.locator("input[name=capacite]").fill(places);
+    await z.locator("select[name=sexe]").selectOption(sexe);
+    await z.locator("button[type=submit]").click();
+    await a.waitForSelector(`text=Chambre « ${nom} » ajoutée`);
+    await a.reload();
+  }
+  ok(true, "l'administration ajoute deux chambres");
+  async function loger(qui, chambre) {
+    await a.reload();
+    const f = await ouvrir(a, "Loger un choriste");
+    await choisir(f, "membreId", qui);
+    await choisir(f, "chambreId", chambre);
+    await f.locator("input[name=du]").fill(jourDans(30));
+    await f.locator("input[name=au]").fill(jourDans(33));
+    await f.locator("button[type=submit]").click();
+    await a.waitForSelector(`details[open] p[role=alert], details[open] p[role=status]`);
+    return a.textContent("details[open] p[role=alert], details[open] p[role=status]");
+  }
+  ok((await loger("PGM-MUA-0001", "Chambre 1")).includes("Chambre attribuée"), "une choriste reçoit une chambre");
+  ok((await loger("PGM-MUA-0002", "Chambre 1")).includes("Chambre complète"), "une chambre pleine est refusée");
+  ok((await loger("PGM-MUA-0002", "Chambre des femmes")).includes("Renseignez le sexe"), "une chambre réservée aux femmes exige le sexe du membre");
+  await c.goto(`${APP}/choriste/chambre`);
+  t = await texte(c);
+  ok(t.includes("Chambre 1") && t.includes("Internat") && t.includes("3 nuits") && !t.includes("Lukombo"),
+    "la choriste voit sa chambre, sans les autres occupants");
+  await c.goto(`${APP}/choriste/notifications`);
+  ok((await texte(c)).includes("Hébergement : chambre Chambre 1 (Internat)"), "elle en est prévenue");
+
+  // Chants
+  await rc.goto(`${APP}/staff/chants`);
+  for (const [titre, voix] of [["Nzambe azali malamu", null], ["Chant des basses", "basse"]]) {
+    z = await ouvrir(rc, "Ajouter un chant");
+    await z.locator("input[name=titre]").fill(titre);
+    await z.locator("select[name=langue]").selectOption("Lingala");
+    if (voix) await z.locator(`input[name=voix][value=${voix}]`).check();
+    await z.locator("input[name=lienPartition]").fill("https://exemple.org/partition.pdf");
+    await z.locator("textarea[name=paroles]").fill(`${titre}\nRefrain`);
+    await z.locator("button[type=submit]").click();
+    await rc.waitForURL(/\/staff\/chants\/[0-9a-f-]{36}$/);
+    await rc.goto(`${APP}/staff/chants`);
+  }
+  ok(true, "le responsable ajoute deux chants au répertoire");
+  await c.goto(`${APP}/choriste/chants`);
+  t = await texte(c);
+  ok(t.includes("Nzambe azali malamu") && !t.includes("Chant des basses"), "la choriste (ténor) voit les chants de sa voix");
+  await c.click("text=Tous les chants");
+  await c.waitForURL(/tous=1/);
+  ok((await texte(c)).includes("Chant des basses"), "et peut afficher tout le répertoire");
+  await c.click("[data-chant='Nzambe azali malamu'] a");
+  await c.waitForURL(/\/choriste\/chants\/[0-9a-f-]{36}$/);
+  t = await texte(c);
+  ok(t.includes("Refrain") && (await c.getAttribute("text=Ouvrir la partition", "href")) === "https://exemple.org/partition.pdf",
+    "elle lit les paroles et ouvre la partition");
+
+  const chemin = (u) => new URL(u).pathname;
+  const pageChant = chemin(c.url());
+  await capture(a, "1-commissions", "/staff/commissions");
+  await capture(rc, "2-commission", `/staff/commissions/${coms[0].id}`);
+  await capture(rc, "3-formation", chemin(formation));
+  await capture(rc, "4-projet", chemin(projet));
+  await capture(a, "5-finances", "/staff/finances");
+  await capture(a, "6-hebergement", "/staff/hebergement");
+  await capture(rc, "7-chants", "/staff/chants");
+  await capture(c, "8-mes-formations", "/choriste/formations", true);
+  await capture(c, "9-ma-chambre", "/choriste/chambre", true);
+  await capture(c, "10-mes-chants", "/choriste/chants", true);
+  await capture(c, "11-chant", pageChant, true);
+  await capture(c, "12-ma-paroisse", "/choriste/paroisse", true);
 
   // --- Export, archivage, suppression protégée ---------------------------
   console.log("Export et archives");

@@ -1,25 +1,31 @@
-import { Building2, MapPin, Music } from "lucide-react";
+import { Building2, MapPin, Music, UsersRound } from "lucide-react";
 import { FicheNonReliee } from "@/components/ui/FicheNonReliee";
 import { utilisateurCourant } from "@/lib/auth/session";
 import { choristeConnecte } from "@/lib/demo-data";
 import { libelleParoisse } from "@/lib/format";
 import { lireOrganisation, maFiche } from "@/lib/membres/depot";
+import { mesCommissions } from "@/lib/organisation/depot";
 import { supabaseActif } from "@/lib/supabase/config";
 
 export const metadata = { title: "Ma paroisse" };
 
-type Vue = { paroisse: string; ville: string; chorale: string; chorales: string[]; voix: string; fonction: string };
+type Vue = {
+  paroisse: string; ville: string; chorale: string; chorales: string[]; voix: string; fonction: string;
+  commissions: { commission: string; description: string; fonction: string }[];
+};
 
 async function vue(): Promise<Vue | null> {
   if (!supabaseActif) {
     const m = choristeConnecte;
-    return { paroisse: m.paroisse, ville: "Muanda", chorale: m.chorale, chorales: [m.chorale], voix: m.voix, fonction: m.fonction };
+    return { paroisse: m.paroisse, ville: "Muanda", chorale: m.chorale, chorales: [m.chorale], voix: m.voix, fonction: m.fonction,
+      commissions: [{ commission: "Commission artistique (démo)", description: "Répertoire et répétitions", fonction: "Membre" }] };
   }
   const u = await utilisateurCourant();
   const fiche = u ? await maFiche(u.id) : null;
   if (!fiche) return null;
-  const org = await lireOrganisation();
+  const [org, commissions] = await Promise.all([lireOrganisation(), mesCommissions(fiche.id)]);
   return {
+    commissions,
     paroisse: fiche.paroisse,
     ville: org.paroisses.find((p) => p.id === fiche.paroisseId)?.ville ?? "",
     chorale: fiche.chorale,
@@ -61,6 +67,22 @@ export default async function MaParoisse() {
           </ul>
         )}
       </section>
+      {v.commissions.length > 0 && (
+        <section className="rounded-2xl bg-white p-5 shadow-sm">
+          <h2 className="font-semibold text-marine-900">Mes commissions</h2>
+          <ul className="mt-3 space-y-3">
+            {v.commissions.map((c) => (
+              <li key={c.commission} className="flex items-start gap-3" data-commission={c.commission}>
+                <span className="rounded-lg bg-or-100/70 p-2 text-or-600"><UsersRound className="size-4" aria-hidden /></span>
+                <div>
+                  <p className="font-medium text-marine-900">{c.commission} <span className="text-sm font-normal text-slate-500">· {c.fonction}</span></p>
+                  {c.description && <p className="text-sm text-slate-500">{c.description}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <p className="text-center text-xs text-slate-400">Pour toute correction, utilisez « Mon profil » ou contactez le responsable de votre paroisse.</p>
     </div>
   );

@@ -69,7 +69,7 @@ export const menuChoriste: EntreeMenu[] = [
   { href: "/choriste/formations", label: "Mes formations", icone: GraduationCap, etape: 7, description: "Vos formations et évaluations." },
   { href: "/choriste/paroisse", label: "Ma paroisse", icone: Building2, etape: 5, description: "Votre paroisse et votre chorale." },
   { href: "/choriste/chambre", label: "Ma chambre", icone: BedDouble, etape: 7, description: "Votre hébergement, si applicable." },
-  { href: "/choriste/documents", label: "Mes documents", icone: FileText, etape: 7, description: "Documents mis à votre disposition." },
+  { href: "/choriste/documents", label: "Mes documents", icone: FileText, etape: 8, description: "Documents mis à votre disposition." },
   { href: "/choriste/notifications", label: "Notifications", icone: Bell, etape: 5, description: "Vos notifications." },
   { href: "/choriste/parametres", label: "Paramètres du compte", icone: Settings, etape: 2, description: "Mot de passe et préférences." },
 ];

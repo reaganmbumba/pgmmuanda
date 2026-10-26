@@ -35,6 +35,18 @@ const parStatut: Record<string, Ton> = {
   Changement: "ambre",
   Invitation: "or",
   Communiqué: "gris",
+  Planifiée: "marine",
+  Planifié: "marine",
+  "En cours": "or",
+  Terminée: "vert",
+  Terminé: "vert",
+  Inscrit: "marine",
+  Validé: "vert",
+  "Non validé": "rouge",
+  Abandon: "gris",
+  "À faire": "gris",
+  "Entrée d'argent": "vert",
+  "Sortie d'argent": "rouge",
 };
 
 export function Badge({ children, ton }: { children: string; ton?: Ton }) {
