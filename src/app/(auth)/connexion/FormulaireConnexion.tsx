@@ -1,31 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { Bouton } from "@/components/ui/Bouton";
+import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
+import { connexion } from "../actions";
 
-const champ =
-  "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-marine-700 focus:ring-4 focus:ring-marine-700/10";
-
-export function FormulaireConnexion() {
+export function FormulaireConnexion({ suite, actif }: { suite?: string; actif: boolean }) {
   const [voir, setVoir] = useState(false);
-  const [message, setMessage] = useState("");
+  const [etat, action] = useActionState(connexion, undefined);
+  const [messageMaquette, setMessageMaquette] = useState("");
+
   return (
     <form
       className="space-y-4"
-      onSubmit={(e) => {
-        e.preventDefault();
-        setMessage(
-          "Maquette : la connexion réelle sera branchée à Supabase à l'Étape 2. Utilisez les accès de démonstration ci-dessous.",
-        );
-      }}
+      action={actif ? action : undefined}
+      onSubmit={
+        actif
+          ? undefined
+          : (e) => {
+              e.preventDefault();
+              setMessageMaquette(
+                "Maquette : la base de données n'est pas configurée. Utilisez les accès de démonstration ci-dessous.",
+              );
+            }
+      }
     >
+      <input type="hidden" name="suite" value={suite ?? ""} />
       <div>
         <label htmlFor="identifiant" className="text-sm font-medium text-slate-700">
           Identifiant ou adresse e-mail
         </label>
-        <input id="identifiant" name="identifiant" autoComplete="username" required className={champ} />
+        <input id="identifiant" name="identifiant" autoComplete="username" required className={classeChamp} />
       </div>
       <div>
         <div className="flex items-center justify-between">
@@ -39,11 +45,11 @@ export function FormulaireConnexion() {
         <div className="relative">
           <input
             id="mdp"
-            name="mdp"
+            name="motDePasse"
             type={voir ? "text" : "password"}
             autoComplete="current-password"
             required
-            className={`${champ} pr-10`}
+            className={`${classeChamp} pr-10`}
           />
           <button
             type="button"
@@ -55,14 +61,10 @@ export function FormulaireConnexion() {
           </button>
         </div>
       </div>
-      <Bouton type="submit" className="w-full">
+      <BoutonEnvoi>
         <LogIn className="size-4" aria-hidden /> Se connecter
-      </Bouton>
-      {message && (
-        <p role="status" className="rounded-xl bg-or-100 p-3 text-xs text-or-600">
-          {message}
-        </p>
-      )}
+      </BoutonEnvoi>
+      <MessageFormulaire etat={actif ? etat : messageMaquette ? { erreur: messageMaquette } : undefined} />
     </form>
   );
 }

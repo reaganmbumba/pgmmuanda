@@ -3,7 +3,7 @@ import { ModulePrevu } from "@/components/ui/ModulePrevu";
 import { menuStaff } from "@/lib/navigation";
 
 // Modules qui ont déjà leur propre page : exclus de cette route générique.
-const PAGES_DEDIEES = ["cartes", "membres", "programmes", "scanner"];
+const PAGES_DEDIEES = ["cartes", "membres", "programmes", "scanner", "utilisateurs"];
 
 const entree = (slug: string) => menuStaff.find((e) => e.href === `/staff/${slug}`);
 

@@ -5,13 +5,17 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Bell, LogOut, Menu, Search, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { deconnexion } from "@/app/(auth)/actions";
+import { peutOuvrir, type Role } from "@/lib/auth/roles";
 import { menuStaff } from "@/lib/navigation";
+
+type Utilisateur = { nom: string; libelleRole: string; role: Role };
 
 function estActif(pathname: string, href: string) {
   return href === "/staff" ? pathname === href : pathname.startsWith(href);
 }
 
-function MenuLateral({ onNavigate }: { onNavigate?: () => void }) {
+function MenuLateral({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
     <nav className="flex h-full flex-col bg-marine-900 text-marine-100">
@@ -19,7 +23,7 @@ function MenuLateral({ onNavigate }: { onNavigate?: () => void }) {
         <Logo size={36} avecTexte clair />
       </div>
       <ul className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        {menuStaff.map(({ href, label, icone: Icone }) => {
+        {menuStaff.filter((e) => peutOuvrir(role, e.href)).map(({ href, label, icone: Icone }) => {
           const actif = estActif(pathname, href);
           return (
             <li key={href}>
@@ -44,25 +48,27 @@ function MenuLateral({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </ul>
       <div className="border-t border-white/10 p-3">
-        <Link
-          href="/connexion"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-marine-100/80 hover:bg-white/5 hover:text-white"
-        >
-          <LogOut className="size-4.5" aria-hidden />
-          Déconnexion
-        </Link>
+        <form action={deconnexion}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-marine-100/80 hover:bg-white/5 hover:text-white"
+          >
+            <LogOut className="size-4.5" aria-hidden />
+            Déconnexion
+          </button>
+        </form>
       </div>
     </nav>
   );
 }
 
-export function StaffShell({ children }: { children: React.ReactNode }) {
+export function StaffShell({ children, utilisateur }: { children: React.ReactNode; utilisateur: Utilisateur }) {
   const [ouvert, setOuvert] = useState(false);
   return (
     <div className="flex min-h-[calc(100dvh-28px)]">
       <aside className="hidden w-68 shrink-0 bg-marine-900 lg:block">
         <div className="sticky top-0 h-[calc(100dvh-28px)]">
-          <MenuLateral />
+          <MenuLateral role={utilisateur.role} />
         </div>
       </aside>
 
@@ -74,7 +80,7 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
             onClick={() => setOuvert(false)}
           />
           <div className="absolute inset-y-0 left-0 w-72 shadow-xl">
-            <MenuLateral onNavigate={() => setOuvert(false)} />
+            <MenuLateral role={utilisateur.role} onNavigate={() => setOuvert(false)} />
             <button
               onClick={() => setOuvert(false)}
               className="absolute right-3 top-4 rounded-lg p-1.5 text-white/80 hover:bg-white/10"
@@ -113,14 +119,14 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
             </button>
             <div className="flex items-center gap-2 rounded-xl px-2 py-1">
               <span className="inline-flex size-8 items-center justify-center rounded-full bg-marine-900 text-xs font-semibold text-or-400">
-                PG
+                {utilisateur.nom.slice(0, 2).toUpperCase()}
               </span>
               <span className="hidden text-sm leading-tight sm:block">
                 <span className="block font-semibold text-marine-900">
-                  Présidence PGM
+                  {utilisateur.nom}
                 </span>
                 <span className="block text-xs text-slate-500">
-                  Administrateur
+                  {utilisateur.libelleRole}
                 </span>
               </span>
             </div>

@@ -2,8 +2,28 @@ import { CircleCheck, CircleHelp, CircleX } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Membre } from "@/lib/types";
 
+/** Ce que la vérification publique a le droit d'afficher. */
+export type CarteVerifiee = {
+  valide: boolean;
+  prenom: string;
+  nom: string;
+  postnom: string;
+  matricule: string;
+  paroisse: string;
+};
+
+export const depuisMembreDemo = (m?: Membre): CarteVerifiee | undefined =>
+  m && {
+    valide: m.carte.statut === "Active" && m.statut !== "Suspendu",
+    prenom: m.prenom,
+    nom: m.nom,
+    postnom: m.postnom,
+    matricule: m.matricule,
+    paroisse: m.paroisse,
+  };
+
 /** Affiche uniquement ce que la vérification publique autorise : photo, nom, matricule, paroisse, statut. */
-export function ResultatVerification({ membre }: { membre?: Membre }) {
+export function ResultatVerification({ membre }: { membre?: CarteVerifiee }) {
   if (!membre)
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center">
@@ -15,7 +35,7 @@ export function ResultatVerification({ membre }: { membre?: Membre }) {
       </div>
     );
 
-  const valide = membre.carte.statut === "Active" && membre.statut !== "Suspendu";
+  const valide = membre.valide;
   return (
     <div
       className={`rounded-2xl border-2 bg-white p-6 ${valide ? "border-emerald-500" : "border-red-500"}`}

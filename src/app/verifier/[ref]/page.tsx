@@ -1,7 +1,20 @@
 import { Logo } from "@/components/Logo";
-import { ResultatVerification } from "@/components/carte/ResultatVerification";
+import { depuisMembreDemo, ResultatVerification, type CarteVerifiee } from "@/components/carte/ResultatVerification";
 import { BandeauDemo } from "@/components/ui/BandeauDemo";
 import { trouverParReference } from "@/lib/demo-data";
+import { supabaseActif } from "@/lib/supabase/config";
+import { creerClientServeur } from "@/lib/supabase/server";
+
+async function verifier(ref: string): Promise<CarteVerifiee | undefined> {
+  if (!supabaseActif) return depuisMembreDemo(trouverParReference(ref));
+  const supabase = await creerClientServeur();
+  const { data } = await supabase.rpc("verifier_carte", { p_reference: ref }).single<{
+    resultat: "valide" | "revoquee" | "inconnue";
+    prenom: string; nom: string; postnom: string; matricule: string; paroisse: string;
+  }>();
+  if (!data || data.resultat === "inconnue") return undefined;
+  return { ...data, valide: data.resultat === "valide" };
+}
 
 export const metadata = { title: "Vérification d'une carte", robots: { index: false } };
 
@@ -11,10 +24,10 @@ export default async function PageVerifier({
   params: Promise<{ ref: string }>;
 }) {
   const { ref } = await params;
-  const membre = trouverParReference(ref);
+  const membre = await verifier(ref);
   return (
     <>
-      <BandeauDemo />
+      {!supabaseActif && <BandeauDemo />}
       <main className="mx-auto flex min-h-dvh max-w-md flex-col px-4 py-8">
         <div className="mb-6 flex justify-center">
           <Logo size={48} avecTexte />

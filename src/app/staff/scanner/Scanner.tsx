@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { Camera, Search } from "lucide-react";
-import { ResultatVerification } from "@/components/carte/ResultatVerification";
+import { depuisMembreDemo, ResultatVerification, type CarteVerifiee } from "@/components/carte/ResultatVerification";
 import { Bouton } from "@/components/ui/Bouton";
 import { trouverParMatricule } from "@/lib/demo-data";
-import type { Membre } from "@/lib/types";
 
 export function Scanner() {
   const [matricule, setMatricule] = useState("");
-  const [resultat, setResultat] = useState<{ membre?: Membre } | null>(null);
+  const [resultat, setResultat] = useState<{ membre?: CarteVerifiee } | null>(null);
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -34,7 +33,7 @@ export function Scanner() {
           className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
           onSubmit={(e) => {
             e.preventDefault();
-            setResultat({ membre: trouverParMatricule(matricule) });
+            setResultat({ membre: depuisMembreDemo(trouverParMatricule(matricule)) });
           }}
         >
           <label htmlFor="matricule" className="text-sm font-semibold text-marine-900">

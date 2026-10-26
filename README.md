@@ -9,7 +9,7 @@ communication, commissions, formations, projets et hébergement.
 | Étape | Contenu | État |
 | --- | --- | --- |
 | 1 | Maquettes et interface responsive, PWA installable | **Terminée** |
-| 2 | Base de données Supabase et authentification | À venir |
+| 2 | Base de données Supabase et authentification | **Terminée** |
 | 3 | Gestion des membres et matricules | À venir |
 | 4 | Cartes PDF et QR codes fonctionnels | À venir |
 | 5 | Espace choriste et espace staff reliés aux données | À venir |
@@ -17,9 +17,12 @@ communication, commissions, formations, projets et hébergement.
 | 7 | Commissions, formations, projets et hébergement | À venir |
 | 8 | Sécurité, tests et déploiement en ligne | À venir |
 
-À l'Étape 1, les écrans affichent un **jeu de démonstration fictif**
-(`src/lib/demo-data.ts`), signalé par un bandeau doré en haut de chaque page.
-Aucune donnée n'est enregistrée.
+Sans configuration Supabase, l'application tourne en **mode maquette** : les écrans
+affichent un jeu de démonstration fictif (`src/lib/demo-data.ts`), signalé par un
+bandeau doré. Avec Supabase configuré, la connexion, les rôles et la vérification
+des cartes utilisent la vraie base ; les autres modules seront reliés aux étapes 3 à 7.
+
+Installation de la base : voir [docs/INSTALLATION-SUPABASE.md](docs/INSTALLATION-SUPABASE.md).
 
 ## Démarrer en local
 
@@ -41,7 +44,14 @@ Puis ouvrir http://localhost:3000 :
 ## Technologies
 
 Next.js 16 (routeur App) · TypeScript · Tailwind CSS 4 · lucide-react (icônes)
-· qrcode.react (QR codes). Supabase sera ajouté à l'Étape 2.
+· qrcode.react (QR codes) · Supabase (PostgreSQL, Auth, RLS) · Zod · Vitest.
+
+## Tests
+
+```bash
+npm test          # règles d'accès et validation des formulaires
+npm run test:db   # migrations et règles de sécurité sur un PostgreSQL local
+```
 
 ## Structure
 
