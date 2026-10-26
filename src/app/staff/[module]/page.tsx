@@ -4,7 +4,7 @@ import { exigerAcces } from "@/lib/auth/session";
 import { menuStaff } from "@/lib/navigation";
 
 // Modules qui ont déjà leur propre page : exclus de cette route générique.
-const PAGES_DEDIEES = ["cartes", "chorales", "membres", "paroisses", "programmes", "scanner", "utilisateurs"];
+const PAGES_DEDIEES = ["cartes", "chorales", "communication", "membres", "paroisses", "presences", "programmes", "rapports", "scanner", "utilisateurs"];
 
 const entree = (slug: string) => menuStaff.find((e) => e.href === `/staff/${slug}`);
 

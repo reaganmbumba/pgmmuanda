@@ -14,8 +14,10 @@ describe("accès par rôle", () => {
     expect(peutOuvrir("presidence", "/choriste")).toBe(false);
   });
 
-  it("limite le contrôleur au scanner", () => {
+  it("limite le contrôleur au scanner et au pointage des présences", () => {
     expect(peutOuvrir("controleur", "/staff/scanner")).toBe(true);
+    expect(peutOuvrir("controleur", "/staff/presences")).toBe(true);
+    expect(peutOuvrir("controleur", "/staff/programmes")).toBe(false);
     expect(peutOuvrir("controleur", "/staff")).toBe(false);
     expect(peutOuvrir("controleur", "/staff/membres")).toBe(false);
   });

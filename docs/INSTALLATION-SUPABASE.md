@@ -11,7 +11,8 @@ du projet PGM Muanda (`https://wkokqwuqctgzxpbvyaxp.supabase.co`).
 3. Recommencer avec `supabase/migrations/20261026000200_securite_rls.sql`.
 4. Recommencer avec `supabase/migrations/20261027000100_cartes.sql` (Étape 4 : cartes, photos).
 5. Recommencer avec `supabase/migrations/20261028000100_notifications.sql` (Étape 5 : notifications).
-6. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
+6. Recommencer avec `supabase/migrations/20261029000100_programmes.sql` (Étape 6 : programmes, annonces, présences).
+7. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
    Ces données sont fictives (« démo ») et s'effacent avec les commandes
    données à la fin du fichier.
 
@@ -105,9 +106,9 @@ Avec PostgreSQL 15 ou plus récent installé localement :
 PGURL=postgres://postgres:motdepasse@localhost:5432/postgres npm run test:db
 ```
 
-Le script crée une base jetable, applique les migrations et vérifie 64 règles
+Le script crée une base jetable, applique les migrations et vérifie 105 règles
 (matricules, historique, accès par rôle, cartes, photos, vérification publique,
-notifications).
+notifications, ciblage des activités et annonces, présences et pointage).
 
 Note : un numéro de matricule n'est jamais réutilisé, même si une inscription
 échoue ; il peut donc y avoir des trous dans la numérotation. C'est voulu.

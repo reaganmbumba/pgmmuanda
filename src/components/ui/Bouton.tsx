@@ -14,6 +14,9 @@ type Props = {
   href?: string;
   className?: string;
   children: React.ReactNode;
+  /** Pour un lien externe (ex. WhatsApp) : nouvel onglet. */
+  target?: string;
+  rel?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 export function Bouton({
@@ -21,12 +24,14 @@ export function Bouton({
   href,
   className = "",
   children,
+  target,
+  rel,
   ...rest
 }: Props) {
   const cls = `inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 ${styles[variante]} ${className}`;
   if (href)
     return (
-      <Link href={href} className={cls}>
+      <Link href={href} className={cls} target={target} rel={rel}>
         {children}
       </Link>
     );

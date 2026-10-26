@@ -1,6 +1,8 @@
 import "server-only";
 import { dernieresVerifications } from "@/lib/cartes/depot";
 import { lireDemandes } from "@/lib/membres/depot";
+import { listerActivites, listerAnnonces, presencesPeriode, taux } from "@/lib/programmes/depot";
+import { dansJours } from "@/lib/programmes/libelles";
 import { STATUTS, VOIX, type CodeStatut, type CodeVoix } from "@/lib/membres/libelles";
 import { creerClientServeur } from "@/lib/supabase/server";
 
@@ -8,13 +10,16 @@ import { creerClientServeur } from "@/lib/supabase/server";
 export async function chiffresTableauDeBord() {
   const supabase = await creerClientServeur();
   const il_y_a_30_jours = new Date(Date.now() - 30 * 86400_000).toISOString();
-  const [{ data: membres }, { count: cartesActives }, { data: attente }, demandes, controles] = await Promise.all([
+  const [{ data: membres }, { count: cartesActives }, { data: attente }, demandes, controles, activites, annonces, presences] = await Promise.all([
     supabase.from("membres").select("statut, voix, cree_le, paroisses(nom)").eq("archive", false),
     supabase.from("cartes").select("id", { count: "exact", head: true }).eq("statut", "active"),
     supabase.from("membres").select("id, prenom, nom, postnom, matricule, paroisses(nom)")
       .eq("archive", false).eq("statut", "en_attente").order("cree_le", { ascending: false }).limit(6),
     lireDemandes({ enAttente: true }),
     dernieresVerifications(),
+    listerActivites({ depuis: dansJours(-0.5), limite: 5 }),
+    listerAnnonces({ limite: 3 }),
+    presencesPeriode(dansJours(-30)),
   ]);
   type L = { statut: CodeStatut; voix: CodeVoix | null; cree_le: string; paroisses: { nom: string } | null };
   const lignes = (membres ?? []) as unknown as L[];
@@ -39,5 +44,8 @@ export async function chiffresTableauDeBord() {
       .map((m) => ({ id: m.id, prenom: m.prenom, nom: m.nom, postnom: m.postnom, matricule: m.matricule, paroisse: m.paroisses?.nom ?? "" })),
     demandes,
     controles: controles.slice(0, 6),
+    activites,
+    annonces,
+    tauxPresence: taux(presences),
   };
 }

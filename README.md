@@ -13,7 +13,7 @@ communication, commissions, formations, projets et hébergement.
 | 3 | Gestion des membres et matricules | **Terminée** |
 | 4 | Cartes PDF et QR codes fonctionnels | **Terminée** |
 | 5 | Espace choriste et espace staff reliés aux données | **Terminée** |
-| 6 | Programmes, annonces et présences | À venir |
+| 6 | Programmes, annonces et présences | **Terminée** |
 | 7 | Commissions, formations, projets et hébergement | À venir |
 | 8 | Sécurité, tests et déploiement en ligne | À venir |
 
@@ -22,10 +22,18 @@ affichent un jeu de démonstration fictif (`src/lib/demo-data.ts`), signalé par
 bandeau doré. Avec Supabase configuré, plus aucune donnée de démonstration n'est affichée : la
 connexion, les rôles, les membres, les cartes, le tableau de bord, l'accueil du
 choriste et les notifications utilisent la vraie base, et les modules pas encore
-construits (programmes, présences, annonces…) indiquent l'étape où ils arriveront.
+construits (commissions, formations, chants, hébergement…) indiquent l'étape où ils arriveront.
+
+Programmes, annonces et présences (Étape 6) : chaque activité ou annonce vise toute la
+PGM ou une paroisse, et tous les membres ou seulement certaines paroisses, chorales ou
+voix. La base calcule elle-même qui est concerné : un choriste ne voit que ce qui le
+concerne. Les présences se saisissent sur une feuille ou en scannant la carte QR du
+choriste (le contrôleur peut pointer), et s'exportent pour Excel depuis « Rapports ».
 
 Les notifications sont internes à l'application (cloche et page « Notifications ») :
-aucun message WhatsApp, SMS ou e-mail n'est envoyé automatiquement.
+aucun message WhatsApp, SMS ou e-mail n'est envoyé automatiquement. Le bouton
+« Partager sur WhatsApp » ouvre WhatsApp avec un message prêt ; c'est l'utilisateur
+qui choisit le groupe et envoie.
 
 Installation de la base : voir [docs/INSTALLATION-SUPABASE.md](docs/INSTALLATION-SUPABASE.md).
 

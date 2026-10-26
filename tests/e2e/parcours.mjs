@@ -131,7 +131,7 @@ try {
     && await indicateur(a, "En attente de validation") === "1" && await indicateur(a, "Cartes actives") === "0",
     "le tableau de bord affiche les vrais chiffres (2 inscrits, 1 actif, 1 en attente, 0 carte)");
   t = await texte(a);
-  ok(t.includes("Paul Lukombo") && t.includes("Paroisse Beta") && !t.includes("Nkanga") && !t.includes("Taux de présence"),
+  ok(t.includes("Paul Lukombo") && t.includes("Paroisse Beta") && !t.includes("Nkanga") && await indicateur(a, "Taux de présence (30 j)") === "—",
     "membres en attente réels, sans données de démonstration");
   ok((await a.locator("text=Mode maquette").count()) === 0, "aucun bandeau de démonstration en mode réel");
   await a.fill("input[name=q]", "mavúngu");
@@ -159,7 +159,8 @@ try {
   t = await texte(c);
   ok(t.includes("Paroisse Alpha") && t.includes("Chorale Alpha") && !t.includes("Paroisse Beta"), "la page « Ma paroisse » montre sa paroisse et sa chorale");
   await c.goto(`${APP}/choriste/programme`);
-  ok((await texte(c)).includes("Module prévu à l'Étape 6"), "le programme n'affiche pas de fausses activités en mode réel");
+  t = await texte(c);
+  ok(t.includes("Aucune activité prévue pour vous") && !t.includes("quatre voix"), "le programme n'affiche pas de fausses activités en mode réel");
   await c.goto(`${APP}/choriste/profil`);
   t = await texte(c);
   ok(t.includes("PGM-MUA-0001") && t.includes("Chorale Alpha"), "le choriste voit sa propre fiche");
@@ -334,6 +335,143 @@ try {
   await a.goto(`${APP}/staff/scanner`);
   ok((await texte(a)).includes("Derniers contrôles") && (await a.locator("text=Révoquée").count()) > 0, "les contrôles sont enregistrés et consultables");
   await anonyme.close();
+
+  // --- Programmes, présences et annonces ---------------------------------
+  console.log("Programmes, présences et annonces");
+  // Heure de Muanda (UTC+1) : « il y a une heure » à Muanda correspond à l'heure UTC actuelle.
+  const ilYaUneHeure = new Date().toISOString().slice(0, 16);
+  const demain = new Date(Date.now() + 25 * 3600_000).toISOString().slice(0, 16);
+  async function creerActivite(p, { titre, debut, lieu = "", voix }) {
+    await p.goto(`${APP}/staff/programmes/nouvelle`);
+    await p.fill("input[name=titre]", titre);
+    await p.fill("input[name=debut]", debut);
+    if (lieu) await p.fill("input[name=lieu]", lieu);
+    if (voix) {
+      await p.check("input[name=ciblage][value=cibles]");
+      await p.check(`input[name=cibleVoix][value=${voix}]`);
+    }
+    await p.click("text=Créer l'activité");
+    await p.waitForURL(/\/staff\/programmes\/[0-9a-f-]{36}\?enregistre=1/);
+    return p.url().split("?")[0];
+  }
+  const repetition = await creerActivite(a, { titre: "Répétition générale", debut: ilYaUneHeure, lieu: "Temple central" });
+  ok((await texte(a)).includes("Toute la PGM · Tous les membres"), "l'administration crée une activité pour toute la PGM");
+  await creerActivite(a, { titre: "Répétition des basses", debut: demain, voix: "basse" });
+  ok(true, "et une activité réservée à une voix");
+  const activiteBeta = await creerActivite(r, { titre: "Réunion paroisse Beta", debut: demain });
+  ok((await texte(r)).includes("Paroisse Beta · Tous les membres"), "le responsable crée une activité limitée à sa paroisse");
+  await r.goto(repetition);
+  ok((await r.locator("text=Modifier").count()) === 0, "il ne peut pas modifier une activité de toute la PGM");
+  t = await texte(r);
+  ok(t.includes("PGM-MUA-0002") && !t.includes("PGM-MUA-0001"), "sur sa feuille de présence, il ne voit que les membres de sa paroisse");
+
+  await c.goto(`${APP}/choriste/programme`);
+  t = await texte(c);
+  ok(t.includes("Répétition générale") && !t.includes("Répétition des basses") && !t.includes("Réunion paroisse Beta"),
+    "le choriste ne voit que les activités qui le concernent");
+  await c.goto(`${APP}/choriste/notifications`);
+  t = await texte(c);
+  ok(t.includes("Nouvelle activité : Répétition générale") && !t.includes("basses"), "il est notifié des activités qui le concernent seulement");
+
+  // Pointage par caméra (contrôleur), puis par matricule (administration)
+  await a.goto(fiche1);
+  const lienCarte = await a.locator("svg[data-qr]").first().getAttribute("data-qr");
+  await QRCode.toFile(".e2e/qr2.png", lienCarte, { width: 480, margin: 6 });
+  execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-loop", "1", "-i", ".e2e/qr2.png", "-vf", "pad=640:480:(ow-iw)/2:(oh-ih)/2:white,format=yuv420p", "-t", "2", "-r", "10", ".e2e/qr2.y4m"]);
+  const camera2 = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--use-file-for-fake-video-capture=.e2e/qr2.y4m"] });
+  try {
+    const k = await (await camera2.newContext({ permissions: ["camera"] })).newPage();
+    k.on("pageerror", (e) => erreursPage.push(e.message));
+    await k.goto(`${APP}/connexion`);
+    await k.fill("input[name=identifiant]", "controleur.e2e");
+    await k.fill("input[name=motDePasse]", MDP);
+    await k.click("button[type=submit]");
+    await k.waitForURL(/\/staff\/scanner/);
+    await k.goto(`${APP}/staff/presences`);
+    await k.click("text=Répétition générale");
+    await k.click("text=Activer la caméra");
+    await k.waitForSelector("[data-resultat=enregistre]", { timeout: 20000 });
+    ok((await k.textContent("[data-resultat]")).includes("PGM-MUA-0001"), "le contrôleur pointe la présence en scannant la carte");
+    await k.goto(`${APP}/staff/programmes`);
+    ok(new URL(k.url()).pathname === "/staff/scanner", "mais il n'ouvre pas la gestion du programme");
+  } finally {
+    await camera2.close();
+  }
+  await a.goto(`${APP}/staff/presences?activite=${repetition.split("/").pop()}`);
+  await a.fill("#matricule-presence", "PGM-MUA-0001");
+  await a.getByRole("button", { name: "Pointer", exact: true }).click();
+  await a.waitForSelector("[data-resultat=deja_present]");
+  ok(true, "un second pointage est signalé « déjà pointé »");
+
+  await a.goto(repetition);
+  ok((await a.locator("tr[data-membre='PGM-MUA-0001']").textContent()).includes("par QR"), "la feuille de présence indique le pointage par QR");
+  await a.locator("tr[data-membre='PGM-MUA-0002']").getByRole("radio", { name: "Absent" }).click();
+  await a.click("text=Enregistrer la feuille de présence");
+  await a.waitForSelector("text=Feuille de présence enregistrée (1 modification).");
+  await a.reload();
+  const compte = async (s) => (await a.textContent(`[data-compte=${s}] p:last-child`))?.trim();
+  ok(await compte("present") === "1" && await compte("absent") === "1" && (await texte(a)).includes("50 %"),
+    "la feuille de présence est enregistrée : 1 présent, 1 absent, 50 %");
+  await c.goto(`${APP}/choriste/presences`);
+  t = await texte(c);
+  ok((await c.textContent("[data-taux]")).trim() === "100 %" && t.includes("Répétition générale") && t.includes("Présent"),
+    "le choriste voit sa présence et son taux");
+
+  // Modification et annulation
+  await a.goto(`${repetition}/modifier`);
+  await a.fill("input[name=lieu]", "Salle de la PGM");
+  await a.click("text=Enregistrer les modifications");
+  await a.waitForURL(/enregistre=1/);
+  await r.goto(activiteBeta);
+  await confirmer(r, "Annuler l'activité");
+  await r.waitForSelector("text=Activité annulée.");
+  ok(true, "le responsable annule l'activité de sa paroisse");
+  await c.goto(`${APP}/choriste/notifications`);
+  t = await texte(c);
+  ok(t.includes("Activité modifiée : Répétition générale") && t.includes("Salle de la PGM") && !t.includes("Beta"),
+    "le choriste est prévenu du changement de lieu, pas de l'annulation qui ne le concerne pas");
+
+  // Annonces
+  await a.goto(`${APP}/staff/communication/nouvelle`);
+  await a.fill("input[name=titre]", "Tenue blanche dimanche");
+  await a.selectOption("select[name=type]", "urgente");
+  await a.fill("textarea[name=contenu]", "Toute la chorale Alpha en blanc pour le culte.");
+  await a.check("input[name=ciblage][value=cibles]");
+  await a.getByLabel("Chorale Alpha (Paroisse Alpha)").check();
+  await a.click("text=Publier l'annonce");
+  await a.waitForURL(/publiee=1/);
+  ok((await a.locator("[data-annonce='Tenue blanche dimanche'] a[href^='https://wa.me/?text=']").count()) === 1,
+    "l'annonce est publiée, avec un lien de partage WhatsApp à envoyer soi-même");
+  await r.goto(`${APP}/staff/communication/nouvelle`);
+  ok((await r.$$eval("select[name=portee] option", (o) => o.map((x) => x.textContent))).join() === "Paroisse Beta",
+    "le responsable ne peut publier que pour sa paroisse");
+  await r.fill("input[name=titre]", "Réunion des choristes Beta");
+  await r.fill("textarea[name=contenu]", "Samedi à 10 h.");
+  await r.click("text=Publier l'annonce");
+  await r.waitForURL(/publiee=1/);
+  await c.goto(`${APP}/choriste/annonces`);
+  t = await texte(c);
+  ok(t.includes("Tenue blanche dimanche") && t.includes("Urgente") && !t.includes("Réunion des choristes Beta"),
+    "le choriste lit l'annonce qui le concerne, pas celle d'une autre paroisse");
+  await c.goto(`${APP}/choriste/notifications`);
+  ok((await texte(c)).includes("Urgent : Tenue blanche dimanche"), "il reçoit une notification « Urgent »");
+  await c.goto(`${APP}/choriste`);
+  t = await texte(c);
+  ok(t.includes("Prochaine activité") && t.includes("Répétition générale") && t.includes("Tenue blanche dimanche"),
+    "l'accueil du choriste montre sa prochaine activité et ses annonces");
+
+  // Tableau de bord et rapports
+  await a.goto(`${APP}/staff`);
+  ok(await indicateur(a, "Taux de présence (30 j)") === "50 %" && (await texte(a)).includes("Répétition générale"),
+    "le tableau de bord affiche le taux de présence et les activités à venir");
+  await a.goto(`${APP}/staff/rapports`);
+  ok((await a.textContent("[data-indicateur='Taux de présence'] p:last-child")).trim() === "50 %", "le rapport calcule le taux de présence");
+  rep = await a.request.get(`${APP}/staff/rapports/presences?jours=30`);
+  const csvPresences = await rep.text();
+  ok(rep.ok() && csvPresences.includes("Répétition générale;PGM-MUA-0001;Mavungu;Grace;Paroisse Alpha;Présent;QR code"),
+    "les présences s'exportent pour Excel");
+  rep = await r.request.get(`${APP}/staff/rapports/presences?jours=30`);
+  ok(!(await rep.text()).includes("PGM-MUA-0001"), "l'export du responsable ne contient que sa paroisse");
 
   // --- Export, archivage, suppression protégée ---------------------------
   console.log("Export et archives");

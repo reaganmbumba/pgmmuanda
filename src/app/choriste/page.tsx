@@ -9,6 +9,8 @@ import { utilisateurCourant } from "@/lib/auth/session";
 import { cartesDuMembre } from "@/lib/cartes/depot";
 import { maFiche } from "@/lib/membres/depot";
 import { mesNotifications } from "@/lib/notifications";
+import { listerActivites, listerAnnonces, presencesMembre, taux } from "@/lib/programmes/depot";
+import { dansJours, depuisSaisieLocale, jourLocal } from "@/lib/programmes/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -20,8 +22,15 @@ export default async function AccueilChoriste() {
   const u = await utilisateurCourant();
   const fiche = u ? await maFiche(u.id) : null;
   if (!fiche) return <FicheNonReliee />;
-  const [cartes, notifications] = await Promise.all([cartesDuMembre(fiche.id), mesNotifications(3)]);
+  const [cartes, notifications, prochaines, dernieres, presences] = await Promise.all([
+    cartesDuMembre(fiche.id), mesNotifications(3),
+    listerActivites({ depuis: depuisSaisieLocale(`${jourLocal(dansJours(0))}T00:00`), limite: 3 }), listerAnnonces({ limite: 2 }), presencesMembre(fiche.id),
+  ]);
   const active = cartes.find((c) => c.statutCode === "active");
+  const prochaine = prochaines.find((a) => a.statutCode !== "annulee");
+  const limite = dansJours(-30);
+  const recentes = presences.filter((p) => p.date >= limite);
+  const tauxPresence = taux(recentes);
   return (
     <div className="space-y-5">
       <Bienvenue prenom={fiche.prenom} nom={fiche.nom} matricule={fiche.matricule}
@@ -49,7 +58,23 @@ export default async function AccueilChoriste() {
         </Link>
       </div>
 
+      {prochaine ? (
+        <ProchaineActivite titre={prochaine.titre} debut={prochaine.debut} lieu={prochaine.lieu} statut={prochaine.statut} />
+      ) : (
+        <section className="rounded-2xl bg-white p-4 text-sm text-slate-500 shadow-sm">Aucune activité prévue pour vous pour le moment.</section>
+      )}
+
+      <Link href="/choriste/presences" className="block rounded-2xl bg-white p-4 shadow-sm">
+        <p className="text-xs text-slate-500">Mes présences (30 jours)</p>
+        <p className="mt-1 text-2xl font-bold text-marine-900">{tauxPresence === null ? "—" : `${tauxPresence} %`}</p>
+        <p className="text-xs text-slate-400">
+          {recentes.length ? `${recentes.filter((p) => p.statutCode === "present").length} présence${recentes.length > 1 ? "s" : ""} sur ${recentes.length} activité${recentes.length > 1 ? "s" : ""}` : "Aucune présence saisie"}
+        </p>
+      </Link>
+
       <Raccourcis />
+
+      <DernieresAnnonces liste={dernieres.map((a) => ({ id: a.id, titre: a.titre, type: a.type, date: a.date }))} />
 
       <section className="rounded-2xl bg-white shadow-sm">
         <div className="flex items-center justify-between p-4 pb-2">
@@ -76,9 +101,6 @@ export default async function AccueilChoriste() {
         )}
       </section>
 
-      <p className="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-xs text-slate-500">
-        Le programme des activités, les présences et les annonces arriveront à l&apos;Étape 6.
-      </p>
     </div>
   );
 }
@@ -99,6 +121,55 @@ function Bienvenue({ prenom, nom, matricule, etiquettes }: { prenom: string; nom
       >
         <QrCode className="size-4" aria-hidden /> Présenter mon QR code
       </Link>
+    </section>
+  );
+}
+
+function ProchaineActivite({ titre, debut, lieu, statut }: { titre: string; debut: string; lieu: string; statut: string }) {
+  return (
+    <Link href="/choriste/programme" className="block rounded-2xl bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-semibold text-marine-900">Prochaine activité</h2>
+        <Badge>{statut}</Badge>
+      </div>
+      <p className="font-medium text-marine-900">{titre}</p>
+      <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
+        <CalendarDays className="size-4" aria-hidden /> {formatDateHeure(debut)}
+      </p>
+      {lieu && (
+        <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+          <MapPin className="size-4" aria-hidden /> {lieu}
+        </p>
+      )}
+    </Link>
+  );
+}
+
+function DernieresAnnonces({ liste }: { liste: { id: string; titre: string; type: string; date: string }[] }) {
+  return (
+    <section className="rounded-2xl bg-white shadow-sm">
+      <div className="flex items-center justify-between p-4 pb-2">
+        <h2 className="font-semibold text-marine-900">Dernières annonces</h2>
+        <Link href="/choriste/annonces" className="text-sm font-medium text-marine-700">Tout voir</Link>
+      </div>
+      {liste.length === 0 ? (
+        <p className="px-4 pb-4 text-sm text-slate-500">Aucune annonce pour le moment.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {liste.map((a) => (
+            <li key={a.id}>
+              <Link href={`/choriste/annonces#${a.id}`} className="flex items-center gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <Badge>{a.type}</Badge>
+                  <p className="mt-1.5 text-sm font-medium text-marine-900">{a.titre}</p>
+                  <p className="text-xs text-slate-400">{formatDate(a.date)}</p>
+                </div>
+                <ChevronRight className="size-4 text-slate-300" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
@@ -130,29 +201,15 @@ function Raccourcis() {
 function AccueilDemo() {
   const prochaine = activites[0];
   const presents = mesPresences.filter((p) => p.statut === "Présent").length;
-  const taux = Math.round((presents / mesPresences.length) * 100);
+  const tauxDemo = Math.round((presents / mesPresences.length) * 100);
   return (
     <div className="space-y-5">
       <Bienvenue prenom={moi.prenom} nom={moi.nom} matricule={moi.matricule} etiquettes={[moi.voix, moi.fonction, libelleParoisse(moi.paroisse)]} />
-
-      <section className="rounded-2xl bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold text-marine-900">Prochaine activité</h2>
-          <Badge>{prochaine.statut}</Badge>
-        </div>
-        <p className="font-medium text-marine-900">{prochaine.titre}</p>
-        <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-500">
-          <CalendarDays className="size-4" aria-hidden /> {formatDateHeure(prochaine.debut)}
-        </p>
-        <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
-          <MapPin className="size-4" aria-hidden /> {prochaine.lieu}
-        </p>
-      </section>
-
+      <ProchaineActivite titre={prochaine.titre} debut={prochaine.debut} lieu={prochaine.lieu} statut={prochaine.statut} />
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white p-4 shadow-sm">
           <p className="text-xs text-slate-500">Mes présences</p>
-          <p className="mt-1 text-2xl font-bold text-marine-900">{taux} %</p>
+          <p className="mt-1 text-2xl font-bold text-marine-900">{tauxDemo} %</p>
           <p className="text-xs text-slate-400">{presents} sur {mesPresences.length} activités</p>
         </div>
         <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -161,29 +218,8 @@ function AccueilDemo() {
           <p className="text-xs text-slate-400">depuis le {formatDate(moi.carte.dateEmission)}</p>
         </div>
       </div>
-
       <Raccourcis />
-
-      <section className="rounded-2xl bg-white shadow-sm">
-        <div className="flex items-center justify-between p-4 pb-2">
-          <h2 className="font-semibold text-marine-900">Dernières annonces</h2>
-          <Link href="/choriste/annonces" className="text-sm font-medium text-marine-700">Tout voir</Link>
-        </div>
-        <ul className="divide-y divide-slate-100">
-          {annonces.slice(0, 2).map((a) => (
-            <li key={a.id}>
-              <Link href="/choriste/annonces" className="flex items-center gap-3 p-4">
-                <div className="min-w-0 flex-1">
-                  <Badge>{a.type}</Badge>
-                  <p className="mt-1.5 text-sm font-medium text-marine-900">{a.titre}</p>
-                  <p className="text-xs text-slate-400">{formatDate(a.date)}</p>
-                </div>
-                <ChevronRight className="size-4 text-slate-300" aria-hidden />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <DernieresAnnonces liste={annonces.slice(0, 2)} />
     </div>
   );
 }

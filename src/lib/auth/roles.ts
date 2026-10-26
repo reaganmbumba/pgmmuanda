@@ -28,12 +28,12 @@ export const estAdmin = (role: Role | null | undefined) =>
 export const accueilPourRole = (role: Role) =>
   role === "controleur" ? "/staff/scanner" : estStaff(role) ? "/staff" : "/choriste";
 
-/** Le contrôleur n'a accès qu'au scanner dans l'espace staff. */
+/** Le contrôleur n'a accès qu'au scanner et au pointage des présences dans l'espace staff. */
 export function peutOuvrir(role: Role, chemin: string): boolean {
   if (chemin.startsWith("/choriste")) return role === "choriste";
   if (!chemin.startsWith("/staff")) return true;
   if (!estStaff(role)) return false;
-  if (role === "controleur") return chemin === "/staff/scanner";
+  if (role === "controleur") return chemin === "/staff/scanner" || chemin === "/staff/presences";
   if (chemin.startsWith("/staff/utilisateurs")) return estAdmin(role);
   return true;
 }
@@ -41,6 +41,13 @@ export function peutOuvrir(role: Role, chemin: string): boolean {
 /** Inscrire et modifier des membres (la base limite le responsable à sa paroisse). */
 export const peutGererMembres = (role: Role | null | undefined) =>
   estAdmin(role) || role === "responsable_paroisse";
+
+/** Créer et modifier des activités (la base limite chacun à sa paroisse ou à sa commission). */
+export const peutGererProgramme = (role: Role | null | undefined) =>
+  estAdmin(role) || role === "responsable_paroisse" || role === "responsable_commission";
+
+/** Publier des annonces (le responsable de paroisse publie vers sa paroisse). */
+export const peutPublier = (role: Role | null | undefined) => estAdmin(role) || role === "responsable_paroisse";
 
 /** Rôles qu'un administrateur peut attribuer (la présidence ne crée pas de super admin). */
 export const rolesAttribuables = (role: Role): Role[] =>

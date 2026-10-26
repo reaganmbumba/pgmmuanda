@@ -52,7 +52,7 @@ function Barres({ lignes }: { lignes: { nom: string; total: number }[] }) {
 
 function Indicateurs({ liste }: { liste: { label: string; valeur: number | string; icone: typeof Users }[] }) {
   return (
-    <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+    <div className={`grid grid-cols-2 gap-4 ${liste.length > 4 ? "md:grid-cols-3 xl:grid-cols-5" : "xl:grid-cols-4"}`}>
       {liste.map(({ label, valeur, icone: Icone }) => (
         <div key={label} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm" data-indicateur={label}>
           <div className="flex items-center justify-between">
@@ -89,11 +89,11 @@ function TableauReel({ chiffres: c }: { chiffres: Awaited<ReturnType<typeof chif
           { label: "Membres actifs", valeur: actifs, icone: UserCheck },
           { label: "En attente de validation", valeur: attente, icone: UserPlus },
           { label: "Cartes actives", valeur: c.cartesActives, icone: IdCard },
+          { label: "Taux de présence (30 j)", valeur: c.tauxPresence === null ? "—" : `${c.tauxPresence} %`, icone: ClipboardCheck },
         ]}
       />
       <p className="mt-3 text-sm text-slate-500">
         {c.nouveaux30j} nouvelle{c.nouveaux30j > 1 ? "s" : ""} inscription{c.nouveaux30j > 1 ? "s" : ""} ces 30 derniers jours.
-        Les présences seront comptées à l&apos;Étape 6.
       </p>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
@@ -145,6 +145,44 @@ function TableauReel({ chiffres: c }: { chiffres: Awaited<ReturnType<typeof chif
                     {d.membre ?? d.matricule ?? "Membre"}
                   </Link>
                   <p className="text-slate-500">{CHAMPS_MEMBRE[d.champ] ?? d.champ} · {formatDate(d.date)}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Carte>
+
+        <Carte titre="Activités à venir" className="xl:col-span-2"
+          action={<Link href="/staff/programmes" className="text-sm font-medium text-marine-700 hover:underline">Voir le programme</Link>}>
+          {c.activites.length === 0 ? (
+            <p className="text-sm text-slate-500">Aucune activité à venir.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {c.activites.map((a) => (
+                <li key={a.id}>
+                  <Link href={`/staff/programmes/${a.id}`} className="flex items-start gap-4 py-3 first:pt-0 last:pb-0">
+                    <span className="mt-0.5 rounded-lg bg-or-100 p-2 text-or-600"><CalendarDays className="size-4.5" aria-hidden /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-medium text-marine-900">{a.titre}</span>
+                      <span className="block text-sm text-slate-500">{formatDateHeure(a.debut)}{a.lieu ? ` · ${a.lieu}` : ""}</span>
+                    </span>
+                    <Badge>{a.statut}</Badge>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Carte>
+
+        <Carte titre="Annonces récentes"
+          action={<Link href="/staff/communication" className="text-sm font-medium text-marine-700 hover:underline">Voir tout</Link>}>
+          {c.annonces.length === 0 ? (
+            <p className="text-sm text-slate-500">Aucune annonce publiée.</p>
+          ) : (
+            <ul className="space-y-3">
+              {c.annonces.map((a) => (
+                <li key={a.id} className="rounded-xl border border-slate-100 p-3">
+                  <div className="flex items-center justify-between gap-2"><Badge>{a.type}</Badge><span className="text-xs text-slate-400">{formatDate(a.date)}</span></div>
+                  <p className="mt-1.5 text-sm font-medium text-marine-900">{a.titre}</p>
                 </li>
               ))}
             </ul>
