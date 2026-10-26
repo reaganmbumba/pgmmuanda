@@ -2,7 +2,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Logo } from "@/components/Logo";
 import { Avatar } from "@/components/ui/Avatar";
 import { lienVerification } from "@/lib/cartes/lien";
-import { formatDate } from "@/lib/format";
+import { formatDate, libelleParoisse } from "@/lib/format";
 
 export type DonneesCarte = {
   prenom: string;
@@ -48,7 +48,7 @@ export function CarteMembre({ membre }: { membre: DonneesCarte }) {
               {membre.matricule}
             </p>
             <p className="truncate text-[2.8cqw] text-marine-100/80">
-              {membre.fonction} · Paroisse {membre.paroisse}
+              {membre.fonction} · {libelleParoisse(membre.paroisse)}
             </p>
             <p className="text-[2.4cqw] text-marine-100/60">
               Émise le {formatDate(membre.carte.dateEmission)}

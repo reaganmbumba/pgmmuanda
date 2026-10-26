@@ -1,6 +1,7 @@
 import { CircleCheck, CircleHelp, CircleX } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Membre } from "@/lib/types";
+import { libelleParoisse } from "@/lib/format";
 
 /** Ce que la vérification publique a le droit d'afficher. */
 export type CarteVerifiee = {
@@ -65,7 +66,7 @@ export function ResultatVerification({ membre }: { membre?: CarteVerifiee }) {
             {membre.prenom} {membre.nom} {membre.postnom}
           </p>
           <p className="font-mono font-semibold text-marine-700">{membre.matricule}</p>
-          <p className="text-slate-500">Paroisse {membre.paroisse}</p>
+          <p className="text-slate-500">{libelleParoisse(membre.paroisse)}</p>
         </div>
       </div>
     </div>

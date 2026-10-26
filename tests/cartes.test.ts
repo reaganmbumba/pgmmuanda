@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { PDFDocument } from "pdf-lib";
 import jsQR from "jsqr";
 import { extraireReference, lienVerification } from "@/lib/cartes/lien";
+import { libelleParoisse } from "@/lib/format";
 import { HAUTEUR, LARGEUR, pdfCarte, pdfPlanche } from "@/lib/cartes/pdf";
 import type { CarteImprimable } from "@/lib/cartes/depot";
 
@@ -72,5 +73,12 @@ describe("décodage d'un QR", () => {
         pixels[i] = pixels[i + 1] = pixels[i + 2] = 0;
       }
     expect(extraireReference(jsQR(pixels, cote, cote)!.data)).toBe(carte.reference);
+  });
+});
+
+describe("libellé de la paroisse", () => {
+  it("ne double pas le mot « Paroisse »", () => {
+    expect(libelleParoisse("Muanda-Centre")).toBe("Paroisse Muanda-Centre");
+    expect(libelleParoisse("Paroisse Saint-Pierre")).toBe("Paroisse Saint-Pierre");
   });
 });

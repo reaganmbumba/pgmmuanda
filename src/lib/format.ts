@@ -17,3 +17,5 @@ export const nomComplet = (m: { prenom: string; nom: string; postnom: string }) 
   `${m.prenom} ${m.nom} ${m.postnom}`;
 export const initiales = (m: { prenom: string; nom: string }) =>
   `${m.prenom[0]}${m.nom[0]}`.toUpperCase();
+/** « Paroisse X », sans doubler le mot si le nom le contient déjà. */
+export const libelleParoisse = (nom: string) => (/^paroisse\b/i.test(nom.trim()) ? nom : `Paroisse ${nom}`);

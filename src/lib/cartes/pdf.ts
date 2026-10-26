@@ -4,7 +4,7 @@ import {
   type PDFFont, type PDFImage, type PDFPage,
 } from "pdf-lib";
 import QRCode from "qrcode";
-import { formatDate } from "@/lib/format";
+import { formatDate, libelleParoisse } from "@/lib/format";
 import type { CarteImprimable } from "./depot";
 import { lienVerification } from "./lien";
 import { LOGO_PNG_BASE64 } from "./logo-png";
@@ -100,7 +100,7 @@ async function recto(doc: PDFDocument, page: PDFPage, c: CarteImprimable, r: Res
   if (c.postnom) ecrire(page, c.postnom, tx, y + 57, r.normal, 6.2, MARINE_CLAIR, largeurTexte);
   ecrire(page, c.matricule, tx, y + 43, r.gras, 8, OR_CLAIR, largeurTexte);
   ecrire(page, c.fonction, tx, y + 27, r.normal, 5.4, MARINE_CLAIR, largeurTexte);
-  ecrire(page, `Paroisse ${c.paroisse}`, tx, y + 20, r.normal, 5.4, MARINE_CLAIR, largeurTexte);
+  ecrire(page, libelleParoisse(c.paroisse), tx, y + 20, r.normal, 5.4, MARINE_CLAIR, largeurTexte);
   ecrire(page, `Émise le ${formatDate(c.dateEmission)}`, tx, y + 11, r.normal, 4.6, MARINE_CLAIR, largeurTexte);
 
   // QR code : uniquement le lien de vérification

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CalendarDays, ChevronRight, MapPin, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { activites, annonces, choristeConnecte as moi, mesPresences } from "@/lib/demo-data";
-import { formatDate, formatDateHeure } from "@/lib/format";
+import { formatDate, formatDateHeure, libelleParoisse } from "@/lib/format";
 import { menuChoriste } from "@/lib/navigation";
 
 const capitaliser = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -27,7 +27,7 @@ export default function AccueilChoriste() {
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
           <span className="rounded-full bg-white/10 px-3 py-1">{moi.voix}</span>
           <span className="rounded-full bg-white/10 px-3 py-1">{moi.fonction}</span>
-          <span className="rounded-full bg-white/10 px-3 py-1">Paroisse {moi.paroisse}</span>
+          <span className="rounded-full bg-white/10 px-3 py-1">{libelleParoisse(moi.paroisse)}</span>
         </div>
         <Link
           href="/choriste/qr"
