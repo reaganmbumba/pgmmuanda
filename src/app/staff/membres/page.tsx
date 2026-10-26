@@ -11,7 +11,7 @@ import { TableMembres } from "./TableMembres";
 
 export const metadata = { title: "Membres" };
 
-export default async function PageMembres({ searchParams }: { searchParams: Promise<{ vue?: string }> }) {
+export default async function PageMembres({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
   if (!supabaseActif) {
     return (
       <>
@@ -23,7 +23,8 @@ export default async function PageMembres({ searchParams }: { searchParams: Prom
   }
 
   const moi = await exigerAcces("/staff/membres");
-  const archives = (await searchParams).vue === "archives";
+  const { vue, q } = await searchParams;
+  const archives = vue === "archives";
   const [membres, demandes] = await Promise.all([listerMembres({ archives }), lireDemandes({ enAttente: true })]);
   const paroisses = [...new Set(membres.map((m) => m.paroisse))].sort();
   const gestion = peutGererMembres(moi?.role);
@@ -75,7 +76,7 @@ export default async function PageMembres({ searchParams }: { searchParams: Prom
           )}
         </div>
       ) : (
-        <TableMembres membres={membres} paroisses={paroisses} lienExport={`/staff/membres/export${archives ? "?vue=archives" : ""}`} />
+        <TableMembres key={q} recherche={q?.slice(0, 80) ?? ""} membres={membres} paroisses={paroisses} lienExport={`/staff/membres/export${archives ? "?vue=archives" : ""}`} />
       )}
     </>
   );

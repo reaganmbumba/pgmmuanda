@@ -1,3 +1,6 @@
+import { ModulePrevu } from "@/components/ui/ModulePrevu";
+import { entreeMenu } from "@/lib/navigation";
+import { supabaseActif } from "@/lib/supabase/config";
 import { Badge } from "@/components/ui/Badge";
 import { mesPresences } from "@/lib/demo-data";
 import { formatDate } from "@/lib/format";
@@ -5,6 +8,8 @@ import { formatDate } from "@/lib/format";
 export const metadata = { title: "Mes présences" };
 
 export default function MesPresences() {
+  // En mode réel, pas de données de démonstration : le module arrive à son étape.
+  if (supabaseActif) return <ModulePrevu entree={entreeMenu("/choriste/presences")} />;
   const presents = mesPresences.filter((p) => p.statut === "Présent").length;
   const taux = Math.round((presents / mesPresences.length) * 100);
   return (

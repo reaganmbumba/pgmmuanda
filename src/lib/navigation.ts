@@ -70,8 +70,11 @@ export const menuChoriste: EntreeMenu[] = [
   { href: "/choriste/paroisse", label: "Ma paroisse", icone: Building2, etape: 5, description: "Votre paroisse et votre chorale." },
   { href: "/choriste/chambre", label: "Ma chambre", icone: BedDouble, etape: 7, description: "Votre hébergement, si applicable." },
   { href: "/choriste/documents", label: "Mes documents", icone: FileText, etape: 6, description: "Documents mis à votre disposition." },
-  { href: "/choriste/notifications", label: "Notifications", icone: Bell, etape: 6, description: "Vos notifications." },
+  { href: "/choriste/notifications", label: "Notifications", icone: Bell, etape: 5, description: "Vos notifications." },
   { href: "/choriste/parametres", label: "Paramètres du compte", icone: Settings, etape: 2, description: "Mot de passe et préférences." },
 ];
+
+/** Entrée de menu (staff ou choriste) correspondant à un chemin. */
+export const entreeMenu = (href: string) => [...menuStaff, ...menuChoriste].find((e) => e.href === href)!;
 
 export const ongletsChoriste = ["/choriste", "/choriste/carte", "/choriste/programme", "/choriste/annonces"];

@@ -13,7 +13,7 @@ const onglets = [
   { href: "/choriste/menu", label: "Menu", icone: LayoutGrid },
 ];
 
-export function ChoristeShell({ children }: { children: React.ReactNode }) {
+export function ChoristeShell({ children, nonLues = 0 }: { children: React.ReactNode; nonLues?: number }) {
   const pathname = usePathname();
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col bg-marine-50">
@@ -24,10 +24,14 @@ export function ChoristeShell({ children }: { children: React.ReactNode }) {
         <Link
           href="/choriste/notifications"
           className="relative rounded-lg p-2 text-white/90 hover:bg-white/10"
-          aria-label="Notifications"
+          aria-label={nonLues > 0 ? `Notifications (${nonLues} non lue${nonLues > 1 ? "s" : ""})` : "Notifications"}
         >
           <Bell className="size-5" />
-          <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-or-400" />
+          {nonLues > 0 && (
+            <span className="absolute right-0.5 top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-or-400 px-1 text-[10px] font-bold leading-4 text-marine-950" data-non-lues={nonLues}>
+              {nonLues > 9 ? "9+" : nonLues}
+            </span>
+          )}
         </Link>
       </header>
       <main className="flex-1 px-4 pb-28 pt-5">{children}</main>

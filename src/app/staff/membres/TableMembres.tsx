@@ -30,24 +30,26 @@ export function TableMembres({
   membres,
   paroisses,
   lienExport,
+  recherche = "",
 }: {
   membres: LigneMembre[];
   paroisses: string[];
   lienExport?: string;
+  recherche?: string;
 }) {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(recherche);
   const [paroisse, setParoisse] = useState("");
   const [voix, setVoix] = useState("");
   const [statut, setStatut] = useState("");
 
   const resultats = useMemo(() => {
-    const t = q.trim().toLowerCase();
+    // Recherche sans tenir compte des majuscules ni des accents (Grâce = grace)
+    const simplifier = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const t = simplifier(q.trim());
     return membres.filter(
       (m) =>
         (!t ||
-          `${m.prenom} ${m.nom} ${m.postnom} ${m.matricule} ${m.telephone}`
-            .toLowerCase()
-            .includes(t)) &&
+          simplifier(`${m.prenom} ${m.nom} ${m.postnom} ${m.matricule} ${m.telephone}`).includes(t)) &&
         (!paroisse || m.paroisse === paroisse) &&
         (!voix || m.voix === voix) &&
         (!statut || m.statut === statut),

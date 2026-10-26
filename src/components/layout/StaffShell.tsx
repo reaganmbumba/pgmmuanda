@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, LogOut, Menu, Search, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { deconnexion } from "@/app/(auth)/actions";
@@ -62,7 +62,50 @@ function MenuLateral({ role, onNavigate }: { role: Role; onNavigate?: () => void
   );
 }
 
-export function StaffShell({ children, utilisateur }: { children: React.ReactNode; utilisateur: Utilisateur }) {
+function Cloche({ nonLues, panneau }: { nonLues: number; panneau?: React.ReactNode }) {
+  // Le panneau est lié à la page où il a été ouvert : changer de page le referme.
+  const pathname = usePathname();
+  const [ouvertSur, setOuvertSur] = useState<string | null>(null);
+  const ouvert = ouvertSur === pathname;
+  const setOuvert = (o: boolean) => setOuvertSur(o ? pathname : null);
+  const zone = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ouvert) return;
+    const fermer = (e: MouseEvent) => { if (!zone.current?.contains(e.target as Node)) setOuvertSur(null); };
+    document.addEventListener("click", fermer);
+    return () => document.removeEventListener("click", fermer);
+  }, [ouvert]);
+  return (
+    <div ref={zone} className="relative">
+      <button
+        className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+        aria-label={nonLues ? `Notifications (${nonLues} non lues)` : "Notifications"}
+        aria-expanded={ouvert}
+        onClick={() => setOuvert(!ouvert)}
+      >
+        <Bell className="size-5" />
+        {nonLues > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4.5 items-center justify-center rounded-full bg-or-500 px-1 text-[10px] font-bold text-marine-950">
+            {nonLues > 99 ? "99+" : nonLues}
+          </span>
+        )}
+      </button>
+      {ouvert && panneau && (
+        <div className="absolute right-0 top-12 z-50 max-h-[70vh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+          <p className="px-3 pb-1 pt-2 text-sm font-semibold text-marine-900">Notifications</p>
+          {panneau}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function StaffShell({ children, utilisateur, nonLues = 0, panneauNotifications }: {
+  children: React.ReactNode;
+  utilisateur: Utilisateur;
+  nonLues?: number;
+  panneauNotifications?: React.ReactNode;
+}) {
   const [ouvert, setOuvert] = useState(false);
   return (
     <div className="flex min-h-[calc(100dvh-28px)]">
@@ -101,22 +144,20 @@ export function StaffShell({ children, utilisateur }: { children: React.ReactNod
           >
             <Menu className="size-5" />
           </button>
-          <div className="relative hidden max-w-md flex-1 sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="search"
-              placeholder="Rechercher un membre, un matricule…"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none focus:border-marine-700 focus:bg-white"
-            />
-          </div>
+          {peutOuvrir(utilisateur.role, "/staff/membres") && (
+            <form action="/staff/membres" role="search" className="relative hidden max-w-md flex-1 sm:block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                name="q"
+                aria-label="Rechercher un membre"
+                placeholder="Rechercher un membre, un matricule…"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm outline-none focus:border-marine-700 focus:bg-white"
+              />
+            </form>
+          )}
           <div className="ml-auto flex items-center gap-2">
-            <button
-              className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100"
-              aria-label="Notifications"
-            >
-              <Bell className="size-5" />
-              <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-or-500" />
-            </button>
+            <Cloche nonLues={nonLues} panneau={panneauNotifications} />
             <div className="flex items-center gap-2 rounded-xl px-2 py-1">
               <span className="inline-flex size-8 items-center justify-center rounded-full bg-marine-900 text-xs font-semibold text-or-400">
                 {utilisateur.nom.slice(0, 2).toUpperCase()}

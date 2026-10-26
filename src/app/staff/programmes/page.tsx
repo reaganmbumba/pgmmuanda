@@ -1,3 +1,6 @@
+import { ModulePrevu } from "@/components/ui/ModulePrevu";
+import { entreeMenu } from "@/lib/navigation";
+import { supabaseActif } from "@/lib/supabase/config";
 import { CalendarPlus, MapPin, User } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Bouton } from "@/components/ui/Bouton";
@@ -13,6 +16,7 @@ const heure = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-dig
 
 export default async function PageProgrammes() {
   await exigerAcces("/staff/programmes");
+  if (supabaseActif) return <ModulePrevu entree={entreeMenu("/staff/programmes")} />;
   return (
     <>
       <EnTete

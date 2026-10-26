@@ -1,3 +1,6 @@
+import { ModulePrevu } from "@/components/ui/ModulePrevu";
+import { entreeMenu } from "@/lib/navigation";
+import { supabaseActif } from "@/lib/supabase/config";
 import { Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { annonces } from "@/lib/demo-data";
@@ -6,6 +9,8 @@ import { formatDate } from "@/lib/format";
 export const metadata = { title: "Mes annonces" };
 
 export default function MesAnnonces() {
+  // En mode réel, pas de données de démonstration : le module arrive à son étape.
+  if (supabaseActif) return <ModulePrevu entree={entreeMenu("/choriste/annonces")} />;
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold text-marine-900">Mes annonces</h1>

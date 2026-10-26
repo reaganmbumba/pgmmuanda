@@ -123,6 +123,23 @@ try {
   t = await texte(a);
   ok(t.includes("Changement de statut") && t.includes("Actif"), "activation confirmée puis historisée");
 
+  // --- Tableau de bord et recherche rapide --------------------------------
+  console.log("Tableau de bord");
+  await a.goto(`${APP}/staff`);
+  const indicateur = async (p, libelle) => (await p.textContent(`[data-indicateur="${libelle}"] p`))?.trim();
+  ok(await indicateur(a, "Choristes inscrits") === "2" && await indicateur(a, "Membres actifs") === "1"
+    && await indicateur(a, "En attente de validation") === "1" && await indicateur(a, "Cartes actives") === "0",
+    "le tableau de bord affiche les vrais chiffres (2 inscrits, 1 actif, 1 en attente, 0 carte)");
+  t = await texte(a);
+  ok(t.includes("Paul Lukombo") && t.includes("Paroisse Beta") && !t.includes("Nkanga") && !t.includes("Taux de présence"),
+    "membres en attente réels, sans données de démonstration");
+  ok((await a.locator("text=Mode maquette").count()) === 0, "aucun bandeau de démonstration en mode réel");
+  await a.fill("input[name=q]", "mavúngu");
+  await a.press("input[name=q]", "Enter");
+  await a.waitForURL(/\/staff\/membres\?q=/);
+  t = await texte(a);
+  ok(t.includes("PGM-MUA-0001") && !t.includes("PGM-MUA-0002"), "la recherche rapide trouve le membre, sans tenir compte des accents");
+
   // --- Compte choriste relié à la fiche ----------------------------------
   console.log("Espace choriste");
   await creerCompte("grace@e2e.test", "Grace Mavungu", "choriste", { identifiant: "grace" });
@@ -134,6 +151,15 @@ try {
 
   const c = await session("grace");
   ok(new URL(c.url()).pathname === "/choriste", "le choriste arrive dans son espace");
+  t = await texte(c);
+  ok(t.includes("Grace Mavungu") && t.includes("PGM-MUA-0001") && t.includes("Ténor") && t.includes("Aucune") && !t.includes("Nkanga"),
+    "l'accueil du choriste affiche sa propre fiche (nom, matricule, voix, pas encore de carte)");
+  ok((await c.locator("[data-non-lues]").count()) === 0, "aucune notification non lue au départ");
+  await c.goto(`${APP}/choriste/paroisse`);
+  t = await texte(c);
+  ok(t.includes("Paroisse Alpha") && t.includes("Chorale Alpha") && !t.includes("Paroisse Beta"), "la page « Ma paroisse » montre sa paroisse et sa chorale");
+  await c.goto(`${APP}/choriste/programme`);
+  ok((await texte(c)).includes("Module prévu à l'Étape 6"), "le programme n'affiche pas de fausses activités en mode réel");
   await c.goto(`${APP}/choriste/profil`);
   t = await texte(c);
   ok(t.includes("PGM-MUA-0001") && t.includes("Chorale Alpha"), "le choriste voit sa propre fiche");
@@ -144,6 +170,9 @@ try {
   await c.click("text=Envoyer la demande");
   await c.waitForSelector("text=Demande envoyée.");
   ok(true, "le choriste envoie une demande de correction");
+  await a.goto(`${APP}/staff`);
+  ok((await a.locator("button[aria-label='Notifications (1 non lues)']").count()) === 1, "l'administrateur reçoit une notification pour la demande");
+  ok((await texte(a)).includes("Demandes de correction en attente") && (await texte(a)).includes("Grace Mavungu"), "la demande figure sur le tableau de bord");
   await c.goto(`${APP}/staff/membres`);
   ok(new URL(c.url()).pathname !== "/staff/membres", "le choriste ne peut pas ouvrir la liste des membres");
   const { data: vus } = await createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } })
@@ -168,6 +197,9 @@ try {
   ok(t.includes("+243 99 222 3333") && t.includes("Acceptée"), "correction acceptée et appliquée à la fiche");
   await c.goto(`${APP}/choriste/profil`);
   ok((await texte(c)).includes("+243 99 222 3333"), "le choriste voit la correction appliquée");
+  ok((await c.textContent("[data-non-lues]"))?.trim() === "1", "le choriste a une notification non lue");
+  await c.goto(`${APP}/choriste/notifications`);
+  ok((await texte(c)).includes("Votre demande de correction a été acceptée"), "la notification annonce que sa demande est acceptée");
 
   // --- Responsable de paroisse : périmètre limité -------------------------
   console.log("Responsable de paroisse");
@@ -181,6 +213,7 @@ try {
   await r.goto(`${APP}/staff/membres/nouveau`);
   const options = await r.$$eval("select[name=paroisseId] option", (o) => o.map((x) => x.textContent));
   ok(!options.includes("Paroisse Alpha") && options.includes("Paroisse Beta"), "il ne peut inscrire que dans sa paroisse");
+  ok((await r.locator("button[aria-label^='Notifications (']").count()) === 0, "il ne reçoit pas les notifications d'une autre paroisse");
   await r.goto(`${APP}/staff/utilisateurs`);
   ok(new URL(r.url()).pathname !== "/staff/utilisateurs", "il n'a pas accès à la gestion des utilisateurs");
 
@@ -226,6 +259,17 @@ try {
   await c.goto(`${APP}/choriste/carte`);
   rep = await c.request.get(`${APP}${await c.locator("a[href$='/pdf']").getAttribute("href")}`);
   ok(rep.ok() && rep.headers()["content-type"] === "application/pdf", "le choriste télécharge sa propre carte en PDF");
+  await c.goto(`${APP}/choriste/notifications`);
+  await c.getByRole("button", { name: /Votre carte de choriste est disponible/ }).click();
+  await c.waitForURL(/\/choriste\/carte$/);
+  await c.goto(`${APP}/choriste`);
+  t = await texte(c);
+  ok(t.includes("Valide") && (await c.textContent("[data-non-lues]"))?.trim() === "1",
+    "la notification de carte ouvre la carte et passe en lue ; l'accueil indique une carte valide");
+  await c.goto(`${APP}/choriste/notifications`);
+  await c.click("text=Tout marquer comme lu");
+  await c.waitForSelector("[data-non-lues]", { state: "detached" });
+  ok(true, "« Tout marquer comme lu » vide le compteur");
 
   await a.goto(`${APP}/staff/scanner`);
   await a.fill("#matricule", "PGM-MUA-0001");

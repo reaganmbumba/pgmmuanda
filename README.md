@@ -12,15 +12,20 @@ communication, commissions, formations, projets et hébergement.
 | 2 | Base de données Supabase et authentification | **Terminée** |
 | 3 | Gestion des membres et matricules | **Terminée** |
 | 4 | Cartes PDF et QR codes fonctionnels | **Terminée** |
-| 5 | Espace choriste et espace staff reliés aux données | À venir |
+| 5 | Espace choriste et espace staff reliés aux données | **Terminée** |
 | 6 | Programmes, annonces et présences | À venir |
 | 7 | Commissions, formations, projets et hébergement | À venir |
 | 8 | Sécurité, tests et déploiement en ligne | À venir |
 
 Sans configuration Supabase, l'application tourne en **mode maquette** : les écrans
 affichent un jeu de démonstration fictif (`src/lib/demo-data.ts`), signalé par un
-bandeau doré. Avec Supabase configuré, la connexion, les rôles et la vérification
-des cartes utilisent la vraie base ; les autres modules seront reliés aux étapes 3 à 7.
+bandeau doré. Avec Supabase configuré, plus aucune donnée de démonstration n'est affichée : la
+connexion, les rôles, les membres, les cartes, le tableau de bord, l'accueil du
+choriste et les notifications utilisent la vraie base, et les modules pas encore
+construits (programmes, présences, annonces…) indiquent l'étape où ils arriveront.
+
+Les notifications sont internes à l'application (cloche et page « Notifications ») :
+aucun message WhatsApp, SMS ou e-mail n'est envoyé automatiquement.
 
 Installation de la base : voir [docs/INSTALLATION-SUPABASE.md](docs/INSTALLATION-SUPABASE.md).
 
