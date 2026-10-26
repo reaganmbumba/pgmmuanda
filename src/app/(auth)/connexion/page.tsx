@@ -20,7 +20,7 @@ export default async function PageConnexion({
     <>
       <h1 className="text-2xl font-bold text-marine-900">Connexion</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Accédez à votre espace staff ou à votre espace choriste.
+        Entrez votre identifiant et votre mot de passe.
       </p>
       {erreur === "lien" && (
         <p role="alert" className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-red-700">

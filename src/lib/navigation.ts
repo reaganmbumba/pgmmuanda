@@ -34,28 +34,30 @@ export type EntreeMenu = {
   /** Étape du plan de réalisation où le module devient fonctionnel. */
   etape: number;
   description: string;
+  /** Rubrique du menu du staff, pour s'y retrouver d'un coup d'œil. */
+  groupe?: string;
 };
 
 export const menuStaff: EntreeMenu[] = [
   { href: "/staff", label: "Tableau de bord", icone: LayoutDashboard, etape: 5, description: "Vue d'ensemble de la PGM." },
-  { href: "/staff/membres", label: "Membres", icone: Users, etape: 3, description: "Fiches des choristes, recherche, filtres et export." },
-  { href: "/staff/cartes", label: "Cartes et QR codes", icone: IdCard, etape: 4, description: "Génération, réédition et révocation des cartes." },
-  { href: "/staff/scanner", label: "Scanner", icone: ScanLine, etape: 4, description: "Vérifier une carte par QR code ou matricule." },
-  { href: "/staff/presences", label: "Présences", icone: ClipboardCheck, etape: 6, description: "Présences aux répétitions, réunions et manifestations." },
-  { href: "/staff/paroisses", label: "Paroisses", icone: Church, etape: 3, description: "Paroisses et leurs responsables." },
-  { href: "/staff/chorales", label: "Chorales", icone: Music, etape: 3, description: "Chorales rattachées à chaque paroisse." },
-  { href: "/staff/commissions", label: "Commissions", icone: UsersRound, etape: 7, description: "Commissions, responsables et tâches." },
-  { href: "/staff/programmes", label: "Programmes", icone: CalendarDays, etape: 6, description: "Calendrier des activités." },
-  { href: "/staff/hebergement", label: "Chambres et hébergement", icone: BedDouble, etape: 7, description: "Chambres, places et affectations." },
-  { href: "/staff/chants", label: "Chants et partitions", icone: BookOpen, etape: 7, description: "Répertoire, partitions et enregistrements." },
-  { href: "/staff/formations", label: "Formations", icone: GraduationCap, etape: 7, description: "Formations, supports et évaluations." },
-  { href: "/staff/communication", label: "Communication", icone: Megaphone, etape: 6, description: "Annonces, communiqués et invitations." },
-  { href: "/staff/documents", label: "Documents", icone: FileText, etape: 8, description: "Documents à disposition des choristes." },
-  { href: "/staff/projets", label: "Projets", icone: FolderKanban, etape: 7, description: "Projets, calendrier et rapports d'avancement." },
-  { href: "/staff/finances", label: "Finances", icone: Wallet, etape: 7, description: "Budgets, dépenses et justificatifs." },
-  { href: "/staff/rapports", label: "Rapports", icone: BarChart3, etape: 6, description: "Statistiques et rapports exportables." },
-  { href: "/staff/utilisateurs", label: "Utilisateurs et permissions", icone: ShieldCheck, etape: 2, description: "Comptes du staff, rôles et accès." },
-  { href: "/staff/parametres", label: "Paramètres", icone: Settings, etape: 8, description: "Votre compte et votre mot de passe." },
+  { href: "/staff/membres", label: "Membres", icone: Users, etape: 3, description: "Fiches des choristes, recherche, filtres et export.", groupe: "Membres" },
+  { href: "/staff/cartes", label: "Cartes et QR codes", icone: IdCard, etape: 4, description: "Génération, réédition et révocation des cartes.", groupe: "Membres" },
+  { href: "/staff/scanner", label: "Scanner", icone: ScanLine, etape: 4, description: "Vérifier une carte par QR code ou matricule.", groupe: "Membres" },
+  { href: "/staff/presences", label: "Présences", icone: ClipboardCheck, etape: 6, description: "Présences aux répétitions, réunions et manifestations.", groupe: "Membres" },
+  { href: "/staff/paroisses", label: "Paroisses", icone: Church, etape: 3, description: "Paroisses et leurs responsables.", groupe: "Organisation" },
+  { href: "/staff/chorales", label: "Chorales", icone: Music, etape: 3, description: "Chorales rattachées à chaque paroisse.", groupe: "Organisation" },
+  { href: "/staff/commissions", label: "Commissions", icone: UsersRound, etape: 7, description: "Commissions, responsables et tâches.", groupe: "Organisation" },
+  { href: "/staff/hebergement", label: "Chambres et hébergement", icone: BedDouble, etape: 7, description: "Chambres, places et affectations.", groupe: "Organisation" },
+  { href: "/staff/programmes", label: "Programmes", icone: CalendarDays, etape: 6, description: "Calendrier des activités.", groupe: "Activités" },
+  { href: "/staff/chants", label: "Chants et partitions", icone: BookOpen, etape: 7, description: "Répertoire, partitions et enregistrements.", groupe: "Activités" },
+  { href: "/staff/formations", label: "Formations", icone: GraduationCap, etape: 7, description: "Formations, supports et évaluations.", groupe: "Activités" },
+  { href: "/staff/communication", label: "Communication", icone: Megaphone, etape: 6, description: "Annonces, communiqués et invitations.", groupe: "Activités" },
+  { href: "/staff/documents", label: "Documents", icone: FileText, etape: 8, description: "Documents à disposition des choristes.", groupe: "Activités" },
+  { href: "/staff/projets", label: "Projets", icone: FolderKanban, etape: 7, description: "Projets, calendrier et rapports d'avancement.", groupe: "Gestion" },
+  { href: "/staff/finances", label: "Finances", icone: Wallet, etape: 7, description: "Budgets, dépenses et justificatifs.", groupe: "Gestion" },
+  { href: "/staff/rapports", label: "Rapports", icone: BarChart3, etape: 6, description: "Statistiques et rapports exportables.", groupe: "Gestion" },
+  { href: "/staff/utilisateurs", label: "Utilisateurs et permissions", icone: ShieldCheck, etape: 2, description: "Comptes du staff, rôles et accès.", groupe: "Gestion" },
+  { href: "/staff/parametres", label: "Paramètres", icone: Settings, etape: 8, description: "Votre compte et votre mot de passe.", groupe: "Gestion" },
 ];
 
 export const menuChoriste: EntreeMenu[] = [

@@ -4,6 +4,7 @@ import {
   ClipboardCheck,
   IdCard,
   Megaphone,
+  ScanLine,
   UserCheck,
   UserPlus,
   Users,
@@ -16,6 +17,7 @@ import { activites, annonces, membres, paroisses } from "@/lib/demo-data";
 import { formatDate, formatDateHeure, nomComplet } from "@/lib/format";
 import type { Voix } from "@/lib/types";
 import { exigerAcces } from "@/lib/auth/session";
+import { peutOuvrir, type Role } from "@/lib/auth/roles";
 import { CHAMPS_MEMBRE } from "@/lib/membres/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
 import { chiffresTableauDeBord } from "@/lib/tableau-de-bord";
@@ -27,8 +29,35 @@ const TAUX_PRESENCE_DEMO = 84;
 export default async function TableauDeBord() {
   if (!supabaseActif) return <TableauDemo />;
   // Le contrôleur n'a accès qu'au scanner (vérifié ici aussi : une redirection après connexion ne repasse pas par le proxy).
-  await exigerAcces("/staff");
-  return <TableauReel chiffres={await chiffresTableauDeBord()} />;
+  const moi = (await exigerAcces("/staff"))!;
+  return <TableauReel role={moi.role} chiffres={await chiffresTableauDeBord()} />;
+}
+
+/** Les gestes les plus fréquents, en grandes tuiles faciles à toucher. */
+const ACTIONS = [
+  { href: "/staff/membres/nouveau", acces: "/staff/membres", label: "Ajouter un membre", icone: UserPlus },
+  { href: "/staff/scanner", acces: "/staff/scanner", label: "Scanner une carte", icone: ScanLine },
+  { href: "/staff/programmes", acces: "/staff/programmes", label: "Programmer une activité", icone: CalendarDays },
+  { href: "/staff/communication", acces: "/staff/communication", label: "Publier une annonce", icone: Megaphone },
+];
+
+function ActionsRapides({ role }: { role: Role }) {
+  const actions = ACTIONS.filter((a) => peutOuvrir(role, a.acces));
+  return (
+    <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {actions.map(({ href, label, icone: Icone }, i) => (
+        <Link key={href} href={href}
+          className={`flex min-h-20 items-center gap-3 rounded-2xl p-4 text-sm font-semibold shadow-sm transition ${
+            i === 0 ? "bg-marine-900 text-white hover:bg-marine-800" : "border border-slate-200/80 bg-white text-marine-900 hover:border-or-400"
+          }`}>
+          <span className={`inline-flex size-11 shrink-0 items-center justify-center rounded-xl ${i === 0 ? "or-degrade text-marine-950" : "bg-or-100 text-or-600"}`}>
+            <Icone className="size-5.5" aria-hidden />
+          </span>
+          {label}
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 const LIBELLES_CONTROLE = { valide: "Valide", revoquee: "Révoquée", inconnue: "Inconnue" } as Record<string, string>;
@@ -68,7 +97,7 @@ function Indicateurs({ liste }: { liste: { label: string; valeur: number | strin
   );
 }
 
-function TableauReel({ chiffres: c }: { chiffres: Awaited<ReturnType<typeof chiffresTableauDeBord>> }) {
+function TableauReel({ role, chiffres: c }: { role: Role; chiffres: Awaited<ReturnType<typeof chiffresTableauDeBord>> }) {
   const actifs = c.statuts.find((s) => s.code === "actif")?.total ?? 0;
   const attente = c.statuts.find((s) => s.code === "en_attente")?.total ?? 0;
   return (
@@ -76,13 +105,8 @@ function TableauReel({ chiffres: c }: { chiffres: Awaited<ReturnType<typeof chif
       <EnTete
         titre="Tableau de bord"
         description="Chiffres réels de votre périmètre, lus dans la base de données."
-        actions={
-          <>
-            <Bouton variante="secondaire" href="/staff/scanner">Scanner une carte</Bouton>
-            <Bouton href="/staff/membres/nouveau">Ajouter un membre</Bouton>
-          </>
-        }
       />
+      <ActionsRapides role={role} />
       <Indicateurs
         liste={[
           { label: "Choristes inscrits", valeur: c.total, icone: Users },
@@ -237,15 +261,8 @@ function TableauDemo() {
       <EnTete
         titre="Tableau de bord"
         description="Vue d'ensemble de la Présidence générale de la musique de Muanda."
-        actions={
-          <>
-            <Bouton variante="secondaire" href="/staff/scanner">
-              Scanner une carte
-            </Bouton>
-            <Bouton href="/staff/membres">Ajouter un membre</Bouton>
-          </>
-        }
       />
+      <ActionsRapides role="super_admin" />
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {indicateurs.map(({ label, valeur, icone: Icone }) => (

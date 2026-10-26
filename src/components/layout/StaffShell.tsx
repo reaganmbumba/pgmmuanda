@@ -19,14 +19,18 @@ function MenuLateral({ role, onNavigate }: { role: Role; onNavigate?: () => void
   const pathname = usePathname();
   return (
     <nav className="flex h-full flex-col bg-marine-900 text-marine-100">
-      <div className="flex h-16 items-center border-b border-white/10 px-5">
-        <Logo size={36} avecTexte clair />
+      <div className="flex h-18 shrink-0 items-center border-b border-white/10 px-5">
+        <Logo size={44} avecTexte clair />
       </div>
       <ul className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        {menuStaff.filter((e) => peutOuvrir(role, e.href)).map(({ href, label, icone: Icone }) => {
+        {menuStaff.filter((e) => peutOuvrir(role, e.href)).map(({ href, label, icone: Icone, groupe }, i, liste) => {
           const actif = estActif(pathname, href);
+          const nouveauGroupe = groupe && groupe !== liste[i - 1]?.groupe;
           return (
             <li key={href}>
+              {nouveauGroupe && (
+                <p className="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-or-400/80">{groupe}</p>
+              )}
               <Link
                 href={href}
                 onClick={onNavigate}
@@ -138,12 +142,15 @@ export function StaffShell({ children, utilisateur, nonLues = 0, panneauNotifica
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6">
           <button
-            className="rounded-lg p-2 text-marine-900 hover:bg-slate-100 lg:hidden"
+            className="rounded-lg p-2.5 text-marine-900 hover:bg-slate-100 lg:hidden"
             onClick={() => setOuvert(true)}
             aria-label="Ouvrir le menu"
           >
-            <Menu className="size-5" />
+            <Menu className="size-6" />
           </button>
+          <Link href="/staff" className="sm:hidden" aria-label="Tableau de bord">
+            <Logo size={36} />
+          </Link>
           {peutOuvrir(utilisateur.role, "/staff/membres") && (
             <form action="/staff/membres" role="search" className="relative hidden max-w-md flex-1 sm:block">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
