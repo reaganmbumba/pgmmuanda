@@ -49,7 +49,7 @@ async function creerCompte(email, nom, role, champs = {}) {
 const navigateur = await chromium.launch();
 const erreursPage = [];
 const pages = [];
-async function session(identifiant) {
+async function session(identifiant, motDePasse = MDP) {
   const ctx = await navigateur.newContext({ acceptDownloads: true });
   const p = await ctx.newPage();
   p.on("pageerror", (e) => erreursPage.push(e.message));
@@ -58,7 +58,7 @@ async function session(identifiant) {
   pages.push(p);
   await p.goto(`${APP}/connexion`);
   await p.fill("input[name=identifiant]", identifiant);
-  await p.fill("input[name=motDePasse]", MDP);
+  await p.fill("input[name=motDePasse]", motDePasse);
   await p.click("button[type=submit]");
   await p.waitForURL((u) => !u.pathname.startsWith("/connexion"), { timeout: 15000 });
   return p;
@@ -819,6 +819,42 @@ try {
 
   const { data: m3 } = await admin.from("membres").update({ matricule: "PGM-MUA-9999" }).eq("matricule", "PGM-MUA-0001").select();
   ok(m3 === null, "le matricule reste immuable, même avec la clé serveur");
+
+  console.log("Comptes sans e-mail");
+  await a.goto(`${APP}/staff/utilisateurs`);
+  await a.click("summary:has-text('Créer un compte')");
+  await a.fill("input[name=nom]", "Joséphine Mbala");
+  ok(await a.inputValue("input[name=identifiant]") === "josephine.mbala", "l'identifiant est proposé à partir du nom (sans accents)");
+  await a.click("button:has-text('Créer le compte')");
+  await a.waitForSelector("[data-mot-de-passe]");
+  const mdpProvisoire = (await a.textContent("[data-mot-de-passe]")).trim();
+  const whatsapp = await a.locator("[data-acces] a[href^='https://wa.me/']").getAttribute("href");
+  ok(/^[a-z2-9]{4}-[a-z2-9]{4}-[a-z2-9]{4}$/.test(mdpProvisoire) && decodeURIComponent(whatsapp).includes("josephine.mbala") && decodeURIComponent(whatsapp).includes(mdpProvisoire),
+    "un compte est créé sans e-mail : mot de passe provisoire affiché, message WhatsApp prêt");
+  await a.goto(`${APP}/staff/utilisateurs`);
+  t = await texte(a);
+  ok(t.includes("Joséphine Mbala") && !t.includes("sans-email"), "le compte apparaît dans la liste, sans adresse interne visible");
+  await a.click("summary:has-text('Créer un compte')");
+  await a.fill("input[name=nom]", "Josephine Mbala");
+  await a.click("button:has-text('Créer le compte')");
+  await a.waitForSelector("text=Cet identifiant est déjà utilisé");
+  ok(true, "un identifiant déjà pris est refusé");
+  const jo = await session("josephine.mbala", mdpProvisoire);
+  ok(new URL(jo.url()).pathname === "/choriste", "la personne se connecte avec son identifiant et le mot de passe provisoire");
+
+  await a.goto(`${APP}/staff/utilisateurs`);
+  await a.getByRole("button", { name: "Donner un nouveau mot de passe à Joséphine Mbala" }).click();
+  await a.waitForSelector("[data-mot-de-passe]");
+  const mdpNouveau = (await a.textContent("[data-mot-de-passe]")).trim();
+  ok(mdpNouveau !== mdpProvisoire, "l'administration peut donner un nouveau mot de passe");
+  const ancien = await navigateur.newPage();
+  await ancien.goto(`${APP}/connexion`);
+  await ancien.fill("input[name=identifiant]", "josephine.mbala");
+  await ancien.fill("input[name=motDePasse]", mdpProvisoire);
+  await ancien.click("button[type=submit]");
+  await ancien.waitForSelector("text=Identifiant ou mot de passe incorrect.");
+  await ancien.close();
+  ok(new URL((await session("josephine.mbala", mdpNouveau)).url()).pathname === "/choriste", "l'ancien mot de passe ne marche plus, le nouveau oui");
 
   ok(erreursPage.length === 0, `aucune erreur JavaScript dans les pages${erreursPage.length ? " : " + erreursPage.join(" | ") : ""}`);
   console.log(`\nParcours réussi : ${n} vérifications.`);

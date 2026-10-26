@@ -21,11 +21,16 @@ const perimetre = <T extends { role: string; paroisseId: string | null; commissi
     ctx.addIssue({ code: "custom", message: "Choisissez la commission de ce responsable.", path: ["commissionId"] });
 };
 
-export const schemaInvitation = z
+export const schemaNouveauCompte = z
   .object({
-    email: z.string().trim().toLowerCase().email("Adresse e-mail invalide."),
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .transform((v) => v || null)
+      .pipe(z.string().email("Adresse e-mail invalide.").nullable()),
     nom: z.string().trim().min(2, "Indiquez le nom de la personne.").max(80),
-    identifiant,
+    identifiant: identifiant.pipe(z.string({ message: "Choisissez un identifiant (ex. : daniel.nkanga)." })),
     role: z.enum(ROLES, { message: "Rôle invalide." }),
     paroisseId: uuidOuVide,
     commissionId: uuidOuVide,

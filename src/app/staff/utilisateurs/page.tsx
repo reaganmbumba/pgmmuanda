@@ -1,4 +1,5 @@
 import { Carte, EnTete } from "@/components/ui/Carte";
+import { Repliable } from "@/components/ui/FormulaireRapide";
 import { ModulePrevu } from "@/components/ui/ModulePrevu";
 import { exigerAcces } from "@/lib/auth/session";
 import { rolesAttribuables, type Role } from "@/lib/auth/roles";
@@ -6,7 +7,8 @@ import { menuStaff } from "@/lib/navigation";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { supabaseActif } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
-import { FormulaireInvitation, LigneUtilisateur } from "./Formulaires";
+import { estEmailTechnique } from "@/lib/auth/comptes";
+import { FormulaireCompte, LigneUtilisateur } from "./Formulaires";
 
 export const metadata = { title: "Utilisateurs et permissions" };
 
@@ -26,7 +28,7 @@ export default async function PageUtilisateurs() {
   const admin = creerClientAdmin();
   if (admin) {
     const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
-    data?.users.forEach((u) => u.email && emails.set(u.id, u.email));
+    data?.users.forEach((u) => u.email && !estEmailTechnique(u.email) && emails.set(u.id, u.email));
   }
 
   const listes = { roles: rolesAttribuables(moi.role), paroisses: paroisses ?? [], commissions: commissions ?? [] };
@@ -35,18 +37,19 @@ export default async function PageUtilisateurs() {
     <>
       <EnTete titre="Utilisateurs et permissions" description="Comptes du staff et des choristes, rôles et périmètres d'accès." />
       <div className="space-y-6">
-        <Carte titre="Inviter une personne">
-          <p className="mb-4 text-sm text-slate-500">
-            La personne reçoit un e-mail pour choisir son mot de passe. Elle n&apos;aura accès qu&apos;aux fonctions de son rôle.
-          </p>
-          {admin ? (
-            <FormulaireInvitation {...listes} />
-          ) : (
-            <p className="rounded-xl bg-or-100 p-3 text-sm text-or-600">
-              Pour envoyer des invitations, ajoutez la clé SUPABASE_SERVICE_ROLE_KEY dans la configuration du serveur.
+        {admin ? (
+          <Repliable titre="Créer un compte">
+            <p className="mb-4 text-sm text-slate-500">
+              Pas besoin d&apos;e-mail : l&apos;application donne un mot de passe provisoire à envoyer sur WhatsApp.
+              La personne n&apos;aura accès qu&apos;aux fonctions de son rôle.
             </p>
-          )}
-        </Carte>
+            <FormulaireCompte {...listes} />
+          </Repliable>
+        ) : (
+          <p className="rounded-xl bg-or-100 p-3 text-sm text-or-600">
+            Pour créer des comptes, ajoutez la clé SUPABASE_SERVICE_ROLE_KEY dans la configuration du serveur.
+          </p>
+        )}
         <Carte titre={`Comptes (${profils?.length ?? 0})`}>
           {error && <p className="p-4 text-sm text-red-700">Impossible de charger les comptes.</p>}
           <div className="-mx-5 -mb-5">

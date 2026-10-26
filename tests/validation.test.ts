@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { schemaConnexion, schemaEmail, schemaNouveauMotDePasse } from "@/lib/validation/auth";
-import { schemaInvitation, schemaModification } from "@/lib/validation/utilisateurs";
+import { schemaNouveauCompte, schemaModification } from "@/lib/validation/utilisateurs";
 
 const UUID = "10000000-0000-4000-8000-00000000000a";
 
@@ -27,26 +27,35 @@ describe("formulaires d'authentification", () => {
 });
 
 describe("gestion des utilisateurs", () => {
-  const base = { email: "resp@exemple.cd", nom: "Ruth Makiadi", identifiant: "", role: "choriste", paroisseId: "", commissionId: "" };
+  const base = { email: "", nom: "Ruth Makiadi", identifiant: "ruth.makiadi", role: "choriste", paroisseId: "", commissionId: "" };
 
-  it("accepte une invitation simple", () => {
-    const r = schemaInvitation.parse(base);
-    expect(r.identifiant).toBeNull();
+  it("crée un compte sans e-mail, avec un identifiant", () => {
+    const r = schemaNouveauCompte.parse(base);
+    expect(r.email).toBeNull();
+    expect(r.identifiant).toBe("ruth.makiadi");
     expect(r.paroisseId).toBeNull();
+    expect(schemaNouveauCompte.parse({ ...base, email: " Resp@Exemple.cd " }).email).toBe("resp@exemple.cd");
+  });
+
+  it("exige un identifiant et refuse un e-mail invalide", () => {
+    const sans = schemaNouveauCompte.safeParse({ ...base, identifiant: "" });
+    expect(sans.success).toBe(false);
+    expect(sans.error?.issues[0].message).toContain("identifiant");
+    expect(schemaNouveauCompte.safeParse({ ...base, email: "pas-un-email" }).success).toBe(false);
   });
 
   it("exige la paroisse d'un responsable de paroisse", () => {
-    expect(schemaInvitation.safeParse({ ...base, role: "responsable_paroisse" }).success).toBe(false);
-    expect(schemaInvitation.safeParse({ ...base, role: "responsable_paroisse", paroisseId: UUID }).success).toBe(true);
+    expect(schemaNouveauCompte.safeParse({ ...base, role: "responsable_paroisse" }).success).toBe(false);
+    expect(schemaNouveauCompte.safeParse({ ...base, role: "responsable_paroisse", paroisseId: UUID }).success).toBe(true);
   });
 
   it("exige la commission d'un responsable de commission", () => {
-    expect(schemaInvitation.safeParse({ ...base, role: "responsable_commission" }).success).toBe(false);
+    expect(schemaNouveauCompte.safeParse({ ...base, role: "responsable_commission" }).success).toBe(false);
   });
 
   it("refuse un rôle inconnu et un identifiant invalide", () => {
-    expect(schemaInvitation.safeParse({ ...base, role: "pirate" }).success).toBe(false);
-    expect(schemaInvitation.safeParse({ ...base, identifiant: "Nom Avec Espaces" }).success).toBe(false);
+    expect(schemaNouveauCompte.safeParse({ ...base, role: "pirate" }).success).toBe(false);
+    expect(schemaNouveauCompte.safeParse({ ...base, identifiant: "Nom Avec Espaces" }).success).toBe(false);
   });
 
   it("convertit le statut actif", () => {

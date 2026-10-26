@@ -29,13 +29,16 @@ Dans **Authentication** › **URL Configuration** :
   puis l'adresse définitive à l'Étape 8).
 - **Redirect URLs** : ajouter `http://localhost:3000/**` (et plus tard l'adresse définitive).
 
-**E-mails.** L'application fonctionne avec les modèles d'e-mail par défaut de
-Supabase : les liens d'invitation et de réinitialisation sont reçus par
-`/auth/confirm` puis `/auth/session`. Attention, le service d'envoi intégré de
-Supabase est très limité (quelques e-mails par heure, et seulement vers les
-adresses des membres de l'équipe Supabase). Pour inviter les choristes, il faut
-configurer un SMTP personnalisé (**Authentication** › **Emails** › **SMTP Settings**),
-prévu à l'Étape 8.
+**Comptes et e-mails.** Les comptes sont créés par l'administration dans
+« Utilisateurs et permissions » › « Créer un compte » : l'application donne un
+identifiant et un mot de passe provisoire à envoyer sur WhatsApp, sans e-mail.
+Si quelqu'un oublie son mot de passe, l'administration clique sur
+« Nouveau mot de passe » à côté de son nom.
+
+Le lien « Mot de passe oublié » de la page de connexion passe par l'envoi
+d'e-mails intégré de Supabase, très limité (quelques e-mails par heure, et
+seulement vers les adresses des membres de l'équipe Supabase). Pour l'ouvrir à
+tous, configurer un SMTP personnalisé (**Authentication** › **Emails** › **SMTP Settings**).
 
 Facultatif, une fois le SMTP configuré : dans **Authentication** › **Emails** › **Templates**,
 remplacer le lien des modèles suivants pour qu'ils passent directement par `/auth/confirm` :
@@ -46,7 +49,7 @@ remplacer le lien des modèles suivants pour qu'ils passent directement par `/au
 | Reset password | `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&suite=/reinitialiser` |
 
 Dans **Authentication** › **Sign In / Providers**, désactiver **Allow new users to sign up** :
-les comptes sont créés uniquement par invitation depuis l'application.
+les comptes sont créés uniquement depuis l'application.
 
 ## 3. Configurer l'application
 

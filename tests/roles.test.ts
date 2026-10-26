@@ -42,3 +42,22 @@ describe("accès par rôle", () => {
     expect(cheminSur(null, "/choriste")).toBe("/choriste");
   });
 });
+
+describe("comptes sans e-mail", () => {
+  it("donne un mot de passe provisoire lisible et différent à chaque fois", async () => {
+    const { motDePasseProvisoire } = await import("@/lib/auth/comptes");
+    const a = motDePasseProvisoire();
+    expect(a).toMatch(/^[a-hj-km-np-z2-9]{4}-[a-hj-km-np-z2-9]{4}-[a-hj-km-np-z2-9]{4}$/);
+    expect(new Set(Array.from({ length: 50 }, motDePasseProvisoire)).size).toBe(50);
+  });
+
+  it("reconnaît les adresses internes et prépare le message WhatsApp", async () => {
+    const { emailTechnique, estEmailTechnique, messageAcces } = await import("@/lib/auth/comptes");
+    expect(estEmailTechnique(emailTechnique("ruth.makiadi"))).toBe(true);
+    expect(estEmailTechnique("ruth@gmail.com")).toBe(false);
+    expect(estEmailTechnique(null)).toBe(false);
+    const m = messageAcces("Ruth", "ruth.makiadi", "abcd-efgh-jkmn", "https://pgmmuanda.vercel.app");
+    expect(m).toContain("Identifiant : ruth.makiadi");
+    expect(m).toContain("abcd-efgh-jkmn");
+  });
+});
