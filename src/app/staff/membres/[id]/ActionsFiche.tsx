@@ -50,7 +50,7 @@ export function RelierCompte({ id, profilId, compteActuel, comptes }: {
       <input type="hidden" name="id" value={id} />
       {comptes.length === 0 ? (
         <p className="text-sm text-slate-500">
-          Aucun compte choriste libre. Invitez d&apos;abord la personne depuis « Utilisateurs et permissions » avec le rôle Choriste.
+          Aucun compte choriste libre. Créez d&apos;abord son compte dans « Utilisateurs et permissions » › « Créer un compte », avec le rôle Choriste.
         </p>
       ) : (
         <>
