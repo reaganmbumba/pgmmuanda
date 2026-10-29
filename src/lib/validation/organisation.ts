@@ -121,3 +121,10 @@ export const schemaChant = z.object({
   lienAudio: lien,
 });
 export const voixChant = (form: FormData) => form.getAll("voix").map(String).filter((v) => v in VOIX);
+
+export const schemaCotisation = z.object({
+  membreId: z.string().uuid("Membre invalide."),
+  mois: z.string().regex(/^\d{4}-\d{2}-01$/, "Mois invalide."),
+  montant: montant.pipe(z.number().positive("Indiquez le montant payé.")),
+  devise: choix(DEVISES, "Monnaie invalide."),
+});

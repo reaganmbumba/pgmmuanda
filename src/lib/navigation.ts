@@ -24,6 +24,7 @@ import {
   UsersRound,
   Wallet,
   Church,
+  Coins,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -54,6 +55,7 @@ export const menuStaff: EntreeMenu[] = [
   { href: "/staff/communication", label: "Communication", icone: Megaphone, etape: 6, description: "Annonces, communiqués et invitations.", groupe: "Activités" },
   { href: "/staff/documents", label: "Documents", icone: FileText, etape: 8, description: "Documents à disposition des choristes.", groupe: "Activités" },
   { href: "/staff/projets", label: "Projets", icone: FolderKanban, etape: 7, description: "Projets, calendrier et rapports d'avancement.", groupe: "Gestion" },
+  { href: "/staff/cotisations", label: "Cotisations", icone: Coins, etape: 9, description: "Qui a payé sa cotisation du mois, qui est en retard.", groupe: "Gestion" },
   { href: "/staff/finances", label: "Finances", icone: Wallet, etape: 7, description: "Budgets, dépenses et justificatifs.", groupe: "Gestion" },
   { href: "/staff/rapports", label: "Rapports", icone: BarChart3, etape: 6, description: "Statistiques et rapports exportables.", groupe: "Gestion" },
   { href: "/staff/utilisateurs", label: "Utilisateurs et permissions", icone: ShieldCheck, etape: 2, description: "Comptes du staff, rôles et accès.", groupe: "Gestion" },
@@ -72,6 +74,7 @@ export const menuChoriste: EntreeMenu[] = [
   { href: "/choriste/formations", label: "Mes formations", icone: GraduationCap, etape: 7, description: "Vos formations et évaluations." },
   { href: "/choriste/paroisse", label: "Ma paroisse", icone: Building2, etape: 5, description: "Votre paroisse et votre chorale." },
   { href: "/choriste/chambre", label: "Ma chambre", icone: BedDouble, etape: 7, description: "Votre hébergement, si applicable." },
+  { href: "/choriste/cotisations", label: "Mes cotisations", icone: Coins, etape: 9, description: "Les mois que vous avez payés." },
   { href: "/choriste/documents", label: "Mes documents", icone: FileText, etape: 8, description: "Documents mis à votre disposition." },
   { href: "/choriste/notifications", label: "Notifications", icone: Bell, etape: 5, description: "Vos notifications." },
   { href: "/choriste/parametres", label: "Paramètres du compte", icone: Settings, etape: 2, description: "Mot de passe et préférences." },

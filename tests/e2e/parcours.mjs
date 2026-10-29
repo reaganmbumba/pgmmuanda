@@ -647,6 +647,41 @@ try {
   rep = await ctl.request.get(`${APP}/staff/finances/export?annee=${new Date().getFullYear()}`);
   ok(!(await rep.text()).includes("Acompte menuisier") && !rep.url().includes("/export"), "ni à leur export (renvoyé vers son espace)");
 
+  // Cotisations (Règlement intérieur, art. 2, 3 et 27)
+  console.log("Cotisations");
+  await a.goto(`${APP}/staff/cotisations`);
+  let ligneGrace = a.locator("[data-cotisation^='Grace Mavungu']");
+  ok(await ligneGrace.count() === 1 && (await a.textContent("[data-nb-payes]")).trim() === "0",
+    "la page Cotisations liste les membres actifs qui n'ont pas encore payé");
+  ok(decodeURIComponent(await ligneGrace.locator("a[aria-label^='Rappel WhatsApp']").getAttribute("href"))
+      .match(/^https:\/\/wa\.me\/243992223333\?text=Bonjour Grace,[\s\S]*Art\. 27/),
+    "le rappel WhatsApp part vers son numéro et cite le Règlement intérieur");
+  await ligneGrace.locator("form[aria-label^='Rappeler'] button").click();
+  await ligneGrace.locator("text=Rappel envoyé dans l'application.").waitFor();
+  await c.goto(`${APP}/choriste/notifications`);
+  ok((await texte(c)).includes("Rappel : votre cotisation de") && (await texte(c)).includes("Règlement intérieur"),
+    "le membre reçoit le rappel du règlement dans l'application");
+  await a.goto(`${APP}/staff/cotisations`);
+  ligneGrace = a.locator("[data-cotisation^='Grace Mavungu']");
+  ok((await ligneGrace.textContent()).includes("Rappel envoyé le") , "la page garde la date du dernier rappel");
+  await ligneGrace.locator("input[name=montant]").fill("2000");
+  await ligneGrace.locator("button:has-text('Payé')").click();
+  await a.waitForFunction(() => document.querySelector("[data-nb-payes]")?.textContent.trim() === "1");
+  await a.click("a:has-text('Ont payé')");
+  ligneGrace = a.locator("[data-cotisation^='Grace Mavungu']");
+  ok((await ligneGrace.textContent()).includes("2 000") && (await ligneGrace.textContent()).includes("par Admin E2E"),
+    "un paiement s'enregistre en un clic, avec le nom de qui l'a noté");
+  await a.goto(`${APP}/staff/finances`);
+  ok((await texte(a)).match(/Cotisations — \S+ \d{4}/), "le total du mois entre tout seul dans la caisse");
+  await c.goto(`${APP}/choriste/cotisations`);
+  t = await texte(c);
+  ok(t.includes("Payé le") && t.includes("2 000") && t.includes("s'acquitter régulièrement de ses contributions"),
+    "le membre voit ses cotisations et ce que dit le règlement");
+  await r.goto(`${APP}/staff/cotisations?vue=payes`);
+  ok(!(await texte(r)).includes("Grace Mavungu"), "un responsable de paroisse ne voit que les membres de sa paroisse");
+  await rc.goto(`${APP}/staff/cotisations`);
+  ok(!new URL(rc.url()).pathname.startsWith("/staff/cotisations"), "sans « Accès aux finances », pas de page Cotisations");
+
   // Hébergement
   await a.goto(`${APP}/staff/hebergement`);
   for (const [nom, places, sexe] of [["Chambre 1", "1", ""], ["Chambre des femmes", "2", "F"]]) {
