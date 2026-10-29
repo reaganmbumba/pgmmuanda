@@ -977,6 +977,21 @@ try {
   ok((await texte(a)).includes("Grace Mavungu") && (await texte(a)).includes("absence ou retard non justifié"), "la liste des sanctions le reprend");
   ok((await c.goto(`${APP}/staff/discipline`), !new URL(c.url()).pathname.startsWith("/staff")), "un choriste n'y a pas accès");
 
+  console.log("Corriger un nom de paroisse");
+  await a.goto(`${APP}/staff/paroisses`);
+  const carteAlpha = a.locator("section", { has: a.locator("h2", { hasText: /^Paroisse Alpha$/ }) });
+  await carteAlpha.locator("summary:has-text('Corriger le nom')").first().click();
+  await carteAlpha.locator("input[aria-label='Nouveau nom de Paroisse Alpha']").fill("Paroisse Alfa");
+  await carteAlpha.locator("button:has-text('Enregistrer')").first().click();
+  await a.waitForSelector("h2:text-is('Paroisse Alfa')");
+  await a.reload();
+  const carteAlfa = a.locator("section", { has: a.locator("h2", { hasText: /^Paroisse Alfa$/ }) });
+  await carteAlfa.locator("summary:has-text('Corriger le nom')").first().click();
+  await carteAlfa.locator("input[aria-label='Nouveau nom de Paroisse Alfa']").fill("Paroisse Alpha");
+  await carteAlfa.locator("button:has-text('Enregistrer')").first().click();
+  await a.waitForSelector("h2:text-is('Paroisse Alpha')");
+  ok(true, "l'administration corrige le nom d'une paroisse mal écrit");
+
   console.log("Conseil et réunions");
   const local = (jours) => new Date(Date.now() + jours * 86400_000 + 3600_000).toISOString().slice(0, 16);
   await a.goto(`${APP}/staff/conseil`);

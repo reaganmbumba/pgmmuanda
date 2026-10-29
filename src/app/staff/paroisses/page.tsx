@@ -8,7 +8,7 @@ import { lireOrganisation } from "@/lib/membres/depot";
 import { menuStaff } from "@/lib/navigation";
 import { supabaseActif } from "@/lib/supabase/config";
 import { supprimerOrganisation } from "./actions";
-import { FormulaireChorale, FormulaireParoisse } from "./Formulaires";
+import { FormulaireChorale, FormulaireParoisse, Renommer } from "./Formulaires";
 
 export const metadata = { title: "Paroisses et chorales" };
 
@@ -43,7 +43,10 @@ export default async function PageParoisses() {
                       libelle="Supprimer" icone={<Trash2 className="size-3.5" aria-hidden />}
                       question="Supprimer cette paroisse ?" />
                   ) : undefined}>
-                  <p className="mb-3 text-xs text-slate-500">{p.ville}</p>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-slate-500">{p.ville}</p>
+                    {admin && <Renommer type="paroisse" id={p.id} nom={p.nom} />}
+                  </div>
                   {siennes.length === 0 ? (
                     <p className="text-sm text-slate-500">Aucune chorale.</p>
                   ) : (
@@ -51,10 +54,11 @@ export default async function PageParoisses() {
                       {siennes.map((c) => (
                         <li key={c.id} className="flex items-center justify-between gap-2 py-2">
                           <span className="text-marine-900">{c.nom}{c.estDemo && <span className="text-or-600"> (démo)</span>}</span>
-                          {gere && peutGererMembres(moi?.role) && (
+                          {gere && peutGererMembres(moi?.role) && (<div className="flex items-center gap-2">
+                            <Renommer type="chorale" id={c.id} nom={c.nom} />
                             <ActionConfirmee action={supprimerOrganisation} champs={{ type: "chorale", id: c.id }} danger
                               libelle="Retirer" question="Supprimer cette chorale ? Ses membres resteront dans la paroisse." />
-                          )}
+                          </div>)}
                         </li>
                       ))}
                     </ul>

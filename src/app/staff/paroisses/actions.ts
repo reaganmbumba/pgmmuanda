@@ -61,3 +61,20 @@ export async function supprimerOrganisation(_: Etat, form: FormData): Promise<Et
   rafraichir();
   return { succes: "Supprimé." };
 }
+
+/** Corriger le nom d'une paroisse (administration) ou d'une chorale (administration ou sa paroisse). */
+export async function renommerOrganisation(_: Etat, form: FormData): Promise<Etat> {
+  if (!supabaseActif) return MAQUETTE;
+  const moi = await utilisateurCourant();
+  if (!moi || !peutGererMembres(moi.role)) return { erreur: "Action non autorisée." };
+  const table = form.get("type") === "paroisse" ? "paroisses" : "chorales";
+  if (table === "paroisses" && !estAdmin(moi.role)) return { erreur: "Action réservée à l'administration." };
+  const nom = String(form.get("nom") ?? "").trim().replace(/\s+/g, " ");
+  if (nom.length < 2 || nom.length > 120) return { erreur: "Le nom doit avoir entre 2 et 120 caractères." };
+  const supabase = await creerClientServeur();
+  const { data, error } = await supabase.from(table).update({ nom }).eq("id", String(form.get("id"))).select("id");
+  if (error?.code === "23505") return { erreur: "Ce nom existe déjà." };
+  if (error || !data?.length) return { erreur: "Modification refusée." };
+  rafraichir();
+  return { succes: "Nom corrigé." };
+}
