@@ -16,11 +16,20 @@ export const estEmailTechnique = (email: string | null | undefined) => Boolean(e
 // Sans lettres ni chiffres qui se confondent (l/1, o/0, i) : facile à recopier depuis WhatsApp.
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
-/** Mot de passe provisoire du type « k7mp-4rxa-9q2d » (environ 59 bits). */
+const MAJUSCULES = "ABCDEFGHJKMNPQRSTUVWXYZ";
+const CHIFFRES = "23456789";
+const tirer = (alphabet: string) => alphabet[randomInt(alphabet.length)];
+
+/**
+ * Mot de passe provisoire du type « Km7p-4rxa-9q2d » (environ 57 bits) : toujours une
+ * majuscule, des minuscules, un chiffre et un tiret, pour passer les règles de mot de
+ * passe que Supabase peut exiger.
+ */
 export function motDePasseProvisoire() {
-  return Array.from({ length: 3 }, () =>
-    Array.from({ length: 4 }, () => ALPHABET[randomInt(ALPHABET.length)]).join(""),
-  ).join("-");
+  const groupe = () => Array.from({ length: 4 }, () => tirer(ALPHABET)).join("");
+  const debut = tirer(MAJUSCULES) + groupe().slice(1);
+  const fin = groupe().slice(0, 3) + tirer(CHIFFRES);
+  return [debut, groupe(), fin].join("-");
 }
 
 /** Message prêt à partager sur WhatsApp avec la personne concernée. */

@@ -47,7 +47,7 @@ describe("comptes sans e-mail", () => {
   it("donne un mot de passe provisoire lisible et différent à chaque fois", async () => {
     const { motDePasseProvisoire } = await import("@/lib/auth/comptes");
     const a = motDePasseProvisoire();
-    expect(a).toMatch(/^[a-hj-km-np-z2-9]{4}-[a-hj-km-np-z2-9]{4}-[a-hj-km-np-z2-9]{4}$/);
+    expect(a).toMatch(/^[A-HJ-KM-NP-Z][a-hj-km-np-z2-9]{3}-[a-hj-km-np-z2-9]{4}-[a-hj-km-np-z2-9]{3}[2-9]$/);
     expect(new Set(Array.from({ length: 50 }, motDePasseProvisoire)).size).toBe(50);
   });
 

@@ -13,6 +13,14 @@ export type Etat = { erreur?: string; succes?: string } | undefined;
 /** Accès à transmettre à la personne : affiché une seule fois, jamais enregistré en clair. */
 export type EtatAcces = (NonNullable<Etat> & { acces?: { nom: string; identifiant: string; motDePasse: string; message: string } }) | undefined;
 
+/** Raison lisible d'un refus de Supabase Auth, pour que l'administration sache quoi faire. */
+function raisonAuth(e: { code?: string; message?: string } | null): string {
+  if (e?.code === "weak_password") return "mot de passe refusé par les règles de Supabase";
+  if (e?.code === "over_request_rate_limit" || e?.code === "over_email_send_rate_limit") return "trop d'essais, réessayez dans quelques minutes";
+  if (e?.code === "unexpected_failure" || /database error/i.test(e?.message ?? "")) return "erreur de la base de données";
+  return e?.message || e?.code || "raison inconnue";
+}
+
 export async function creerCompte(_: EtatAcces, form: FormData): Promise<EtatAcces> {
   const moi = await utilisateurCourant();
   if (!moi || !estAdmin(moi.role)) return { erreur: "Action réservée à l'administration." };
@@ -36,7 +44,11 @@ export async function creerCompte(_: EtatAcces, form: FormData): Promise<EtatAcc
     user_metadata: { nom_affiche: d.data.nom },
   });
   if (error || !data.user) {
-    return { erreur: error?.code === "email_exists" ? "Un compte existe déjà avec cette adresse e-mail." : "Le compte n'a pas pu être créé." };
+    if (error?.code === "email_exists") {
+      return { erreur: d.data.email ? "Un compte existe déjà avec cette adresse e-mail." : "Cet identifiant est déjà utilisé. Choisissez-en un autre." };
+    }
+    console.error("Création de compte refusée par Supabase :", error?.code, error?.message);
+    return { erreur: `Le compte n'a pas pu être créé (${raisonAuth(error)}).` };
   }
 
   const { error: e2 } = await admin
@@ -52,7 +64,10 @@ export async function creerCompte(_: EtatAcces, form: FormData): Promise<EtatAcc
     .eq("id", data.user.id);
   if (e2) {
     await admin.auth.admin.deleteUser(data.user.id);
-    return { erreur: e2.code === "23505" ? "Cet identifiant est déjà utilisé. Choisissez-en un autre." : "Le compte n'a pas pu être créé." };
+    console.error("Profil du nouveau compte refusé :", e2.code, e2.message);
+    return { erreur: e2.code === "23505" ? "Cet identifiant est déjà utilisé. Choisissez-en un autre."
+      : e2.code === "23514" ? "Choisissez la paroisse ou la commission de ce responsable."
+      : `Le compte n'a pas pu être créé (profil : ${e2.message}).` };
   }
   revalidatePath("/staff/utilisateurs");
   return {
@@ -83,7 +98,10 @@ export async function nouveauMotDePasse(_: EtatAcces, form: FormData): Promise<E
 
   const motDePasse = motDePasseProvisoire();
   const { data, error } = await admin.auth.admin.updateUserById(id, { password: motDePasse });
-  if (error) return { erreur: "Le mot de passe n'a pas pu être changé." };
+  if (error) {
+    console.error("Nouveau mot de passe refusé par Supabase :", error.code, error.message);
+    return { erreur: `Le mot de passe n'a pas pu être changé (${raisonAuth(error)}).` };
+  }
   // Un compte bloqué après des essais ratés est débloqué
   await admin.rpc("effacer_echecs_connexion", { p_cle: profil.identifiant });
   if (data.user.email) await admin.rpc("effacer_echecs_connexion", { p_cle: data.user.email });

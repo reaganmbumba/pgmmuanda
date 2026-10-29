@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Copy, KeyRound, MessageCircle, UserPlus } from "lucide-react";
+import { Copy, KeyRound, Loader2, MessageCircle, UserPlus } from "lucide-react";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
 import { LIBELLES_NIVEAUX, LIBELLES_ROLES, ROLES_PAR_NIVEAU, niveauDe, peutRecevoirAccesFinances, type Niveau, type Role } from "@/lib/auth/roles";
 import { lienWhatsApp } from "@/lib/programmes/libelles";
@@ -121,12 +121,18 @@ function BoiteAcces({ acces }: { acces: NonNullable<NonNullable<EtatAcces>["acce
 }
 
 export function FormulaireCompte(listes: Listes) {
-  const [etat, action] = useActionState(creerCompte, undefined);
+  const [etat, action, enCours] = useActionState(creerCompte, undefined);
   return (
     <div className="space-y-4">
       {/* Après une création réussie, le formulaire repart de zéro */}
-      <form action={action} key={etat?.acces?.motDePasse} className="grid gap-3 md:grid-cols-2">
-        <ChampsCompte {...listes} />
+      {/* Envoi sans la remise à zéro automatique de React : après une erreur, les choix restent affichés tels quels */}
+      <form key={etat?.acces?.motDePasse} className="grid gap-3 md:grid-cols-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const f = new FormData(e.currentTarget);
+          startTransition(() => action(f));
+        }}>
+        <ChampsCompte {...listes} enCours={enCours} />
       </form>
       <MessageFormulaire etat={etat} />
       {etat?.acces && <BoiteAcces acces={etat.acces} />}
@@ -134,7 +140,7 @@ export function FormulaireCompte(listes: Listes) {
   );
 }
 
-function ChampsCompte({ roles, paroisses, commissions }: Listes) {
+function ChampsCompte({ roles, paroisses, commissions, enCours }: Listes & { enCours: boolean }) {
   const [role, setRole] = useState<Role>("choriste");
   const [nom, setNom] = useState("");
   const [identifiant, setIdentifiant] = useState<string | null>(null);
@@ -160,9 +166,10 @@ function ChampsCompte({ roles, paroisses, commissions }: Listes) {
       <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} />
       <CaseFinances role={role} />
       <div className="md:col-span-2">
-        <BoutonEnvoi className="min-h-12 sm:w-auto">
-          <UserPlus className="size-5" aria-hidden /> Créer le compte
-        </BoutonEnvoi>
+        <button type="submit" disabled={enCours}
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-marine-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-marine-800 disabled:opacity-60 sm:w-auto">
+          {enCours ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <UserPlus className="size-5" aria-hidden />} Créer le compte
+        </button>
       </div>
     </>
   );
