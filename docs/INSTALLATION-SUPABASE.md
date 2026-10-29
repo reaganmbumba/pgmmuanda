@@ -22,7 +22,8 @@ du projet PGM Muanda (`https://wkokqwuqctgzxpbvyaxp.supabase.co`).
 14. Recommencer avec `supabase/migrations/20261105000100_president_antenne.sql` (compte « Président de l'antenne », lecture seule).
 15. Recommencer avec `supabase/migrations/20261106000100_responsable_chorale.sql` (compte « Responsable de chorale »).
 16. Recommencer avec `supabase/migrations/20261107000100_chorales_urbaines.sql` (chorales urbaines, sans paroisse, comme Oracle).
-17. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
+17. Recommencer avec `supabase/migrations/20261108000100_registre_chorales.sql` (registre de présence des chorales).
+18. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
    Ces données sont fictives (« démo ») et s'effacent avec les commandes
    données à la fin du fichier.
 

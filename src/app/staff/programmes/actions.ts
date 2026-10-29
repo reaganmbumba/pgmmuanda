@@ -34,6 +34,7 @@ function rafraichir(id?: string) {
   revalidatePath("/staff/programmes");
   revalidatePath("/staff");
   if (id) revalidatePath(`/staff/programmes/${id}`);
+  revalidatePath("/staff/registre", "layout");
 }
 
 export async function enregistrerActivite(_: Etat, form: FormData): Promise<Etat> {

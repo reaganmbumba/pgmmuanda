@@ -1159,6 +1159,42 @@ try {
   await rch.goto(`${APP}/staff/paroisses`);
   ok(!(await rch.isVisible("text=Nouvelle chorale")) && !(await rch.isVisible("summary:has-text('Corriger le nom')")), "il ne crée ni ne renomme de chorale");
 
+  console.log("Registre de présence de la chorale");
+  await rch.goto(`${APP}/staff/registre`);
+  t = await rch.textContent("[data-horaires]");
+  ok(t.includes("Lundi") && t.includes("Jeudi") && t.includes("Dimanche") && t.includes("Culte"),
+    "la chorale a ses jours habituels : lundi et jeudi répétition, dimanche culte");
+  // Un jour inhabituel : hier, quel que soit le jour
+  const hier = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Kinshasa" }).format(new Date(Date.now() - 86400_000));
+  await rch.fill("input[name=jour]", hier);
+  await rch.selectOption("select[name=type] >> nth=0", "repetition");
+  await rch.click("button:has-text('Ouvrir le registre')");
+  await rch.waitForURL(/\/staff\/registre\/[0-9a-f-]{36}$/);
+  const urlRegistre = rch.url();
+  ok((await texte(rch)).includes("Répétition — Chorale Alpha"), "le responsable ouvre le registre d'un jour inhabituel");
+  await rch.locator("tr[data-membre='PGM-MUA-0001'] button[role=radio]:has-text('Absent')").click();
+  await rch.click("button:has-text('Enregistrer la feuille de présence')");
+  await rch.waitForSelector("text=Feuille de présence enregistrée");
+  await rch.goto(`${APP}/staff/registre`);
+  ok((await rch.textContent("[data-registres]")).includes("1 absent"), "le registre compte les absents");
+  await c.goto(`${APP}/choriste/presences`);
+  t = await c.textContent("[data-mes-absences]");
+  ok(t.includes("Répétition — Chorale Alpha"), "le choriste voit le jour de son absence dans son espace");
+  ok((await c.textContent("[data-jours-chorale]")).includes("Jeudi"), "il voit aussi les jours habituels de sa chorale");
+  await rch.goto(`${APP}/staff/registre`);
+  await rch.click("summary:has-text('Ajouter ou changer un jour')");
+  const zh = rch.locator("details[open]");
+  await zh.locator("select[name=jour]").selectOption("6");
+  await zh.locator("input[name=heure]").fill("09:00");
+  await zh.locator("button:has-text('Enregistrer')").click();
+  await rch.waitForSelector("text=Jour habituel enregistré.");
+  await rch.reload();
+  ok((await rch.textContent("[data-horaires]")).includes("Samedi · Répétition à 09 h 00"), "le responsable change les jours habituels");
+  await rch.goto(urlRegistre);
+  await confirmer(rch, "Retirer ce registre");
+  await rch.waitForURL(/\/staff\/registre\?chorale=/);
+  ok(!(await rch.isVisible("[data-registres]")), "un registre ouvert par erreur se retire");
+
   console.log("Installer l'application");
   const inst = await navigateur.newPage();
   const sw = await inst.request.get(`${APP}/sw.js`, { maxRedirects: 0 });
