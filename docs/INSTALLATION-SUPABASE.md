@@ -17,7 +17,8 @@ du projet PGM Muanda (`https://wkokqwuqctgzxpbvyaxp.supabase.co`).
 9. Recommencer avec `supabase/migrations/20261031000200_documents.sql` (Étape 8 : partitions, reçus, documents).
 10. Recommencer avec `supabase/migrations/20261101000100_finances_staff.sql` (case « Accès aux finances »).
 11. Recommencer avec `supabase/migrations/20261102000100_cotisations.sql` (cotisations et rappels du règlement).
-12. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
+12. Recommencer avec `supabase/migrations/20261103000100_discipline.sql` (sanctions et absences sans motif).
+13. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
    Ces données sont fictives (« démo ») et s'effacent avec les commandes
    données à la fin du fichier.
 

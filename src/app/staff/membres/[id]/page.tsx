@@ -17,6 +17,10 @@ import { GestionCarte } from "@/components/carte/GestionCarte";
 import { PhotoMembre } from "@/components/carte/PhotoMembre";
 import { cartesDuMembre } from "@/lib/cartes/depot";
 import { ActionsStatut, RelierCompte, TraiterDemande } from "./ActionsFiche";
+import { listerSanctions } from "@/lib/discipline/depot";
+import { jourLocal } from "@/lib/programmes/libelles";
+import { FormulaireSanction } from "@/app/staff/discipline/Formulaires";
+import { ListeSanctions } from "@/app/staff/discipline/ListeSanctions";
 
 export const metadata = { title: "Fiche membre" };
 
@@ -33,12 +37,13 @@ export default async function FicheMembrePage({ params, searchParams }: {
 
   const gestion = peutGererMembres(moi?.role);
   const admin = estAdmin(moi?.role);
-  const [historique, demandes, organisation, comptes, cartes] = await Promise.all([
+  const [historique, demandes, organisation, comptes, cartes, sanctions] = await Promise.all([
     lireHistorique(id),
     gestion ? lireDemandes({ membreId: id }) : Promise.resolve([]),
     lireOrganisation(),
     admin ? comptesNonRelies() : Promise.resolve([]),
     cartesDuMembre(id),
+    admin ? listerSanctions(id) : Promise.resolve([]),
   ]);
   const carteActive = cartes.find((c) => c.statutCode === "active") ?? null;
   let compteActuel: string | null = null;
@@ -146,6 +151,20 @@ export default async function FicheMembrePage({ params, searchParams }: {
                 )}
               </Carte>
             </section>
+          )}
+
+          {admin && (
+            <Carte titre={`Discipline${sanctions.length ? ` (${sanctions.length})` : ""}`}>
+              <p className="mb-3 text-xs text-slate-500">Visible seulement par l&apos;administration (Règlement intérieur, art. 18 à 27).</p>
+              {sanctions.length > 0 && <div className="mb-4"><ListeSanctions sanctions={sanctions} /></div>}
+              <details className="rounded-xl border border-slate-200 p-3">
+                <summary className="cursor-pointer text-sm font-semibold text-marine-900">Noter une sanction</summary>
+                <div className="mt-3"><FormulaireSanction membreId={id} aujourdhui={jourLocal(new Date().toISOString())} /></div>
+              </details>
+              {sanctions.some((s) => s.typeCode === "suspension" || s.typeCode === "exclusion") && membre.statutCode === "actif" && (
+                <p className="mt-3 text-xs text-amber-700">Le membre est encore « Actif » : pour bloquer sa carte, changez son statut ci-contre.</p>
+              )}
+            </Carte>
           )}
 
           <Carte titre="Historique">

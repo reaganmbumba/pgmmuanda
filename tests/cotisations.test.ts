@@ -32,3 +32,12 @@ describe("cotisations", () => {
     expect(peutOuvrir("choriste", "/choriste/cotisations")).toBe(true);
   });
 });
+
+describe("discipline", () => {
+  it("ouvre la page aux responsables de paroisse et à l'administration", () => {
+    expect(peutOuvrir("presidence", "/staff/discipline")).toBe(true);
+    expect(peutOuvrir("responsable_paroisse", "/staff/discipline")).toBe(true);
+    expect(peutOuvrir("responsable_commission", "/staff/discipline")).toBe(false);
+    expect(peutOuvrir("controleur", "/staff/discipline")).toBe(false);
+  });
+});

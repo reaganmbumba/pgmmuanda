@@ -128,3 +128,15 @@ export const schemaCotisation = z.object({
   montant: montant.pipe(z.number().positive("Indiquez le montant payé.")),
   devise: choix(DEVISES, "Monnaie invalide."),
 });
+
+export const schemaSanction = z.object({
+  membreId: z.string().uuid("Membre invalide."),
+  type: z.enum(["avertissement", "blame", "suspension", "exclusion"], { message: "Choisissez la sanction." }),
+  manquement: texte(200).min(2, "Choisissez le manquement."),
+  details: texte(2000),
+  dateFaits: jour,
+  // Le champ n'existe dans le formulaire que pour une suspension
+  finSuspension: z.preprocess((v) => v ?? "", optionnel(jour)),
+  defense: z.literal("on", { message: "Article 25 : le membre doit d'abord être invité à présenter sa défense." }),
+}).refine((d) => d.type === "suspension" || !d.finSuspension, { message: "La date de fin ne concerne que la suspension.", path: ["finSuspension"] })
+  .refine((d) => d.type !== "suspension" || !!d.finSuspension, { message: "Indiquez jusqu'à quand dure la suspension.", path: ["finSuspension"] });

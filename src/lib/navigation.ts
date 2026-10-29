@@ -25,6 +25,7 @@ import {
   Wallet,
   Church,
   Coins,
+  Gavel,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -45,6 +46,7 @@ export const menuStaff: EntreeMenu[] = [
   { href: "/staff/cartes", label: "Cartes et QR codes", icone: IdCard, etape: 4, description: "Génération, réédition et révocation des cartes.", groupe: "Membres" },
   { href: "/staff/scanner", label: "Scanner", icone: ScanLine, etape: 4, description: "Vérifier une carte par QR code ou matricule.", groupe: "Membres" },
   { href: "/staff/presences", label: "Présences", icone: ClipboardCheck, etape: 6, description: "Présences aux répétitions, réunions et manifestations.", groupe: "Membres" },
+  { href: "/staff/discipline", label: "Discipline", icone: Gavel, etape: 9, description: "Absences sans motif et sanctions du Règlement intérieur.", groupe: "Membres" },
   { href: "/staff/paroisses", label: "Paroisses", icone: Church, etape: 3, description: "Paroisses et leurs responsables.", groupe: "Organisation" },
   { href: "/staff/chorales", label: "Chorales", icone: Music, etape: 3, description: "Chorales rattachées à chaque paroisse.", groupe: "Organisation" },
   { href: "/staff/commissions", label: "Commissions", icone: UsersRound, etape: 7, description: "Commissions, responsables et tâches.", groupe: "Organisation" },

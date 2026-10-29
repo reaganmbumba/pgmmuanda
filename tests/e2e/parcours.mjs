@@ -936,6 +936,47 @@ try {
     && await a.locator("select[aria-label='Fonction de Patience Lukau']").inputValue() === "responsable_commission",
     "la liste des comptes affiche le niveau puis la fonction");
 
+  console.log("Discipline");
+  const { data: graceFiche } = await admin.from("membres").select("id").eq("matricule", "PGM-MUA-0001").single();
+  for (const [titre, jours] of [["Répétition du lundi", 2], ["Répétition du jeudi", 5]]) {
+    const { data: act, error: eAct } = await admin.from("activites")
+      .insert({ titre, debut: new Date(Date.now() - jours * 86400_000).toISOString() }).select("id").single();
+    if (eAct) throw new Error(eAct.message);
+    const { error: ePres } = await admin.from("presences").insert({ activite_id: act.id, membre_id: graceFiche.id, statut: "absent" });
+    if (ePres) throw new Error(ePres.message);
+  }
+  await a.goto(`${APP}/staff/discipline`);
+  const ligneAbs = a.locator("[data-absent^='Grace Mavungu']");
+  ok(await ligneAbs.count() === 1 && (await ligneAbs.locator("[data-nb-absences]").textContent()).includes("2 absences"),
+    "la page Discipline liste les membres avec 2 absences sans motif ou plus");
+  ok(decodeURIComponent(await ligneAbs.locator("a[aria-label^='Rappel WhatsApp']").getAttribute("href")).match(/2 absences sans motif[\s\S]*art\. 27[\s\S]*Art\. 16/),
+    "le rappel WhatsApp cite les articles 27 et 16 du Règlement intérieur");
+  await ligneAbs.locator("form[aria-label^='Rappeler'] button").click();
+  await ligneAbs.locator("text=Rappel envoyé dans l'application.").waitFor();
+  await c.goto(`${APP}/choriste/notifications`);
+  ok((await texte(c)).includes("Rappel : 2 absences sans motif"), "le membre reçoit le rappel du règlement dans l'application");
+  await r.goto(`${APP}/staff/discipline`);
+  t = await texte(r);
+  ok(!t.includes("Grace Mavungu") && !(await r.isVisible("a:has-text('Sanctions')")), "le responsable de paroisse ne voit que sa paroisse, sans les sanctions");
+  await rc.goto(`${APP}/staff/discipline`);
+  ok(!new URL(rc.url()).pathname.startsWith("/staff/discipline"), "le responsable de commission n'a pas accès à la discipline");
+
+  await a.goto(fiche1);
+  await a.click("summary:has-text('Noter une sanction')");
+  const zs = a.locator("details[open]:has(summary:has-text('Noter une sanction'))");
+  await zs.locator("input[name=dateFaits]").fill(new Date().toISOString().slice(0, 10));
+  await zs.locator("button:has-text('Enregistrer la sanction')").click();
+  ok(await zs.locator("input[name=defense]").evaluate((e) => !e.validity.valid), "pas de sanction sans avoir entendu la défense du membre (art. 25)");
+  await zs.locator("input[name=defense]").check();
+  await zs.locator("button:has-text('Enregistrer la sanction')").click();
+  await a.waitForSelector("text=Avertissement enregistré.");
+  await a.reload();
+  ok((await texte(a)).includes("Discipline (1)") && await a.locator("[data-sanction=avertissement]").count() === 1,
+    "l'administration note un avertissement sur la fiche du membre");
+  await a.goto(`${APP}/staff/discipline?vue=sanctions`);
+  ok((await texte(a)).includes("Grace Mavungu") && (await texte(a)).includes("absence ou retard non justifié"), "la liste des sanctions le reprend");
+  ok((await c.goto(`${APP}/staff/discipline`), !new URL(c.url()).pathname.startsWith("/staff")), "un choriste n'y a pas accès");
+
   console.log("Installer l'application");
   const inst = await navigateur.newPage();
   const sw = await inst.request.get(`${APP}/sw.js`, { maxRedirects: 0 });
