@@ -1046,6 +1046,42 @@ try {
   await a.reload();
   ok((await a.textContent("[data-sieges]")).includes("0 siège occupé"), "l'administration termine un mandat");
 
+  console.log("Président de l'antenne (lecture seule)");
+  await a.goto(`${APP}/staff/utilisateurs`);
+  await a.click("summary:has-text('Créer un compte')");
+  await a.fill("input[name=nom]", "Président Antenne");
+  await a.selectOption("details[open] select[aria-label=Niveau]", "admin");
+  await a.selectOption("details[open] select[aria-label=Fonction]", "president_antenne");
+  ok((await a.locator("details[open] select[aria-label=Fonction] option:checked").textContent()).includes("voit tout, ne modifie rien"),
+    "l'administration crée un compte « Président de l'antenne PGM Muanda »");
+  await a.click("button:has-text('Créer le compte')");
+  await a.waitForSelector("[data-mot-de-passe]");
+  const mdpPres = (await a.textContent("[data-mot-de-passe]")).trim();
+  const pa = await session("president.antenne", mdpPres);
+  ok(new URL(pa.url()).pathname === "/staff" && await pa.isVisible("[data-lecture-seule]"), "il arrive dans l'espace staff, en lecture seule");
+  const menuPres = await pa.locator("aside nav a").allTextContents();
+  ok(["Membres", "Finances", "Cotisations", "Discipline", "Utilisateurs et permissions", "Chambres et hébergement", "Conseil de la PGM"]
+    .every((x) => menuPres.some((t) => t.includes(x))), "il voit tout le menu, comme l'administration");
+  await pa.goto(`${APP}/staff/membres`);
+  ok((await texte(pa)).includes("Grace Mavungu") && !(await pa.isVisible("a:has-text('Nouveau membre')")), "il voit tous les membres, sans bouton pour en inscrire");
+  await pa.goto(`${APP}/staff/discipline?vue=sanctions`);
+  ok((await texte(pa)).includes("Grace Mavungu") && !(await pa.isVisible("button:has-text('Annuler')")), "il voit les sanctions, sans pouvoir les annuler");
+  await pa.goto(`${APP}/staff/cotisations`);
+  ok(!(await pa.isVisible("button:has-text('Payé')")) && !(await pa.isVisible("form[aria-label^='Rappeler']")), "il voit les cotisations sans pouvoir en enregistrer");
+  await pa.goto(`${APP}/staff/finances`);
+  ok(!(await pa.isVisible("summary:has-text('Enregistrer une entrée')")), "il voit les finances sans pouvoir en enregistrer");
+  await pa.goto(`${APP}/staff/utilisateurs`);
+  ok(!(await pa.isVisible("summary:has-text('Créer un compte')")) && !(await pa.isVisible("button:has-text('Nouveau mot de passe')")),
+    "il voit les comptes sans pouvoir en créer ni changer de mot de passe");
+  const { data: sp } = await createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+    .auth.signInWithPassword({ email: "president.antenne@sans-email.pgmmuanda.vercel.app", password: mdpPres });
+  const clp = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    auth: { persistSession: false }, global: { headers: { Authorization: `Bearer ${sp.session.access_token}` } },
+  });
+  const { data: modif } = await clp.from("membres").update({ nom: "Pirate" }).eq("matricule", "PGM-MUA-0001").select("id");
+  const { error: eIns } = await clp.from("paroisses").insert({ nom: "Paroisse pirate" });
+  ok((modif ?? []).length === 0 && eIns, "même en passant par la base directement, il ne peut rien modifier");
+
   console.log("Installer l'application");
   const inst = await navigateur.newPage();
   const sw = await inst.request.get(`${APP}/sw.js`, { maxRedirects: 0 });

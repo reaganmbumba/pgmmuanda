@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
+import { useLectureSeule } from "@/components/LectureSeule";
 import type { Etat } from "@/lib/etat-action";
 
 function Envoyer({ libelle }: { libelle: string }) {
@@ -20,6 +21,7 @@ export function ActionDirecte({ action, champs, libelle }: {
   action: (etat: Etat, form: FormData) => Promise<Etat>; champs: Record<string, string>; libelle: string;
 }) {
   const [etat, envoyer] = useActionState(action, undefined);
+  if (useLectureSeule()) return null;
   return (
     <form action={envoyer} className="inline-block">
       {Object.entries(champs).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}

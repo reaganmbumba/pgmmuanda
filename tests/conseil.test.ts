@@ -54,3 +54,16 @@ describe("Conseil et réunions", () => {
     expect(peutOuvrir("choriste", "/choriste/reunions")).toBe(true);
   });
 });
+
+describe("Président de l'antenne", () => {
+  it("ouvre toutes les pages du staff, sans être administrateur", async () => {
+    const { estAdmin, niveauDe, peutOuvrir, voitTout } = await import("@/lib/auth/roles");
+    expect(peutOuvrir("president_antenne", "/staff/finances")).toBe(true);
+    expect(peutOuvrir("president_antenne", "/staff/utilisateurs")).toBe(true);
+    expect(peutOuvrir("president_antenne", "/choriste")).toBe(false);
+    expect(estAdmin("president_antenne")).toBe(false);
+    expect(voitTout("president_antenne")).toBe(true);
+    expect(niveauDe("president_antenne")).toBe("admin");
+    expect(niveauDe("controleur")).toBe("staff");
+  });
+});

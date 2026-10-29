@@ -6,7 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, LogOut, Menu, Search, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { deconnexion } from "@/app/(auth)/actions";
-import { peutOuvrir, type Role } from "@/lib/auth/roles";
+import { estLecteurGeneral, peutOuvrir, type Role } from "@/lib/auth/roles";
+import { LectureSeuleProvider } from "@/components/LectureSeule";
 import { menuStaff } from "@/lib/navigation";
 
 type Utilisateur = { nom: string; libelleRole: string; role: Role; accesFinances?: boolean };
@@ -180,7 +181,16 @@ export function StaffShell({ children, utilisateur, nonLues = 0, panneauNotifica
             </div>
           </div>
         </header>
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <LectureSeuleProvider actif={estLecteurGeneral(utilisateur.role)}>
+            {estLecteurGeneral(utilisateur.role) && (
+              <p className="mb-4 rounded-xl bg-marine-50 px-4 py-2 text-sm text-marine-900 ring-1 ring-slate-200" data-lecture-seule>
+                Compte en lecture seule : vous voyez tout, sans pouvoir modifier.
+              </p>
+            )}
+            {children}
+          </LectureSeuleProvider>
+        </main>
       </div>
     </div>
   );

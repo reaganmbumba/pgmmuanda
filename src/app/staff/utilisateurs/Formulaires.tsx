@@ -4,7 +4,7 @@ import { startTransition, useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Copy, KeyRound, Loader2, MessageCircle, UserPlus } from "lucide-react";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
-import { LIBELLES_NIVEAUX, LIBELLES_ROLES, ROLES_PAR_NIVEAU, niveauDe, peutRecevoirAccesFinances, type Niveau, type Role } from "@/lib/auth/roles";
+import { LIBELLES_NIVEAUX, LIBELLES_ROLES, estLecteurGeneral, ROLES_PAR_NIVEAU, niveauDe, peutRecevoirAccesFinances, type Niveau, type Role } from "@/lib/auth/roles";
 import { lienWhatsApp } from "@/lib/programmes/libelles";
 import { creerCompte, modifierUtilisateur, nouveauMotDePasse, type EtatAcces } from "./actions";
 
@@ -55,7 +55,7 @@ function ChoixRole({ roles, role, onChange, disabled, pour }: {
       {fonctions.length > 1 && (
         <select value={role} disabled={disabled} aria-label={`Fonction${suffixe}`} className={classeChamp}
           onChange={(e) => onChange(e.target.value as Role)}>
-          {fonctions.map((r) => <option key={r} value={r}>{LIBELLES_ROLES[r]}</option>)}
+          {fonctions.map((r) => <option key={r} value={r}>{LIBELLES_ROLES[r]}{estLecteurGeneral(r) ? " (voit tout, ne modifie rien)" : ""}</option>)}
         </select>
       )}
     </div>

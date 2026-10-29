@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useLectureSeule } from "@/components/LectureSeule";
 import { Save } from "lucide-react";
 import { BoutonEnvoi, MessageFormulaire } from "@/components/ui/Formulaire";
 import { STATUTS_PRESENCE, type CodeStatutPresence } from "@/lib/programmes/libelles";
@@ -15,8 +16,10 @@ const couleurs: Record<string, string> = {
   present: "bg-emerald-600 text-white", absent: "bg-red-600 text-white", excuse: "bg-amber-500 text-white",
 };
 
-export function FeuillePresence({ activite, lignes, lectureSeule }: { activite: string; lignes: LignePresence[]; lectureSeule?: boolean }) {
+export function FeuillePresence({ activite, lignes, lectureSeule: figee }: { activite: string; lignes: LignePresence[]; lectureSeule?: boolean }) {
   const [etat, action] = useActionState(enregistrerPresences, undefined);
+  const compteLecture = useLectureSeule();
+  const lectureSeule = figee || compteLecture;
   const [valeurs, setValeurs] = useState(() => Object.fromEntries(lignes.map((l) => [l.id, l.statut])));
   const nonSaisis = lignes.filter((l) => !valeurs[l.id]).length;
 

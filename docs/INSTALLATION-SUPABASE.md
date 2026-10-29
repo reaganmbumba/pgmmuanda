@@ -19,7 +19,8 @@ du projet PGM Muanda (`https://wkokqwuqctgzxpbvyaxp.supabase.co`).
 11. Recommencer avec `supabase/migrations/20261102000100_cotisations.sql` (cotisations et rappels du règlement).
 12. Recommencer avec `supabase/migrations/20261103000100_discipline.sql` (sanctions et absences sans motif).
 13. Recommencer avec `supabase/migrations/20261104000100_conseil_reunions.sql` (Conseil de la PGM, réunions et Assemblées générales).
-14. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
+14. Recommencer avec `supabase/migrations/20261105000100_president_antenne.sql` (compte « Président de l'antenne », lecture seule).
+15. Facultatif, pour essayer l'application : exécuter `supabase/seed-demo.sql`.
    Ces données sont fictives (« démo ») et s'effacent avec les commandes
    données à la fin du fichier.
 

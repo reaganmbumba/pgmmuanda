@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
+import { useLectureSeule } from "@/components/LectureSeule";
 import type { Etat } from "@/lib/etat-action";
 import { MessageFormulaire } from "./Formulaire";
 
@@ -25,9 +26,11 @@ export function FormulaireRapide({ action, champs = {}, libelle, icone, children
 }) {
   const [etat, envoyer, enCours] = useActionState(action, undefined);
   const ref = useRef<HTMLFormElement>(null);
+  const lectureSeule = useLectureSeule();
   useEffect(() => {
     if (etat?.succes && !garder) ref.current?.reset();
   }, [etat, garder]);
+  if (lectureSeule) return null;
   return (
     <form ref={ref} className={`space-y-4 ${className}`}
       onSubmit={(e) => {
@@ -49,6 +52,7 @@ export function FormulaireRapide({ action, champs = {}, libelle, icone, children
 
 /** Bloc repliable « + Ajouter … » : l'écran reste simple tant qu'on n'en a pas besoin. */
 export function Repliable({ titre, children, ouvert }: { titre: string; children: React.ReactNode; ouvert?: boolean }) {
+  if (useLectureSeule()) return null;
   return (
     <details open={ouvert} className="group rounded-2xl border border-slate-200/80 bg-white shadow-sm">
       <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-5 py-3 font-semibold text-marine-900 marker:hidden">

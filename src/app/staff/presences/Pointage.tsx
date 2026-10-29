@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useLectureSeule } from "@/components/LectureSeule";
 import { CircleAlert, CircleCheck, CircleX, Loader2, Search } from "lucide-react";
 import { LecteurQR } from "@/components/carte/LecteurQR";
 import { Avatar } from "@/components/ui/Avatar";
@@ -45,6 +46,7 @@ export function Pointage({ activite }: { activite: string }) {
   const [resultat, setResultat] = useState<ResultatPointage | null>(null);
   const [historique, setHistorique] = useState<ResultatPointage[]>([]);
   const [enCours, demarrer] = useTransition();
+  const lectureSeule = useLectureSeule();
 
   function envoyer(contenu: string, mode: "qr" | "matricule") {
     demarrer(async () => {
@@ -54,6 +56,7 @@ export function Pointage({ activite }: { activite: string }) {
     });
   }
 
+  if (lectureSeule) return <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Compte en lecture seule : le pointage est fait par les responsables et les contrôleurs.</p>;
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <LecteurQR surCode={(texte) => envoyer(texte, "qr")} />

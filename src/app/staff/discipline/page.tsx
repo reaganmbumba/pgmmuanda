@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Carte, EnTete } from "@/components/ui/Carte";
 import { Vide } from "@/components/ui/Champ";
-import { estAdmin } from "@/lib/auth/roles";
+import { voitTout } from "@/lib/auth/roles";
 import { exigerAcces } from "@/lib/auth/session";
 import { lienWhatsAppVers } from "@/lib/cotisations/mois";
 import { listerSanctions, membresAbsents } from "@/lib/discipline/depot";
@@ -27,7 +27,7 @@ export default async function PageDiscipline({ searchParams }: { searchParams: P
       </>
     );
   }
-  const admin = estAdmin(moi.role);
+  const admin = voitTout(moi.role);
   const p = await searchParams;
   const vue = admin && p.vue === "sanctions" ? "sanctions" : "absences";
   const jours = Number(p.jours) === 90 ? 90 : 30;
@@ -60,7 +60,7 @@ export default async function PageDiscipline({ searchParams }: { searchParams: P
         {sanctions.length === 0
           ? <Vide>Aucune sanction enregistrée. Pour en noter une, ouvrez la fiche du membre.</Vide>
           : <Carte><ListeSanctions sanctions={sanctions} avecMembre /></Carte>}
-        <p className="mt-4 text-xs text-slate-500">Seule l&apos;administration voit les sanctions. Pour en noter une, ouvrez la fiche du membre, partie « Discipline ».</p>
+        <p className="mt-4 text-xs text-slate-500">Seuls l&apos;administration et le Président de l&apos;antenne voient les sanctions. Pour en noter une, ouvrez la fiche du membre, partie « Discipline ».</p>
       </>
     );
   }

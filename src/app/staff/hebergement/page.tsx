@@ -1,3 +1,4 @@
+import { estAdmin } from "@/lib/auth/roles";
 import { BedDouble, CalendarCheck, Plus } from "lucide-react";
 import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
 import { Badge } from "@/components/ui/Badge";
@@ -117,7 +118,7 @@ export default async function PageHebergement({ searchParams }: { searchParams: 
           <button className="rounded-lg bg-marine-900 px-3 py-1.5 font-medium text-white">Afficher</button>
         </form>
       </div>
-      <Chambres chambres={chambres} affectations={affectations} jour={jour} gestion />
+      <Chambres chambres={chambres} affectations={affectations} jour={jour} gestion={estAdmin(moi.role)} />
 
       <Carte titre="Choristes logés (séjours en cours et à venir)" className="mt-6">
         {sejours.length === 0 ? <p className="text-sm text-slate-500">Personne n&apos;est logé pour le moment.</p> : (

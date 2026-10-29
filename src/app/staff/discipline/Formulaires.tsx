@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useLectureSeule } from "@/components/LectureSeule";
 import { useFormStatus } from "react-dom";
 import { BellRing, Gavel, Loader2, MessageCircle } from "lucide-react";
 import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
@@ -68,6 +69,7 @@ export function RappelAbsences({ membreId, nom, nombre, whatsapp, dernier }: {
   membreId: string; nom: string; nombre: number; whatsapp: string; dernier: string | null;
 }) {
   const [etat, action] = useActionState(rappelerAbsences, undefined);
+  if (useLectureSeule()) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
       <form action={action} aria-label={`Rappeler le règlement à ${nom}`}>

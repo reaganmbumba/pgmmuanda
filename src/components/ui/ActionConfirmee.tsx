@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useLectureSeule } from "@/components/LectureSeule";
 import { Loader2 } from "lucide-react";
 import { useFormStatus } from "react-dom";
 
@@ -39,6 +40,7 @@ export function ActionConfirmee({
 }) {
   const [etat, envoyer] = useActionState(action, undefined);
   const [ouvert, setOuvert] = useState(false);
+  if (useLectureSeule()) return null;
   return (
     <div className={className}>
       {masquer ? null : !ouvert ? (

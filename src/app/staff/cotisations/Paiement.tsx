@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useLectureSeule } from "@/components/LectureSeule";
 import { useFormStatus } from "react-dom";
 import { BellRing, Check, Loader2, MessageCircle } from "lucide-react";
 import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
@@ -23,6 +24,7 @@ export function Payer({ membreId, nom, mois, montant, devise }: {
   membreId: string; nom: string; mois: string; montant?: number; devise?: string;
 }) {
   const [etat, action] = useActionState(enregistrerCotisation, undefined);
+  if (useLectureSeule()) return null;
   return (
     <form action={action} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="membreId" value={membreId} />
@@ -58,6 +60,7 @@ export function Rappeler({ membreId, nom, mois, whatsapp, dernier }: {
   membreId: string; nom: string; mois: string; whatsapp: string; dernier: string | null;
 }) {
   const [etat, action] = useActionState(rappelerCotisation, undefined);
+  if (useLectureSeule()) return null;
   return (
     <div className="flex flex-wrap items-center gap-2">
       <form action={action} aria-label={`Rappeler le règlement à ${nom}`}>
