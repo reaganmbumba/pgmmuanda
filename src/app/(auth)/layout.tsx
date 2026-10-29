@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative">
           <Image src="/logo-pgm.png" alt="Logo PGM Muanda — EBNM KCC" width={168} height={168} priority unoptimized
             className="mb-6 drop-shadow-[0_12px_32px_rgba(0,0,0,0.35)]" />
-          <p className="text-2xl font-bold tracking-wide text-white">ANTENNE PGM MUANDA</p>
+          <p className="text-2xl font-bold tracking-wide text-white">PGM ANTENNE DE MUANDA</p>
           <p className="mb-10 text-sm font-medium tracking-[0.3em] text-or-400">EBNM KCC</p>
           <p className="text-4xl font-bold leading-tight text-white">
             Servir Dieu par le chant,
@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             cartes, programmes, présences et communication en un seul endroit.
           </p>
         </div>
-        <p className="relative text-xs text-marine-100/50">ANTENNE PGM MUANDA — EBNM KCC</p>
+        <p className="relative text-xs text-marine-100/50">PGM ANTENNE DE MUANDA — EBNM KCC</p>
       </aside>
       <main className="flex flex-col lg:items-center lg:justify-center lg:px-4 lg:py-10">
         {/* Téléphone : bandeau avec le logo */}
@@ -31,7 +31,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="absolute -right-16 -top-16 size-56 rounded-full border-[18px] border-or-500/10" />
           <Image src="/logo-pgm.png" alt="Logo PGM Muanda — EBNM KCC" width={112} height={112} priority unoptimized
             className="relative mx-auto drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]" />
-          <p className="relative mt-4 text-lg font-bold tracking-wide text-white">ANTENNE PGM MUANDA</p>
+          <p className="relative mt-4 text-lg font-bold tracking-wide text-white">PGM ANTENNE DE MUANDA</p>
           <p className="relative text-xs font-medium tracking-[0.25em] text-or-400">EBNM KCC</p>
         </div>
         <div className="relative -mt-8 w-full flex-1 rounded-t-3xl bg-marine-50 px-5 pb-10 pt-8 lg:mt-0 lg:max-w-sm lg:flex-none lg:rounded-none lg:bg-transparent lg:p-0">

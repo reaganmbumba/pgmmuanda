@@ -6,8 +6,8 @@ const SCRIPT_INSTALLATION = `window.addEventListener("beforeinstallprompt",funct
 
 export const metadata: Metadata = {
   title: {
-    default: "ANTENNE PGM MUANDA — EBNM KCC",
-    template: "%s · Antenne PGM Muanda",
+    default: "PGM ANTENNE DE MUANDA — EBNM KCC",
+    template: "%s · PGM Antenne de Muanda",
   },
   description:
     "Plateforme de gestion de la Présidence générale de la musique de Muanda (EBNM-KCC).",
