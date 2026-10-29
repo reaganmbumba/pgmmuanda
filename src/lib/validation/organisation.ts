@@ -140,3 +140,25 @@ export const schemaSanction = z.object({
   defense: z.literal("on", { message: "Article 25 : le membre doit d'abord être invité à présenter sa défense." }),
 }).refine((d) => d.type === "suspension" || !d.finSuspension, { message: "La date de fin ne concerne que la suspension.", path: ["finSuspension"] })
   .refine((d) => d.type !== "suspension" || !!d.finSuspension, { message: "Indiquez jusqu'à quand dure la suspension.", path: ["finSuspension"] });
+
+export const schemaMandat = z.object({
+  membreId: z.string().uuid("Choisissez le membre."),
+  fonction: z.enum(["president", "administration", "secretaire", "finances", "caisse", "technique", "social",
+    "juridique", "discipline", "relations", "presse"], { message: "Choisissez la fonction." }),
+  adjoint: z.preprocess((v) => v === "on", z.boolean()),
+  debut: jour,
+}).refine((d) => !(d.fonction === "president" && d.adjoint), { message: "Le Président n'a pas d'adjoint.", path: ["adjoint"] });
+
+export const schemaReunion = z.object({
+  type: z.enum(["conseil", "ag_ordinaire", "ag_extraordinaire"], { message: "Choisissez le type de réunion." }),
+  titre: texte(150).min(2, "Donnez un titre."),
+  debut: saisieDate.transform(depuisSaisieLocale),
+  lieu: texte(150),
+  ordreDuJour: texte(4000).min(2, "L'ordre du jour est obligatoire (Cadre général, art. 21)."),
+});
+
+export const schemaCompteRendu = z.object({
+  id: z.string().uuid("Réunion invalide."),
+  statut: z.enum(["convoquee", "tenue", "annulee"], { message: "Statut invalide." }),
+  compteRendu: texte(20000),
+});

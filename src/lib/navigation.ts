@@ -26,6 +26,8 @@ import {
   Church,
   Coins,
   Gavel,
+  Landmark,
+  Presentation,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -47,11 +49,13 @@ export const menuStaff: EntreeMenu[] = [
   { href: "/staff/scanner", label: "Scanner", icone: ScanLine, etape: 4, description: "Vérifier une carte par QR code ou matricule.", groupe: "Membres" },
   { href: "/staff/presences", label: "Présences", icone: ClipboardCheck, etape: 6, description: "Présences aux répétitions, réunions et manifestations.", groupe: "Membres" },
   { href: "/staff/discipline", label: "Discipline", icone: Gavel, etape: 9, description: "Absences sans motif et sanctions du Règlement intérieur.", groupe: "Membres" },
+  { href: "/staff/conseil", label: "Conseil de la PGM", icone: Landmark, etape: 9, description: "Les fonctions du Conseil et les mandats de 4 ans.", groupe: "Organisation" },
   { href: "/staff/paroisses", label: "Paroisses", icone: Church, etape: 3, description: "Paroisses et leurs responsables.", groupe: "Organisation" },
   { href: "/staff/chorales", label: "Chorales", icone: Music, etape: 3, description: "Chorales rattachées à chaque paroisse.", groupe: "Organisation" },
   { href: "/staff/commissions", label: "Commissions", icone: UsersRound, etape: 7, description: "Commissions, responsables et tâches.", groupe: "Organisation" },
   { href: "/staff/hebergement", label: "Chambres et hébergement", icone: BedDouble, etape: 7, description: "Chambres, places et affectations.", groupe: "Organisation" },
   { href: "/staff/programmes", label: "Programmes", icone: CalendarDays, etape: 6, description: "Calendrier des activités.", groupe: "Activités" },
+  { href: "/staff/reunions", label: "Réunions et AG", icone: Presentation, etape: 9, description: "Convocations, ordre du jour, présence et compte rendu.", groupe: "Activités" },
   { href: "/staff/chants", label: "Chants et partitions", icone: BookOpen, etape: 7, description: "Répertoire, partitions et enregistrements.", groupe: "Activités" },
   { href: "/staff/formations", label: "Formations", icone: GraduationCap, etape: 7, description: "Formations, supports et évaluations.", groupe: "Activités" },
   { href: "/staff/communication", label: "Communication", icone: Megaphone, etape: 6, description: "Annonces, communiqués et invitations.", groupe: "Activités" },
@@ -77,6 +81,7 @@ export const menuChoriste: EntreeMenu[] = [
   { href: "/choriste/paroisse", label: "Ma paroisse", icone: Building2, etape: 5, description: "Votre paroisse et votre chorale." },
   { href: "/choriste/chambre", label: "Ma chambre", icone: BedDouble, etape: 7, description: "Votre hébergement, si applicable." },
   { href: "/choriste/cotisations", label: "Mes cotisations", icone: Coins, etape: 9, description: "Les mois que vous avez payés." },
+  { href: "/choriste/reunions", label: "Mes réunions", icone: Presentation, etape: 9, description: "Convocations du Conseil, si vous en êtes membre." },
   { href: "/choriste/documents", label: "Mes documents", icone: FileText, etape: 8, description: "Documents mis à votre disposition." },
   { href: "/choriste/notifications", label: "Notifications", icone: Bell, etape: 5, description: "Vos notifications." },
   { href: "/choriste/parametres", label: "Paramètres du compte", icone: Settings, etape: 2, description: "Mot de passe et préférences." },

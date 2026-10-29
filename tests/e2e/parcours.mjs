@@ -977,6 +977,75 @@ try {
   ok((await texte(a)).includes("Grace Mavungu") && (await texte(a)).includes("absence ou retard non justifié"), "la liste des sanctions le reprend");
   ok((await c.goto(`${APP}/staff/discipline`), !new URL(c.url()).pathname.startsWith("/staff")), "un choriste n'y a pas accès");
 
+  console.log("Conseil et réunions");
+  const local = (jours) => new Date(Date.now() + jours * 86400_000 + 3600_000).toISOString().slice(0, 16);
+  await a.goto(`${APP}/staff/conseil`);
+  ok((await a.textContent("[data-sieges]")).includes("0 siège occupé sur 21"), "la page Conseil montre les 21 sièges (art. 28)");
+  await a.click("summary:has-text('Nommer quelqu')");
+  const zm = a.locator("details[open]");
+  await zm.locator("select[name=membreId]").selectOption(await zm.locator("select[name=membreId] option", { hasText: "PGM-MUA-0001" }).getAttribute("value"));
+  await zm.locator("select[name=fonction]").selectOption("secretaire");
+  ok((await zm.textContent()).includes("(4 ans, art. 29)"), "la fin du mandat est calculée à 4 ans");
+  await zm.locator("button:has-text('Nommer au Conseil')").click();
+  await a.waitForSelector("text=Secrétaire : nomination enregistrée pour 4 ans.");
+  await zm.locator("select[name=membreId]").selectOption(await zm.locator("select[name=membreId] option", { hasText: "PGM-MUA-0001" }).getAttribute("value"));
+  await zm.locator("select[name=fonction]").selectOption("secretaire");
+  await zm.locator("button:has-text('Nommer au Conseil')").click();
+  await a.waitForSelector("text=Cette fonction est déjà occupée");
+  ok(true, "une fonction n'a qu'un titulaire à la fois");
+  await r.goto(`${APP}/staff/conseil`);
+  ok((await r.textContent("[data-siege='Secrétaire']")).includes("Grace Mavungu") && !(await r.isVisible("summary:has-text('Nommer quelqu')")),
+    "un responsable d'une autre paroisse voit la composition du Conseil, sans pouvoir nommer");
+
+  await a.goto(`${APP}/staff/reunions`);
+  await a.click("summary:has-text('Convoquer une réunion')");
+  const zr = a.locator("details[open]");
+  await zr.locator("select[name=type]").selectOption("ag_ordinaire");
+  await zr.locator("input[name=titre]").fill("AG trop tôt");
+  await zr.locator("input[name=debut]").fill(local(5));
+  await zr.locator("textarea[name=ordreDuJour]").fill("1. Bilan");
+  await zr.locator("button:has-text('Convoquer')").click();
+  ok(await zr.locator("input[name=debut]").evaluate((e) => !e.validity.valid), "une AG ne se convoque pas moins de 15 jours avant (art. 21)");
+  await zr.locator("select[name=type]").selectOption("conseil");
+  await zr.locator("input[name=titre]").fill("Conseil de novembre");
+  await zr.locator("input[name=debut]").fill(local(3));
+  await zr.locator("input[name=lieu]").fill("Temple de Muanda");
+  await zr.locator("textarea[name=ordreDuJour]").fill("1. Budget\n2. Divers");
+  await zr.locator("button:has-text('Convoquer')").click();
+  await a.waitForSelector("text=Réunion du Conseil convoquée.");
+  ok(true, "l'administration convoque une réunion du Conseil avec son ordre du jour");
+  await c.goto(`${APP}/choriste/notifications`);
+  ok((await texte(c)).includes("Convocation : Conseil de novembre"), "le membre du Conseil reçoit la convocation dans l'application");
+  await c.goto(`${APP}/choriste/reunions`);
+  ok(await c.locator("[data-ma-reunion='Conseil de novembre']").count() === 1, "il la retrouve dans « Mes réunions »");
+  await a.goto(`${APP}/staff/reunions`);
+  await a.click("[data-reunion='Conseil de novembre'] a");
+  await a.waitForSelector("[data-ordre-du-jour]");
+  ok(decodeURIComponent(await a.locator("a:has-text('Partager la convocation')").getAttribute("href")).includes("Ordre du jour :\n1. Budget"),
+    "la convocation se partage sur WhatsApp avec l'ordre du jour");
+  ok((await a.textContent("[data-quorum]")).includes("0 présent sur 1"), "la feuille de présence liste les membres du Conseil");
+  await a.locator("[data-presence-conseil^='Grace Mavungu'] label:has-text('Présent')").click();
+  await a.click("button:has-text('Enregistrer la feuille de présence')");
+  await a.waitForSelector("text=Feuille de présence enregistrée (1).");
+  await a.reload();
+  ok((await a.textContent("[data-quorum]")).includes("1 présent sur 1 · Quorum atteint"), "le quorum de la moitié est calculé (art. 30)");
+  ok(!(await a.locator("select[name=statut] option").allTextContents()).includes("A eu lieu"), "une réunion à venir ne peut pas être notée comme tenue");
+  await r.goto(a.url());
+  ok(!(await r.isVisible("textarea[name=compteRendu]")) && (await texte(r)).includes("1. Budget"), "le staff lit la réunion, seule l'administration la tient");
+
+  for (const jours of [30, 20, 10]) {
+    const { data: rn, error: eR } = await admin.from("reunions").insert({ type: "conseil", titre: `Conseil J-${jours}`,
+      debut: new Date(Date.now() - jours * 86400_000).toISOString(), ordre_du_jour: "1. Point", statut: "tenue" }).select("id").single();
+    if (eR) throw new Error(eR.message);
+    await admin.from("reunion_presences").insert({ reunion_id: rn.id, membre_id: graceFiche.id, statut: "absent" });
+  }
+  await a.goto(`${APP}/staff/conseil`);
+  ok((await a.textContent("[data-art31]")).includes("Grace Mavungu"), "3 absences de suite sans motif au Conseil sont signalées (art. 31)");
+  await confirmer(a, "Fin du mandat");
+  await a.waitForSelector("text=0 siège occupé", { timeout: 15000 }).catch(() => {});
+  await a.reload();
+  ok((await a.textContent("[data-sieges]")).includes("0 siège occupé"), "l'administration termine un mandat");
+
   console.log("Installer l'application");
   const inst = await navigateur.newPage();
   const sw = await inst.request.get(`${APP}/sw.js`, { maxRedirects: 0 });
