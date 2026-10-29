@@ -50,7 +50,8 @@ export function PhotoMembre({ membre, id }: { membre: { prenom: string; nom: str
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-4">
-        <Avatar membre={{ ...membre, photo: apercu ?? membre.photo }} taille="xl" />
+        {/* En cas d'échec, l'aperçu disparaît : on ne montre que ce qui est vraiment enregistré */}
+        <Avatar membre={{ ...membre, photo: (etat?.erreur ? null : apercu) ?? membre.photo }} taille="xl" />
         <div className="space-y-2">
           <form ref={formulaire} action={action}>
             <input type="hidden" name="membreId" value={id} />
