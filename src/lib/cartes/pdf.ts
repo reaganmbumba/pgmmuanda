@@ -59,7 +59,8 @@ async function photoPdf(doc: PDFDocument, photo: string | null): Promise<PDFImag
   const octets = Buffer.from(m[2], "base64");
   try {
     return m[1] === "png" ? await doc.embedPng(octets) : await doc.embedJpg(octets);
-  } catch {
+  } catch (e) {
+    console.error("Photo de carte illisible", e);
     return null; // image illisible : la carte est imprimée avec les initiales
   }
 }
@@ -73,7 +74,7 @@ async function recto(doc: PDFDocument, page: PDFPage, c: CarteImprimable, r: Res
 
   // En-tête
   page.drawImage(r.logo, { x: x + 9, y: y + H - 29, width: 21, height: 21 });
-  ecrire(page, "PGM MUANDA DIGITAL", x + 34, y + H - 17, r.gras, 7.2);
+  ecrire(page, "PGM ANTENNE DE MUANDA", x + 34, y + H - 17, r.gras, 7.2);
   ecrire(page, "EBNM KCC · CARTE DE CHORISTE", x + 34, y + H - 25, r.normal, 4.6, OR_CLAIR);
 
   // Photo ou initiales
@@ -125,13 +126,13 @@ function verso(page: PDFPage, c: CarteImprimable, r: Ressources) {
   ];
   lignes.forEach((l, i) => ecrire(page, l, 12, H - 34 - i * 8.5, r.normal, 5.4, GRIS, W - 24));
   ecrire(page, c.matricule, 12, 4.5, r.gras, 6, OR_CLAIR);
-  ecrire(page, "PGM MUANDA DIGITAL", W - 12 - r.gras.widthOfTextAtSize("PGM MUANDA DIGITAL", 5), 4.5, r.gras, 5, BLANC);
+  ecrire(page, "PGM ANTENNE DE MUANDA", W - 12 - r.gras.widthOfTextAtSize("PGM ANTENNE DE MUANDA", 5), 4.5, r.gras, 5, BLANC);
 }
 
 async function preparer() {
   const doc = await PDFDocument.create();
-  doc.setProducer("PGM MUANDA DIGITAL");
-  doc.setCreator("PGM MUANDA DIGITAL");
+  doc.setProducer("PGM ANTENNE DE MUANDA");
+  doc.setCreator("PGM ANTENNE DE MUANDA");
   const r: Ressources = {
     normal: await doc.embedFont(StandardFonts.Helvetica),
     gras: await doc.embedFont(StandardFonts.HelveticaBold),
@@ -172,7 +173,7 @@ export async function pdfPlanche(cartes: CarteImprimable[]): Promise<Uint8Array>
         page.drawLine({ start: { x: cx, y: cy - 5 }, end: { x: cx, y: cy + 5 }, thickness: 0.3, color: GRIS });
       }
     }
-    ecrire(page, `PGM MUANDA DIGITAL · planche ${i / (colonnes * rangees) + 1} · ${lot.length} carte(s)`, x0, 18, r.normal, 7, GRIS);
+    ecrire(page, `PGM ANTENNE DE MUANDA · planche ${i / (colonnes * rangees) + 1} · ${lot.length} carte(s)`, x0, 18, r.normal, 7, GRIS);
   }
   return doc.save();
 }

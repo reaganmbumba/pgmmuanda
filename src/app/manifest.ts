@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PGM MUANDA DIGITAL — EBNM KCC",
+    name: "PGM ANTENNE DE MUANDA — EBNM KCC",
     short_name: "PGM Muanda",
     description:
       "Plateforme de la Présidence générale de la musique de Muanda (EBNM-KCC).",
