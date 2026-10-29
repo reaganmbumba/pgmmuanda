@@ -19,7 +19,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
         panneauNotifications={supabaseActif ? <ListeNotifications {...notifications} /> : undefined}
         utilisateur={
           u
-            ? { nom: u.nom, libelleRole: LIBELLES_ROLES[u.role], role: u.role }
+            ? { nom: u.nom, libelleRole: LIBELLES_ROLES[u.role], role: u.role, accesFinances: u.accesFinances }
             : { nom: "Présidence PGM", libelleRole: "Administrateur (démo)", role: "super_admin" }
         }
       >

@@ -51,14 +51,14 @@ export async function connexion(_: EtatFormulaire, form: FormData): Promise<Etat
 
   if (admin) await admin.rpc("effacer_echecs_connexion", { p_cle: cle });
 
-  const { data: profil } = await supabase.from("profils").select("role, actif").eq("id", data.user.id).single();
+  const { data: profil } = await supabase.from("profils").select("role, actif, acces_finances").eq("id", data.user.id).single();
   if (!profil?.actif) {
     await supabase.auth.signOut();
     return { erreur: "Ce compte est désactivé. Contactez l'administration de la PGM." };
   }
   const role = profil.role as Role;
   const suite = cheminSur(form.get("suite") as string | null, accueilPourRole(role));
-  redirect(peutOuvrir(role, suite) && suite !== "/" ? suite : accueilPourRole(role));
+  redirect(peutOuvrir(role, suite, profil.acces_finances) && suite !== "/" ? suite : accueilPourRole(role));
 }
 
 export async function motDePasseOublie(_: EtatFormulaire, form: FormData): Promise<EtatFormulaire> {

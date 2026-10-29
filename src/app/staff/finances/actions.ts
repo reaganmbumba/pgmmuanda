@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { utilisateurCourant } from "@/lib/auth/session";
-import { peutSuivreFinances } from "@/lib/auth/roles";
+import { peutOuvrir } from "@/lib/auth/roles";
 import { MAQUETTE, messageErreur, type Etat } from "@/lib/etat-action";
 import { formatMontant } from "@/lib/organisation/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
@@ -12,7 +12,7 @@ import { schemaOperation } from "@/lib/validation/organisation";
 export async function enregistrerOperation(_: Etat, form: FormData): Promise<Etat> {
   if (!supabaseActif) return MAQUETTE;
   const moi = await utilisateurCourant();
-  if (!moi || !peutSuivreFinances(moi.role)) return { erreur: "Action réservée au staff de la PGM." };
+  if (!moi || !peutOuvrir(moi.role, "/staff/finances", moi.accesFinances)) return { erreur: "Action réservée aux personnes choisies pour les finances." };
   const d = schemaOperation.safeParse(Object.fromEntries(form));
   if (!d.success) return { erreur: d.error.issues[0].message };
   const supabase = await creerClientServeur();

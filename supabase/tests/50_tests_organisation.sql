@@ -168,10 +168,36 @@ commit;
 begin;
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000f';
-select pg_temp.affirmer((select count(*) = 2 from public.operations_financieres), 'le responsable de commission voit toutes les finances');
+select pg_temp.affirmer((select count(*) = 1 and bool_and(libelle = 'Acompte menuisier') from public.operations_financieres),
+  'sans « Accès aux finances », le responsable de commission ne voit que l''argent de ses projets');
+select pg_temp.refuse($$insert into public.operations_financieres (sens, libelle, montant) values ('recette', 'Hors projet', 10)$$,
+  'row-level security', 'et n''enregistre rien en dehors de ses projets');
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
+select pg_temp.affirmer((select count(*) = 0 from public.operations_financieres),
+  'un responsable de paroisse non choisi ne voit pas les finances');
+select pg_temp.refuse($$insert into public.operations_financieres (sens, libelle, montant) values ('recette', 'Quête', 10)$$,
+  'row-level security', 'ni n''en enregistre');
+update public.profils set acces_finances = true where id = auth.uid();
+commit;
+select pg_temp.affirmer((select not acces_finances from public.profils where id = '00000000-0000-0000-0000-00000000000b'),
+  'il ne peut pas se donner lui-même l''accès aux finances');
+
+-- L'administration choisit qui suit les finances
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000a';
+update public.profils set acces_finances = true
+ where id in ('00000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000f', '00000000-0000-0000-0000-00000000000d');
+select pg_temp.affirmer((select count(*) = 3 from public.profils where acces_finances), 'l''administration coche « Accès aux finances »');
+commit;
+
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000f';
+select pg_temp.affirmer((select count(*) = 2 from public.operations_financieres), 'choisi, le responsable de commission voit toutes les finances');
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
 select pg_temp.affirmer((select count(*) = 2 from public.operations_financieres) and (select count(*) = 0 from public.projets),
-  'le responsable de paroisse suit aussi les finances (mais pas les projets des commissions)');
+  'choisi, le responsable de paroisse suit aussi les finances (mais pas les projets des commissions)');
 insert into public.operations_financieres (sens, libelle, montant, devise) values ('recette', 'Quête paroisse A', 50000, 'CDF');
 select pg_temp.affirmer((select saisi_par_nom = (select nom_affiche from public.profils where id = '00000000-0000-0000-0000-00000000000b')
   from public.operations_financieres where libelle = 'Quête paroisse A'), 'il enregistre une entrée d''argent, signée de son nom');
@@ -183,7 +209,7 @@ select pg_temp.refuse($$insert into public.operations_financieres (sens, libelle
   values ('depense', 'Pupitres', 1000, '90000000-0000-0000-0000-00000000000a')$$,
   'row-level security', 'il n''impute rien au projet d''une commission');
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000d';
-select pg_temp.affirmer((select count(*) = 0 from public.operations_financieres), 'le contrôleur non plus');
+select pg_temp.affirmer((select count(*) = 0 from public.operations_financieres), 'le contrôleur ne voit rien, même coché');
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000c';
 select pg_temp.affirmer((select count(*) = 0 from public.operations_financieres) and (select count(*) = 0 from public.projet_taches),
   'un choriste ne voit rien des finances ni des projets');

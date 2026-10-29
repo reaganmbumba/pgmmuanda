@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { utilisateurCourant } from "@/lib/auth/session";
-import { estAdmin, rolesAttribuables, type Role } from "@/lib/auth/roles";
+import { estAdmin, peutRecevoirAccesFinances, rolesAttribuables, type Role } from "@/lib/auth/roles";
 import { emailTechnique, messageAcces, motDePasseProvisoire } from "@/lib/auth/comptes";
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { URL_SITE } from "@/lib/supabase/config";
@@ -47,6 +47,7 @@ export async function creerCompte(_: EtatAcces, form: FormData): Promise<EtatAcc
       role: d.data.role,
       paroisse_id: d.data.paroisseId,
       commission_id: d.data.commissionId,
+      acces_finances: d.data.accesFinances && peutRecevoirAccesFinances(d.data.role),
     })
     .eq("id", data.user.id);
   if (e2) {
@@ -112,6 +113,7 @@ export async function modifierUtilisateur(_: Etat, form: FormData): Promise<Etat
       paroisse_id: d.data.paroisseId,
       commission_id: d.data.commissionId,
       actif: d.data.actif,
+      acces_finances: d.data.accesFinances && peutRecevoirAccesFinances(d.data.role),
     })
     .eq("id", d.data.id)
     .select("id");

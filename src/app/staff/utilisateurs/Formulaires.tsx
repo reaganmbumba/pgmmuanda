@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Copy, KeyRound, MessageCircle, UserPlus } from "lucide-react";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
-import { LIBELLES_NIVEAUX, LIBELLES_ROLES, ROLES_PAR_NIVEAU, niveauDe, type Niveau, type Role } from "@/lib/auth/roles";
+import { LIBELLES_NIVEAUX, LIBELLES_ROLES, ROLES_PAR_NIVEAU, niveauDe, peutRecevoirAccesFinances, type Niveau, type Role } from "@/lib/auth/roles";
 import { lienWhatsApp } from "@/lib/programmes/libelles";
 import { creerCompte, modifierUtilisateur, nouveauMotDePasse, type EtatAcces } from "./actions";
 
@@ -59,6 +59,18 @@ function ChoixRole({ roles, role, onChange, disabled, pour }: {
         </select>
       )}
     </div>
+  );
+}
+
+/** Case visible seulement pour les responsables : l'administration a toujours accès aux finances. */
+function CaseFinances({ role, coche, disabled, pour }: { role: Role; coche?: boolean; disabled?: boolean; pour?: string }) {
+  if (!peutRecevoirAccesFinances(role)) return null;
+  return (
+    <label className="flex min-h-12 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-marine-900">
+      <input type="checkbox" name="accesFinances" defaultChecked={coche} disabled={disabled}
+        aria-label={pour ? `Accès aux finances pour ${pour}` : undefined} className="size-5 accent-marine-900" />
+      Accès aux finances
+    </label>
   );
 }
 
@@ -146,6 +158,7 @@ function ChampsCompte({ roles, paroisses, commissions }: Listes) {
         <input name="email" type="email" placeholder="Si la personne en a une" className={classeChamp} />
       </label>
       <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} />
+      <CaseFinances role={role} />
       <div className="md:col-span-2">
         <BoutonEnvoi className="min-h-12 sm:w-auto">
           <UserPlus className="size-5" aria-hidden /> Créer le compte
@@ -182,7 +195,7 @@ function BoutonEnvoiSecondaire({ children, label }: { children: React.ReactNode;
 }
 
 export function LigneUtilisateur({ u, roles, paroisses, commissions, estMoi }: Listes & {
-  u: { id: string; nom: string; email: string | null; identifiant: string | null; role: Role; paroisseId: string | null; commissionId: string | null; actif: boolean };
+  u: { id: string; nom: string; email: string | null; identifiant: string | null; role: Role; paroisseId: string | null; commissionId: string | null; actif: boolean; accesFinances: boolean };
   estMoi: boolean;
 }) {
   const [etat, action] = useActionState(modifierUtilisateur, undefined);
@@ -199,6 +212,7 @@ export function LigneUtilisateur({ u, roles, paroisses, commissions, estMoi }: L
       <ChoixRole roles={modifiable ? roles : [u.role]} role={role} onChange={setRole} disabled={!modifiable} pour={u.nom} />
       <div>
         <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} paroisseId={u.paroisseId} commissionId={u.commissionId} />
+        <div className="mt-2"><CaseFinances role={role} coche={u.accesFinances} disabled={!modifiable} pour={u.nom} /></div>
       </div>
       <select name="actif" defaultValue={u.actif ? "oui" : "non"} disabled={!modifiable} aria-label={`Statut de ${u.nom}`} className={classeChamp}>
         <option value="oui">Actif</option>

@@ -14,6 +14,9 @@ const identifiant = z
   .transform((v) => v || null)
   .pipe(z.string().regex(/^[a-z0-9._-]{3,40}$/, "Identifiant : 3 à 40 caractères (lettres, chiffres, . _ -).").nullable());
 
+// Case cochée : « on » ; décochée : absente du formulaire.
+const caseCochee = z.literal("on").optional().transform((v) => v === "on");
+
 const perimetre = <T extends { role: string; paroisseId: string | null; commissionId: string | null }>(d: T, ctx: z.RefinementCtx) => {
   if (d.role === "responsable_paroisse" && !d.paroisseId)
     ctx.addIssue({ code: "custom", message: "Choisissez la paroisse de ce responsable.", path: ["paroisseId"] });
@@ -34,6 +37,7 @@ export const schemaNouveauCompte = z
     role: z.enum(ROLES, { message: "Rôle invalide." }),
     paroisseId: uuidOuVide,
     commissionId: uuidOuVide,
+    accesFinances: caseCochee,
   })
   .superRefine(perimetre);
 
@@ -44,5 +48,6 @@ export const schemaModification = z
     paroisseId: uuidOuVide,
     commissionId: uuidOuVide,
     actif: z.enum(["oui", "non"]).transform((v) => v === "oui"),
+    accesFinances: caseCochee,
   })
   .superRefine(perimetre);

@@ -18,7 +18,7 @@ export default async function PageUtilisateurs() {
   const supabase = await creerClientServeur();
 
   const [{ data: profils, error }, { data: paroisses }, { data: commissions }] = await Promise.all([
-    supabase.from("profils").select("id, identifiant, nom_affiche, role, paroisse_id, commission_id, actif").order("nom_affiche"),
+    supabase.from("profils").select("id, identifiant, nom_affiche, role, paroisse_id, commission_id, actif, acces_finances").order("nom_affiche"),
     supabase.from("paroisses").select("id, nom").order("nom"),
     supabase.from("commissions").select("id, nom").order("nom"),
   ]);
@@ -67,6 +67,7 @@ export default async function PageUtilisateurs() {
                   paroisseId: p.paroisse_id,
                   commissionId: p.commission_id,
                   actif: p.actif,
+                  accesFinances: p.acces_finances,
                 }}
               />
             ))}

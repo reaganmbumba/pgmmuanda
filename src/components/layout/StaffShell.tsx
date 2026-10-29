@@ -9,13 +9,13 @@ import { deconnexion } from "@/app/(auth)/actions";
 import { peutOuvrir, type Role } from "@/lib/auth/roles";
 import { menuStaff } from "@/lib/navigation";
 
-type Utilisateur = { nom: string; libelleRole: string; role: Role };
+type Utilisateur = { nom: string; libelleRole: string; role: Role; accesFinances?: boolean };
 
 function estActif(pathname: string, href: string) {
   return href === "/staff" ? pathname === href : pathname.startsWith(href);
 }
 
-function MenuLateral({ role, onNavigate }: { role: Role; onNavigate?: () => void }) {
+function MenuLateral({ role, accesFinances, onNavigate }: { role: Role; accesFinances?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
     <nav className="flex h-full flex-col bg-marine-900 text-marine-100">
@@ -23,7 +23,7 @@ function MenuLateral({ role, onNavigate }: { role: Role; onNavigate?: () => void
         <Logo size={44} avecTexte clair />
       </div>
       <ul className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        {menuStaff.filter((e) => peutOuvrir(role, e.href)).map(({ href, label, icone: Icone, groupe }, i, liste) => {
+        {menuStaff.filter((e) => peutOuvrir(role, e.href, accesFinances)).map(({ href, label, icone: Icone, groupe }, i, liste) => {
           const actif = estActif(pathname, href);
           const nouveauGroupe = groupe && groupe !== liste[i - 1]?.groupe;
           return (
@@ -115,7 +115,7 @@ export function StaffShell({ children, utilisateur, nonLues = 0, panneauNotifica
     <div className="flex min-h-[calc(100dvh-28px)]">
       <aside className="hidden w-68 shrink-0 bg-marine-900 lg:block">
         <div className="sticky top-0 h-[calc(100dvh-28px)]">
-          <MenuLateral role={utilisateur.role} />
+          <MenuLateral role={utilisateur.role} accesFinances={utilisateur.accesFinances} />
         </div>
       </aside>
 
@@ -127,7 +127,7 @@ export function StaffShell({ children, utilisateur, nonLues = 0, panneauNotifica
             onClick={() => setOuvert(false)}
           />
           <div className="absolute inset-y-0 left-0 w-72 shadow-xl">
-            <MenuLateral role={utilisateur.role} onNavigate={() => setOuvert(false)} />
+            <MenuLateral role={utilisateur.role} accesFinances={utilisateur.accesFinances} onNavigate={() => setOuvert(false)} />
             <button
               onClick={() => setOuvert(false)}
               className="absolute right-3 top-4 rounded-lg p-1.5 text-white/80 hover:bg-white/10"

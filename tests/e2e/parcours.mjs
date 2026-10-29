@@ -618,11 +618,21 @@ try {
   ok(t.startsWith("﻿Date;") && t.includes("Acompte menuisier") && t.includes("-150000,00;CDF") && t.includes("300,00;USD"), "export Excel des finances");
   await rc.goto(`${APP}/staff/finances`);
   t = await texte(rc);
-  ok(t.includes("Acompte menuisier") && t.includes("Cotisations d'octobre"), "le responsable de commission suit toutes les finances");
+  ok(t.includes("Acompte menuisier") && !t.includes("Cotisations d'octobre"),
+    "sans « Accès aux finances », le responsable de commission ne voit que l'argent de ses projets");
+  await r.goto(`${APP}/staff/finances`);
+  ok(!new URL(r.url()).pathname.startsWith("/staff/finances") && !(await r.isVisible("nav a[href='/staff/finances']")),
+    "un responsable de paroisse non choisi n'a pas accès aux finances");
+  await a.goto(`${APP}/staff/utilisateurs`);
+  const ligneBeta = a.locator("form", { has: a.locator("input[aria-label='Accès aux finances pour Resp Beta']") });
+  await ligneBeta.locator("input[aria-label='Accès aux finances pour Resp Beta']").check();
+  await ligneBeta.locator("button:has-text('Enregistrer')").click();
+  await a.waitForSelector("text=Modification enregistrée.");
+  ok(true, "l'administration coche « Accès aux finances » pour une personne choisie");
   await r.goto(`${APP}/staff/finances`);
   t = await texte(r);
-  ok(t.includes("Acompte menuisier") && t.includes("Cotisations d'octobre") && t.includes("par Resp Artistique"),
-    "le responsable de paroisse aussi, avec le nom de qui a enregistré");
+  ok(new URL(r.url()).pathname === "/staff/finances" && t.includes("Acompte menuisier") && t.includes("Cotisations d'octobre") && t.includes("par Resp Artistique"),
+    "choisi, le responsable de paroisse voit toutes les finances, avec le nom de qui a enregistré");
   z = await ouvrir(r, "Enregistrer une entrée ou une sortie");
   await z.locator("input[name=sens][value=recette]").check();
   await z.locator("input[name=libelle]").fill("Quête de la paroisse");

@@ -4,7 +4,7 @@ import { Bouton } from "@/components/ui/Bouton";
 import { Carte, EnTete } from "@/components/ui/Carte";
 import { Vide } from "@/components/ui/Champ";
 import { FormulaireRapide, Repliable } from "@/components/ui/FormulaireRapide";
-import { estAdmin } from "@/lib/auth/roles";
+import { estAdmin, peutSuivreFinances } from "@/lib/auth/roles";
 import { exigerAcces } from "@/lib/auth/session";
 import { operationsDemo } from "@/lib/demo-data";
 import { listerDocuments, type Document } from "@/lib/documents/depot";
@@ -68,6 +68,8 @@ export default async function PageFinances({ searchParams }: { searchParams: Pro
     listerProjets(),
   ]);
   const admin = estAdmin(moi.role);
+  // Sans « Accès aux finances », un responsable de commission ne suit que l'argent de ses projets.
+  const complet = peutSuivreFinances(moi.role, moi.accesFinances);
   const recus = recusParOperation(await listerDocuments({ operations: operations.map((o) => o.id) }));
   const ouverts = projets.filter((p) => p.statutCode !== "annule" && p.statutCode !== "termine");
 
@@ -87,15 +89,26 @@ export default async function PageFinances({ searchParams }: { searchParams: Pro
         } />
       <Bilans operations={operations} />
       <div className="mb-6">
-        <Repliable titre="Enregistrer une entrée ou une sortie d'argent">
-          <FormulaireRapide action={enregistrerOperation} libelle="Enregistrer" icone={<Save className="size-4" aria-hidden />}>
-            <ChampsOperation projets={ouverts} projetObligatoire={false} />
-          </FormulaireRapide>
-        </Repliable>
+        {complet || ouverts.length > 0 ? (
+          <Repliable titre="Enregistrer une entrée ou une sortie d'argent">
+            <FormulaireRapide action={enregistrerOperation} libelle="Enregistrer" icone={<Save className="size-4" aria-hidden />}>
+              <ChampsOperation projets={ouverts} projetObligatoire={!complet} />
+            </FormulaireRapide>
+          </Repliable>
+        ) : (
+          <p className="text-sm text-slate-500">Créez d&apos;abord un projet pour votre commission pour y enregistrer des dépenses.</p>
+        )}
       </div>
       <h2 className="mb-3 text-lg font-semibold text-marine-900">Opérations {annee}</h2>
       <Tableau operations={operations} supprimable={admin} recus={recus} joindre />
-      {!admin && <p className="mt-4 text-xs text-slate-500">Tout le staff voit les finances et peut enregistrer une opération. Pour corriger ou supprimer une erreur, contactez l&apos;administration.</p>}
+      {!admin && (
+        <p className="mt-4 text-xs text-slate-500">
+          {complet
+            ? "L'administration vous a choisi(e) pour suivre les finances."
+            : "Vous voyez seulement l'argent des projets de votre commission."}{" "}
+          Pour corriger ou supprimer une erreur, contactez l&apos;administration.
+        </p>
+      )}
     </>
   );
 }

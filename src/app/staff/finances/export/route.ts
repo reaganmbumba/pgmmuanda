@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { utilisateurCourant } from "@/lib/auth/session";
-import { peutSuivreFinances } from "@/lib/auth/roles";
+import { peutOuvrir } from "@/lib/auth/roles";
 import { fichierCsv } from "@/lib/csv";
 import { listerOperations } from "@/lib/organisation/depot";
 import { SENS_OPERATION } from "@/lib/organisation/libelles";
@@ -10,7 +10,7 @@ import { supabaseActif } from "@/lib/supabase/config";
 export async function GET(request: NextRequest) {
   if (!supabaseActif) return new NextResponse("Export indisponible en mode maquette.", { status: 404 });
   const moi = await utilisateurCourant();
-  if (!moi || !peutSuivreFinances(moi.role)) return new NextResponse("Accès refusé.", { status: 403 });
+  if (!moi || !peutOuvrir(moi.role, "/staff/finances", moi.accesFinances)) return new NextResponse("Accès refusé.", { status: 403 });
   const annee = Number(request.nextUrl.searchParams.get("annee"));
   if (!Number.isInteger(annee) || annee < 2000 || annee > 2100) return new NextResponse("Année invalide.", { status: 400 });
   const ops = await listerOperations({ depuis: `${annee}-01-01`, avant: `${annee + 1}-01-01` });

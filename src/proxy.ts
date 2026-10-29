@@ -33,13 +33,13 @@ export async function proxy(request: NextRequest) {
   }
   if (!user) return rediriger(request, reponse, "/connexion", chemin);
 
-  const { data: profil } = await supabase.from("profils").select("role, actif").eq("id", user.id).single();
+  const { data: profil } = await supabase.from("profils").select("role, actif, acces_finances").eq("id", user.id).single();
   if (!profil?.actif) {
     await supabase.auth.signOut();
     return rediriger(request, reponse, "/connexion", chemin);
   }
   const role = profil.role as Role;
-  if (!peutOuvrir(role, chemin)) {
+  if (!peutOuvrir(role, chemin, profil.acces_finances)) {
     return rediriger(request, reponse, accueilPourRole(role));
   }
   return reponse;

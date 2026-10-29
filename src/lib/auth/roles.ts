@@ -39,14 +39,14 @@ export const accueilPourRole = (role: Role) =>
   role === "controleur" ? "/staff/scanner" : estStaff(role) ? "/staff" : "/choriste";
 
 /** Le contrôleur n'a accès qu'au scanner et au pointage des présences dans l'espace staff. */
-export function peutOuvrir(role: Role, chemin: string): boolean {
+export function peutOuvrir(role: Role, chemin: string, accesFinances = false): boolean {
   if (chemin.startsWith("/choriste")) return role === "choriste";
   if (!chemin.startsWith("/staff")) return true;
   if (!estStaff(role)) return false;
   if (role === "controleur") return chemin === "/staff/scanner" || chemin === "/staff/presences";
   if (chemin.startsWith("/staff/utilisateurs") || chemin.startsWith("/staff/hebergement")) return estAdmin(role);
   if (chemin.startsWith("/staff/projets")) return peutGererCommission(role);
-  if (chemin.startsWith("/staff/finances")) return peutSuivreFinances(role);
+  if (chemin.startsWith("/staff/finances")) return peutSuivreFinances(role, accesFinances) || peutGererCommission(role);
   return true;
 }
 
@@ -61,8 +61,17 @@ export const peutGererProgramme = (role: Role | null | undefined) =>
 /** Gérer formations, projets et chants (la base limite le responsable à sa commission). */
 export const peutGererCommission = (role: Role | null | undefined) => estAdmin(role) || role === "responsable_commission";
 
-/** Voir les finances, enregistrer entrées et sorties, joindre les reçus : tout le staff sauf le contrôleur. */
-export const peutSuivreFinances = (role: Role | null | undefined) => estStaff(role) && role !== "controleur";
+/**
+ * Suivre toutes les finances (voir, enregistrer, joindre les reçus) : l'administration, et les
+ * responsables que l'administration a choisis (case « Accès aux finances »). Sans cette case,
+ * le responsable de commission ne voit que l'argent des projets de sa commission.
+ */
+export const peutSuivreFinances = (role: Role | null | undefined, accesFinances = false) =>
+  estAdmin(role) || (accesFinances && peutRecevoirAccesFinances(role));
+
+/** Rôles pour lesquels l'administration peut cocher « Accès aux finances ». */
+export const peutRecevoirAccesFinances = (role: Role | null | undefined) =>
+  role === "responsable_paroisse" || role === "responsable_commission";
 
 /** Publier des annonces (le responsable de paroisse publie vers sa paroisse). */
 export const peutPublier = (role: Role | null | undefined) => estAdmin(role) || role === "responsable_paroisse";

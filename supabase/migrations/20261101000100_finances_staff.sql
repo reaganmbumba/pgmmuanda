@@ -1,13 +1,19 @@
--- Finances ouvertes à tout le staff (demande de la PGM, 2026-10-29) :
--- présidence, responsables de paroisse et de commission voient toutes les
--- entrées et sorties d'argent, en enregistrent et y joignent les reçus.
--- Le contrôleur (scanner seulement) et les choristes n'y ont pas accès.
+-- Finances suivies par les personnes choisies (demande de la PGM, 2026-10-29) :
+-- l'administration coche « Accès aux finances » pour un responsable de paroisse ou de
+-- commission. Ces personnes voient toutes les entrées et sorties d'argent, en
+-- enregistrent et y joignent les reçus. Sans cette case, rien ne change : le responsable
+-- de commission ne voit que l'argent des projets de sa commission.
 -- Correction et suppression restent réservées à l'administration, et chaque
 -- opération garde le nom de la personne qui l'a enregistrée.
 
+alter table public.profils add column acces_finances boolean not null default false;
+
 create or replace function public.peut_suivre_finances()
 returns boolean language sql stable security definer set search_path = '' as $$
-  select coalesce(public.mon_role() not in ('choriste', 'controleur'), false);
+  select coalesce((
+    select p.role in ('super_admin', 'presidence')
+        or (p.acces_finances and p.role in ('responsable_paroisse', 'responsable_commission'))
+      from public.profils p where p.id = auth.uid() and p.actif), false);
 $$;
 grant execute on function public.peut_suivre_finances() to authenticated;
 
@@ -39,21 +45,23 @@ end $$;
 
 drop policy "lecture" on public.operations_financieres;
 create policy "lecture" on public.operations_financieres for select to authenticated
-  using (public.peut_suivre_finances());
+  using (public.peut_suivre_finances() or public.peut_gerer_commission(commission_id));
 
 -- Un projet reste celui de sa commission : on n'y impute une dépense que si on gère le projet.
 drop policy "saisie" on public.operations_financieres;
 create policy "saisie" on public.operations_financieres for insert to authenticated with check (
-  public.peut_suivre_finances()
-  and (projet_id is null or public.est_admin() or public.peut_gerer_projet(projet_id))
+  public.est_admin()
+  or (projet_id is null and public.peut_suivre_finances())
+  or (projet_id is not null and public.peut_gerer_projet(projet_id))
 );
 
--- Reçus : tout le staff qui suit les finances peut joindre la photo d'un reçu.
+-- Reçus : les personnes qui suivent les finances, et la commission pour ses projets.
 create or replace function public.peut_gerer_document(p_chant uuid, p_operation uuid, p_portee uuid)
 returns boolean language sql stable security definer set search_path = '' as $$
   select case
     when p_chant is not null then public.est_admin() or public.mon_role() = 'responsable_commission'
-    when p_operation is not null then public.peut_suivre_finances()
-      and exists (select 1 from public.operations_financieres o where o.id = p_operation)
+    when p_operation is not null then exists (
+      select 1 from public.operations_financieres o where o.id = p_operation
+         and (public.peut_suivre_finances() or (o.projet_id is not null and public.peut_gerer_projet(o.projet_id))))
     else public.peut_gerer_annonce(p_portee) end;
 $$;
