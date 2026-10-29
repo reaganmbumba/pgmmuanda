@@ -17,6 +17,7 @@ export default async function PageParoisses() {
   const moi = await exigerAcces("/staff/paroisses");
   const { paroisses, chorales } = await lireOrganisation();
   const admin = estAdmin(moi?.role);
+  const urbaines = chorales.filter((c) => c.paroisseId === null);
   const mesParoisses = admin ? paroisses : moi?.role === "responsable_paroisse" ? paroisses.filter((p) => p.id === moi.paroisseId) : [];
 
   return (
@@ -25,7 +26,24 @@ export default async function PageParoisses() {
       <div className="space-y-5">
         {admin && <Carte titre="Nouvelle paroisse"><FormulaireParoisse /></Carte>}
         {peutGererMembres(moi?.role) && mesParoisses.length > 0 && (
-          <Carte titre="Nouvelle chorale"><FormulaireChorale paroisses={mesParoisses} /></Carte>
+          <Carte titre="Nouvelle chorale"><FormulaireChorale paroisses={mesParoisses} urbaine={admin} /></Carte>
+        )}
+        {urbaines.length > 0 && (
+          <Carte titre="Chorales urbaines (toutes paroisses)">
+            <p className="mb-3 text-xs text-slate-500">Elles chantent dans toute l&apos;antenne. Chaque membre garde sa propre paroisse.</p>
+            <ul className="divide-y divide-slate-100 text-sm">
+              {urbaines.map((c) => (
+                <li key={c.id} className="flex items-center justify-between gap-2 py-2">
+                  <span className="text-marine-900">{c.nom}{c.estDemo && <span className="text-or-600"> (démo)</span>}</span>
+                  {admin && (<div className="flex items-center gap-2">
+                    <Renommer type="chorale" id={c.id} nom={c.nom} />
+                    <ActionConfirmee action={supprimerOrganisation} champs={{ type: "chorale", id: c.id }} danger
+                      libelle="Retirer" question="Supprimer cette chorale ? Ses membres resteront dans leur paroisse." />
+                  </div>)}
+                </li>
+              ))}
+            </ul>
+          </Carte>
         )}
         {paroisses.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">

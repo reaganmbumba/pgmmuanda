@@ -20,7 +20,8 @@ export default async function ModifierMembre({ params }: { params: Promise<{ id:
   }
   // Le responsable de chorale, seulement dans sa chorale.
   if (moi?.role === "responsable_chorale") {
-    organisation.paroisses = organisation.paroisses.filter((p) => p.id === moi.paroisseId);
+    // Chorale urbaine (sans paroisse) : ses membres viennent de toutes les paroisses.
+    if (moi.paroisseId) organisation.paroisses = organisation.paroisses.filter((p) => p.id === moi.paroisseId);
     organisation.chorales = organisation.chorales.filter((c) => c.id === moi.choraleId);
   }
   return (

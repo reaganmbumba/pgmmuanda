@@ -89,7 +89,8 @@ export async function maFiche(profilId: string): Promise<FicheMembre | null> {
 
 export type Organisation = {
   paroisses: { id: string; nom: string; ville: string; estDemo: boolean }[];
-  chorales: { id: string; nom: string; paroisseId: string; estDemo: boolean }[];
+  /** paroisseId null : chorale urbaine (toutes paroisses). */
+  chorales: { id: string; nom: string; paroisseId: string | null; estDemo: boolean }[];
 };
 
 export async function lireOrganisation(): Promise<Organisation> {

@@ -63,6 +63,7 @@ export const schemaParoisse = z.object({
 });
 
 export const schemaChorale = z.object({
-  paroisseId: z.string().uuid("Choisissez la paroisse."),
+  // « urbaine » : chorale de toute l'antenne, sans paroisse (administration seulement)
+  paroisseId: z.union([z.literal("urbaine"), z.string().uuid()], { message: "Choisissez la paroisse." }),
   nom: texte(120).min(2, "Indiquez le nom de la chorale."),
 });

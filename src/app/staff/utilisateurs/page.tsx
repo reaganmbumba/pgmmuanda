@@ -32,7 +32,7 @@ export default async function PageUtilisateurs() {
   ]);
   // « Vision Femme (Paroisse de Kitsiaku) » : deux paroisses peuvent avoir une chorale du même nom
   const chorales = ((choralesBrutes ?? []) as unknown as { id: string; nom: string; paroisses: { nom: string } | null }[])
-    .map((c) => ({ id: c.id, nom: c.paroisses ? `${c.nom} (${c.paroisses.nom})` : c.nom }));
+    .map((c) => ({ id: c.id, nom: `${c.nom} (${c.paroisses?.nom ?? "Urbain"})` }));
 
   // Les adresses e-mail sont dans Supabase Auth : lecture côté serveur uniquement.
   const emails = new Map<string, string>();

@@ -21,7 +21,9 @@ function Champ({ libelle, children, aide }: { libelle: string; children: React.R
 export function FormulaireMembre({ membre, organisation }: { membre?: FicheMembre; organisation: Organisation }) {
   const [etat, action] = useActionState(enregistrerMembre, undefined);
   const [paroisse, setParoisse] = useState(membre?.paroisseId ?? (organisation.paroisses.length === 1 ? organisation.paroisses[0].id : ""));
-  const chorales = organisation.chorales.filter((c) => c.paroisseId === paroisse);
+  // Les chorales de la paroisse, puis les chorales urbaines (ouvertes à toutes les paroisses)
+  const chorales = organisation.chorales.filter((c) => c.paroisseId === paroisse)
+    .concat(paroisse ? organisation.chorales.filter((c) => c.paroisseId === null) : []);
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
   return (
@@ -53,9 +55,9 @@ export function FormulaireMembre({ membre, organisation }: { membre?: FicheMembr
           </select>
         </Champ>
         <Champ libelle="Chorale" aide={paroisse && !chorales.length ? "Aucune chorale enregistrée pour cette paroisse." : undefined}>
-          <select key={paroisse} name="choraleId" defaultValue={membre?.paroisseId === paroisse ? (membre?.choraleId ?? "") : organisation.chorales.length === 1 ? organisation.chorales[0].id : ""} className={classeChamp}>
+          <select key={paroisse} name="choraleId" defaultValue={membre?.paroisseId === paroisse || chorales.some((c) => c.id === membre?.choraleId && c.paroisseId === null) ? (membre?.choraleId ?? "") : organisation.chorales.length === 1 ? organisation.chorales[0].id : ""} className={classeChamp}>
             <option value="">Aucune</option>
-            {chorales.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
+            {chorales.map((c) => <option key={c.id} value={c.id}>{c.paroisseId === null ? `${c.nom} (Urbain)` : c.nom}</option>)}
           </select>
         </Champ>
         <Champ libelle="Voix">

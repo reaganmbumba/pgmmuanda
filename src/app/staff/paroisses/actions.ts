@@ -35,10 +35,12 @@ export async function ajouterChorale(_: Etat, form: FormData): Promise<Etat> {
   if (!moi || !peutGererMembres(moi.role)) return { erreur: "Action réservée à l'administration et aux responsables de paroisse." };
   const d = schemaChorale.safeParse(Object.fromEntries(form));
   if (!d.success) return { erreur: d.error.issues[0].message };
+  const urbaine = d.data.paroisseId === "urbaine";
+  if (urbaine && !estAdmin(moi.role)) return { erreur: "Seule l'administration crée une chorale urbaine." };
   const supabase = await creerClientServeur();
-  const { error } = await supabase.from("chorales").insert({ nom: d.data.nom, paroisse_id: d.data.paroisseId });
+  const { error } = await supabase.from("chorales").insert({ nom: d.data.nom, paroisse_id: urbaine ? null : d.data.paroisseId });
   if (error) {
-    if (error.code === "23505") return { erreur: "Cette chorale existe déjà dans cette paroisse." };
+    if (error.code === "23505") return { erreur: urbaine ? "Cette chorale urbaine existe déjà." : "Cette chorale existe déjà dans cette paroisse." };
     if (error.code === "42501") return { erreur: "Vous ne pouvez ajouter une chorale que dans votre paroisse." };
     return { erreur: "Enregistrement refusé." };
   }

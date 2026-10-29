@@ -992,6 +992,32 @@ try {
   await a.waitForSelector("h2:text-is('Paroisse Alpha')");
   ok(true, "l'administration corrige le nom d'une paroisse mal écrit");
 
+  console.log("Chorale urbaine (sans paroisse)");
+  const formChorale = a.locator("form", { has: a.locator("input[aria-label='Nom de la chorale']") });
+  await formChorale.locator("select[name=paroisseId]").selectOption("urbaine");
+  await formChorale.locator("input[name=nom]").fill("Oracle E2E");
+  await formChorale.locator("button:has-text('Ajouter')").click();
+  await a.waitForSelector("text=Chorale « Oracle E2E » ajoutée.");
+  await a.reload();
+  ok((await a.locator("section", { has: a.locator("h2:text-is('Chorales urbaines (toutes paroisses)')") }).textContent()).includes("Oracle E2E"),
+    "l'administration crée une chorale urbaine, sans paroisse");
+  await a.goto(`${APP}/staff/membres/nouveau`);
+  for (const nom of ["Paroisse Alpha", "Paroisse Beta"]) {
+    await a.locator("select[name=paroisseId]").selectOption({ label: nom });
+    ok(await a.locator("select[name=choraleId] option", { hasText: "Oracle E2E (Urbain)" }).count() === 1,
+      `la chorale urbaine est proposée aux membres de ${nom}`);
+  }
+  await r.goto(`${APP}/staff/paroisses`);
+  ok((await r.locator("select[name=paroisseId] option[value=urbaine]").count()) === 0,
+    "un responsable de paroisse ne peut pas créer de chorale urbaine");
+  await a.goto(`${APP}/staff/paroisses`);
+  const carteUrbaine = a.locator("section", { has: a.locator("h2:text-is('Chorales urbaines (toutes paroisses)')") });
+  await carteUrbaine.getByRole("button", { name: "Retirer", exact: true }).click();
+  await carteUrbaine.getByRole("button", { name: "Confirmer" }).click();
+  await a.waitForTimeout(1500);
+  await a.reload();
+  ok(!(await texte(a)).includes("Oracle E2E"), "la chorale urbaine de test est retirée");
+
   console.log("Conseil et réunions");
   const local = (jours) => new Date(Date.now() + jours * 86400_000 + 3600_000).toISOString().slice(0, 16);
   await a.goto(`${APP}/staff/conseil`);

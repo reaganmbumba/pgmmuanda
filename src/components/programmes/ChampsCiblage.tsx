@@ -27,7 +27,7 @@ export function ChampsCiblage({ organisation, portees, valeur }: {
   const [portee, setPortee] = useState<string>(valeur?.portee ?? (portees[0] ?? ""));
   const [tous, setTous] = useState(valeur?.pourTous ?? true);
   const chorales = organisation.chorales.filter((c) => !portee || c.paroisseId === portee);
-  const nomParoisse = (id: string) => organisation.paroisses.find((p) => p.id === id)?.nom ?? "";
+  const nomParoisse = (id: string | null) => (id ? organisation.paroisses.find((p) => p.id === id)?.nom ?? "" : "Urbain");
 
   return (
     <fieldset className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
