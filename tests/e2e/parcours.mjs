@@ -887,7 +887,7 @@ try {
   await a.waitForSelector("[data-mot-de-passe]");
   const mdpProvisoire = (await a.textContent("[data-mot-de-passe]")).trim();
   const whatsapp = await a.locator("[data-acces] a[href^='https://wa.me/']").getAttribute("href");
-  ok(/^[a-z2-9]{4}-[a-z2-9]{4}-[a-z2-9]{4}$/.test(mdpProvisoire) && decodeURIComponent(whatsapp).includes("josephine.mbala") && decodeURIComponent(whatsapp).includes(mdpProvisoire),
+  ok(/^[A-Z][a-z2-9]{3}-[a-z2-9]{4}-[a-z2-9]{3}[2-9]$/.test(mdpProvisoire) && decodeURIComponent(whatsapp).includes("josephine.mbala") && decodeURIComponent(whatsapp).includes(mdpProvisoire),
     "un compte est créé sans e-mail : mot de passe provisoire affiché, message WhatsApp prêt");
   await a.goto(`${APP}/staff/utilisateurs`);
   t = await texte(a);
