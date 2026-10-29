@@ -922,7 +922,7 @@ try {
     "le type de compte se choisit parmi Membre, Membre staff et Admin");
   await a.selectOption("details[open] select[aria-label=Niveau]", "staff");
   const fonctions = await a.locator("details[open] select[aria-label=Fonction] option").allTextContents();
-  ok(fonctions.join("|") === "Responsable de paroisse|Responsable de commission|Contrôleur" && await a.isVisible("details[open] select[name=paroisseId]"),
+  ok(fonctions.join("|") === "Responsable de paroisse|Responsable de chorale|Responsable de commission|Contrôleur" && await a.isVisible("details[open] select[name=paroisseId]"),
     "Membre staff demande ensuite la fonction, puis la paroisse");
   await a.selectOption("details[open] select[aria-label=Fonction]", "responsable_commission");
   await a.selectOption("details[open] select[name=commissionId]", { index: 1 });
@@ -1096,6 +1096,31 @@ try {
   const { data: modif } = await clp.from("membres").update({ nom: "Pirate" }).eq("matricule", "PGM-MUA-0001").select("id");
   const { error: eIns } = await clp.from("paroisses").insert({ nom: "Paroisse pirate" });
   ok((modif ?? []).length === 0 && eIns, "même en passant par la base directement, il ne peut rien modifier");
+
+  console.log("Responsable de chorale");
+  // Un membre de la même paroisse, sans chorale : le responsable de chorale ne doit pas le voir
+  const { data: parAlpha } = await admin.from("paroisses").select("id").eq("nom", "Paroisse Alpha").single();
+  await admin.from("membres").insert({ nom: "Horschorale", prenom: "Marthe", paroisse_id: parAlpha.id });
+  await a.goto(`${APP}/staff/utilisateurs`);
+  await a.click("summary:has-text('Créer un compte')");
+  await a.fill("input[name=nom]", "Chef Chorale Alpha");
+  const mdpChoisi = await a.inputValue("details[open] input[name=motDePasse]");
+  ok(/^[A-Z][a-z2-9]{3}-[a-z2-9]{4}-[a-z2-9]{3}[2-9]$/.test(mdpChoisi), "le mot de passe provisoire est visible dans le formulaire, avant la création");
+  await a.selectOption("details[open] select[aria-label=Niveau]", "staff");
+  await a.selectOption("details[open] select[aria-label=Fonction]", "responsable_chorale");
+  await a.selectOption("details[open] select[aria-label=Chorale]", { label: "Chorale Alpha (Paroisse Alpha)" });
+  await a.click("button:has-text('Créer le compte')");
+  await a.waitForSelector("[data-mot-de-passe]");
+  ok((await a.textContent("[data-mot-de-passe]")).trim() === mdpChoisi, "c'est ce mot de passe qui est donné à la personne");
+  const rch = await session("chef.chorale.alpha", mdpChoisi);
+  await rch.goto(`${APP}/staff/membres`);
+  t = await texte(rch);
+  ok(t.includes("Grace Mavungu") && !t.includes("Horschorale") && !t.includes("Lukombo"), "le responsable de chorale ne voit que les membres de sa chorale");
+  await rch.goto(`${APP}/staff/membres/nouveau`);
+  ok(await rch.locator("select[name=choraleId] option:checked").textContent() === "Chorale Alpha"
+    && await rch.locator("select[name=paroisseId] option").count() <= 2, "il inscrit les nouveaux membres dans sa chorale");
+  await rch.goto(`${APP}/staff/paroisses`);
+  ok(!(await rch.isVisible("text=Nouvelle chorale")) && !(await rch.isVisible("summary:has-text('Corriger le nom')")), "il ne crée ni ne renomme de chorale");
 
   console.log("Installer l'application");
   const inst = await navigateur.newPage();

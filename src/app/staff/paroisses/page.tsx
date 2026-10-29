@@ -17,7 +17,7 @@ export default async function PageParoisses() {
   const moi = await exigerAcces("/staff/paroisses");
   const { paroisses, chorales } = await lireOrganisation();
   const admin = estAdmin(moi?.role);
-  const mesParoisses = admin ? paroisses : paroisses.filter((p) => p.id === moi?.paroisseId);
+  const mesParoisses = admin ? paroisses : moi?.role === "responsable_paroisse" ? paroisses.filter((p) => p.id === moi.paroisseId) : [];
 
   return (
     <>
@@ -35,7 +35,7 @@ export default async function PageParoisses() {
           <div className="grid gap-4 md:grid-cols-2">
             {paroisses.map((p) => {
               const siennes = chorales.filter((c) => c.paroisseId === p.id);
-              const gere = admin || p.id === moi?.paroisseId;
+              const gere = admin || (moi?.role === "responsable_paroisse" && p.id === moi.paroisseId);
               return (
                 <Carte key={p.id} titre={`${p.nom}${p.estDemo ? " (démo)" : ""}`}
                   action={admin ? (

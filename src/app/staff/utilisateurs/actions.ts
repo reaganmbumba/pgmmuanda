@@ -39,7 +39,7 @@ export async function creerCompte(_: EtatAcces, form: FormData): Promise<EtatAcc
   const { data: pris } = await admin.from("profils").select("id").eq("identifiant", d.data.identifiant).maybeSingle();
   if (pris) return { erreur: "Cet identifiant est déjà utilisé. Choisissez-en un autre." };
 
-  const motDePasse = motDePasseProvisoire();
+  const motDePasse = d.data.motDePasse ?? motDePasseProvisoire();
   const { data, error } = await admin.auth.admin.createUser({
     email: d.data.email ?? emailTechnique(d.data.identifiant),
     password: motDePasse,
@@ -62,6 +62,7 @@ export async function creerCompte(_: EtatAcces, form: FormData): Promise<EtatAcc
       role: d.data.role,
       paroisse_id: d.data.paroisseId,
       commission_id: d.data.commissionId,
+      chorale_id: d.data.choraleId,
       acces_finances: d.data.accesFinances && peutRecevoirAccesFinances(d.data.role),
     })
     .eq("id", data.user.id);
@@ -133,6 +134,7 @@ export async function modifierUtilisateur(_: Etat, form: FormData): Promise<Etat
       role: d.data.role,
       paroisse_id: d.data.paroisseId,
       commission_id: d.data.commissionId,
+      chorale_id: d.data.choraleId,
       actif: d.data.actif,
       acces_finances: d.data.accesFinances && peutRecevoirAccesFinances(d.data.role),
     })

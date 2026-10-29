@@ -53,7 +53,7 @@ export function FormulaireMembre({ membre, organisation }: { membre?: FicheMembr
           </select>
         </Champ>
         <Champ libelle="Chorale" aide={paroisse && !chorales.length ? "Aucune chorale enregistrée pour cette paroisse." : undefined}>
-          <select key={paroisse} name="choraleId" defaultValue={membre?.paroisseId === paroisse ? (membre?.choraleId ?? "") : ""} className={classeChamp}>
+          <select key={paroisse} name="choraleId" defaultValue={membre?.paroisseId === paroisse ? (membre?.choraleId ?? "") : organisation.chorales.length === 1 ? organisation.chorales[0].id : ""} className={classeChamp}>
             <option value="">Aucune</option>
             {chorales.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
           </select>

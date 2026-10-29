@@ -17,11 +17,15 @@ export default async function PageUtilisateurs() {
   const moi = (await exigerAcces("/staff/utilisateurs"))!;
   const supabase = await creerClientServeur();
 
-  const [{ data: profils, error }, { data: paroisses }, { data: commissions }] = await Promise.all([
-    supabase.from("profils").select("id, identifiant, nom_affiche, role, paroisse_id, commission_id, actif, acces_finances").order("nom_affiche"),
+  const [{ data: profils, error }, { data: paroisses }, { data: commissions }, { data: choralesBrutes }] = await Promise.all([
+    supabase.from("profils").select("id, identifiant, nom_affiche, role, paroisse_id, commission_id, chorale_id, actif, acces_finances").order("nom_affiche"),
     supabase.from("paroisses").select("id, nom").order("nom"),
     supabase.from("commissions").select("id, nom").order("nom"),
+    supabase.from("chorales").select("id, nom, paroisses(nom)").order("nom"),
   ]);
+  // « Vision Femme (Paroisse de Kitsiaku) » : deux paroisses peuvent avoir une chorale du même nom
+  const chorales = ((choralesBrutes ?? []) as unknown as { id: string; nom: string; paroisses: { nom: string } | null }[])
+    .map((c) => ({ id: c.id, nom: c.paroisses ? `${c.nom} (${c.paroisses.nom})` : c.nom }));
 
   // Les adresses e-mail sont dans Supabase Auth : lecture côté serveur uniquement.
   const emails = new Map<string, string>();
@@ -31,7 +35,7 @@ export default async function PageUtilisateurs() {
     data?.users.forEach((u) => u.email && !estEmailTechnique(u.email) && emails.set(u.id, u.email));
   }
 
-  const listes = { roles: rolesAttribuables(moi.role), paroisses: paroisses ?? [], commissions: commissions ?? [] };
+  const listes = { roles: rolesAttribuables(moi.role), paroisses: paroisses ?? [], commissions: commissions ?? [], chorales };
 
   return (
     <>
@@ -66,6 +70,7 @@ export default async function PageUtilisateurs() {
                   role: p.role as Role,
                   paroisseId: p.paroisse_id,
                   commissionId: p.commission_id,
+                  choraleId: p.chorale_id,
                   actif: p.actif,
                   accesFinances: p.acces_finances,
                 }}

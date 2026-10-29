@@ -1,4 +1,3 @@
-import { randomInt } from "node:crypto";
 
 /**
  * Comptes créés par l'administration, sans e-mail d'invitation : beaucoup de
@@ -18,7 +17,8 @@ const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 
 const MAJUSCULES = "ABCDEFGHJKMNPQRSTUVWXYZ";
 const CHIFFRES = "23456789";
-const tirer = (alphabet: string) => alphabet[randomInt(alphabet.length)];
+// Tirage au sort sûr, dans le navigateur comme sur le serveur (le léger biais du modulo est négligeable ici)
+const tirer = (alphabet: string) => alphabet[globalThis.crypto.getRandomValues(new Uint32Array(1))[0] % alphabet.length];
 
 /**
  * Mot de passe provisoire du type « Km7p-4rxa-9q2d » (environ 57 bits) : toujours une
@@ -41,4 +41,11 @@ export function messageAcces(nom: string, identifiant: string, motDePasse: strin
     `Mot de passe provisoire : ${motDePasse}`,
     "À la première connexion, changez votre mot de passe dans « Paramètres ».",
   ].join("\n");
+}
+
+/** Règles d'un mot de passe choisi à la main (les mêmes que celles que Supabase peut exiger). */
+export function problemeMotDePasse(m: string): string | null {
+  if (m.length < 10) return "Le mot de passe doit avoir au moins 10 caractères.";
+  if (!/[A-Z]/.test(m) || !/[a-z]/.test(m) || !/[0-9]/.test(m)) return "Le mot de passe doit avoir une majuscule, une minuscule et un chiffre.";
+  return null;
 }

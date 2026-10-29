@@ -12,6 +12,8 @@ export type UtilisateurConnecte = {
   role: Role;
   paroisseId: string | null;
   commissionId: string | null;
+  /** Chorale du responsable de chorale. */
+  choraleId: string | null;
   /** Choisi(e) par l'administration pour suivre les finances. */
   accesFinances: boolean;
 };
@@ -24,7 +26,7 @@ export const utilisateurCourant = cache(async (): Promise<UtilisateurConnecte | 
   if (!user) return null;
   const { data: profil } = await supabase
     .from("profils")
-    .select("nom_affiche, role, paroisse_id, commission_id, actif, acces_finances")
+    .select("nom_affiche, role, paroisse_id, commission_id, chorale_id, actif, acces_finances")
     .eq("id", user.id)
     .single();
   if (!profil || !profil.actif) return null;
@@ -35,6 +37,7 @@ export const utilisateurCourant = cache(async (): Promise<UtilisateurConnecte | 
     role: profil.role as Role,
     paroisseId: profil.paroisse_id,
     commissionId: profil.commission_id,
+    choraleId: profil.chorale_id,
     accesFinances: profil.acces_finances,
   };
 });

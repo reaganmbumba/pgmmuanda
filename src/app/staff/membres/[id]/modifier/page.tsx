@@ -18,6 +18,11 @@ export default async function ModifierMembre({ params }: { params: Promise<{ id:
   if (moi?.role === "responsable_paroisse") {
     organisation.paroisses = organisation.paroisses.filter((p) => p.id === moi.paroisseId);
   }
+  // Le responsable de chorale, seulement dans sa chorale.
+  if (moi?.role === "responsable_chorale") {
+    organisation.paroisses = organisation.paroisses.filter((p) => p.id === moi.paroisseId);
+    organisation.chorales = organisation.chorales.filter((c) => c.id === moi.choraleId);
+  }
   return (
     <>
       <EnTete titre={`Modifier ${membre.prenom} ${membre.nom}`} description={`Matricule ${membre.matricule} (non modifiable).`} />

@@ -2,6 +2,7 @@ export const ROLES = [
   "super_admin",
   "presidence",
   "responsable_paroisse",
+  "responsable_chorale",
   "responsable_commission",
   "controleur",
   "choriste",
@@ -14,6 +15,7 @@ export const LIBELLES_ROLES: Record<Role, string> = {
   super_admin: "Super administrateur",
   presidence: "Présidence PGM",
   responsable_paroisse: "Responsable de paroisse",
+  responsable_chorale: "Responsable de chorale",
   responsable_commission: "Responsable de commission",
   controleur: "Contrôleur",
   choriste: "Choriste",
@@ -25,7 +27,7 @@ export type Niveau = "membre" | "staff" | "admin";
 export const LIBELLES_NIVEAUX: Record<Niveau, string> = { membre: "Membre", staff: "Membre staff", admin: "Admin" };
 export const ROLES_PAR_NIVEAU: Record<Niveau, Role[]> = {
   membre: ["choriste"],
-  staff: ["responsable_paroisse", "responsable_commission", "controleur"],
+  staff: ["responsable_paroisse", "responsable_chorale", "responsable_commission", "controleur"],
   admin: ["presidence", "super_admin", "president_antenne"],
 };
 export const niveauDe = (role: Role): Niveau =>
@@ -63,7 +65,7 @@ export function peutOuvrir(role: Role, chemin: string, accesFinances = false): b
 
 /** Inscrire et modifier des membres (la base limite le responsable à sa paroisse). */
 export const peutGererMembres = (role: Role | null | undefined) =>
-  estAdmin(role) || role === "responsable_paroisse";
+  estAdmin(role) || role === "responsable_paroisse" || role === "responsable_chorale";
 
 /** Créer et modifier des activités (la base limite chacun à sa paroisse ou à sa commission). */
 export const peutGererProgramme = (role: Role | null | undefined) =>

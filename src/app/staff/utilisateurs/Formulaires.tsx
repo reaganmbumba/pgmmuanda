@@ -1,21 +1,28 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Copy, KeyRound, Loader2, MessageCircle, UserPlus } from "lucide-react";
+import { Copy, KeyRound, Loader2, MessageCircle, RefreshCw, UserPlus } from "lucide-react";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
 import { LIBELLES_NIVEAUX, LIBELLES_ROLES, estLecteurGeneral, ROLES_PAR_NIVEAU, niveauDe, peutRecevoirAccesFinances, type Niveau, type Role } from "@/lib/auth/roles";
 import { lienWhatsApp } from "@/lib/programmes/libelles";
+import { motDePasseProvisoire } from "@/lib/auth/comptes";
 import { creerCompte, modifierUtilisateur, nouveauMotDePasse, type EtatAcces } from "./actions";
 
 type Option = { id: string; nom: string };
-type Listes = { roles: Role[]; paroisses: Option[]; commissions: Option[] };
+type Listes = { roles: Role[]; paroisses: Option[]; commissions: Option[]; chorales: Option[] };
 
-function ChampsPerimetre({ role, paroisses, commissions, paroisseId, commissionId }: {
-  role: Role; paroisses: Option[]; commissions: Option[]; paroisseId?: string | null; commissionId?: string | null;
+function ChampsPerimetre({ role, paroisses, commissions, chorales, paroisseId, commissionId, choraleId }: {
+  role: Role; paroisses: Option[]; commissions: Option[]; chorales: Option[];
+  paroisseId?: string | null; commissionId?: string | null; choraleId?: string | null;
 }) {
   return (
     <>
+      <select name="choraleId" defaultValue={choraleId ?? ""} aria-label="Chorale"
+        className={`${classeChamp} ${role === "responsable_chorale" ? "" : "hidden"}`}>
+        <option value="">Chorale…</option>
+        {chorales.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
+      </select>
       <select name="paroisseId" defaultValue={paroisseId ?? ""} aria-label="Paroisse"
         className={`${classeChamp} ${role === "responsable_paroisse" ? "" : "hidden"}`}>
         <option value="">Paroisse…</option>
@@ -140,7 +147,7 @@ export function FormulaireCompte(listes: Listes) {
   );
 }
 
-function ChampsCompte({ roles, paroisses, commissions, enCours }: Listes & { enCours: boolean }) {
+function ChampsCompte({ roles, paroisses, commissions, chorales, enCours }: Listes & { enCours: boolean }) {
   const [role, setRole] = useState<Role>("choriste");
   const [nom, setNom] = useState("");
   const [identifiant, setIdentifiant] = useState<string | null>(null);
@@ -163,8 +170,9 @@ function ChampsCompte({ roles, paroisses, commissions, enCours }: Listes & { enC
         <span>Adresse e-mail <span className="font-normal text-slate-400">(facultatif)</span></span>
         <input name="email" type="email" placeholder="Si la personne en a une" className={classeChamp} />
       </label>
-      <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} />
+      <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} chorales={chorales} />
       <CaseFinances role={role} />
+      <ChampMotDePasse />
       <div className="md:col-span-2">
         <button type="submit" disabled={enCours}
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-marine-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-marine-800 disabled:opacity-60 sm:w-auto">
@@ -201,8 +209,8 @@ function BoutonEnvoiSecondaire({ children, label }: { children: React.ReactNode;
   );
 }
 
-export function LigneUtilisateur({ u, roles, paroisses, commissions, estMoi }: Listes & {
-  u: { id: string; nom: string; email: string | null; identifiant: string | null; role: Role; paroisseId: string | null; commissionId: string | null; actif: boolean; accesFinances: boolean };
+export function LigneUtilisateur({ u, roles, paroisses, commissions, chorales, estMoi }: Listes & {
+  u: { id: string; nom: string; email: string | null; identifiant: string | null; role: Role; paroisseId: string | null; commissionId: string | null; choraleId: string | null; actif: boolean; accesFinances: boolean };
   estMoi: boolean;
 }) {
   const [etat, action] = useActionState(modifierUtilisateur, undefined);
@@ -218,7 +226,8 @@ export function LigneUtilisateur({ u, roles, paroisses, commissions, estMoi }: L
       </div>
       <ChoixRole roles={modifiable ? roles : [u.role]} role={role} onChange={setRole} disabled={!modifiable} pour={u.nom} />
       <div>
-        <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} paroisseId={u.paroisseId} commissionId={u.commissionId} />
+        <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} chorales={chorales}
+          paroisseId={u.paroisseId} commissionId={u.commissionId} choraleId={u.choraleId} />
         <div className="mt-2"><CaseFinances role={role} coche={u.accesFinances} disabled={!modifiable} pour={u.nom} /></div>
       </div>
       <select name="actif" defaultValue={u.actif ? "oui" : "non"} disabled={!modifiable} aria-label={`Statut de ${u.nom}`} className={classeChamp}>
@@ -232,5 +241,27 @@ export function LigneUtilisateur({ u, roles, paroisses, commissions, estMoi }: L
     </form>
     {modifiable && <BoutonNouveauMotDePasse id={u.id} nom={u.nom} />}
     </div>
+  );
+}
+
+/** Mot de passe provisoire visible dès le formulaire : proposé par l'application, modifiable. */
+function ChampMotDePasse() {
+  const [valeur, setValeur] = useState("");
+  // Tiré au sort dans le navigateur, après l'affichage (sinon le serveur et le navigateur ne seraient pas d'accord)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- valeur aléatoire, seulement dans le navigateur
+  useEffect(() => { setValeur(motDePasseProvisoire()); }, []);
+  return (
+    <label className="grid gap-1 text-sm font-medium text-slate-700 md:col-span-2">
+      Mot de passe provisoire
+      <span className="flex gap-2">
+        <input name="motDePasse" value={valeur} onChange={(e) => setValeur(e.target.value)} autoComplete="off" spellCheck={false}
+          className={`${classeChamp} font-mono text-base tracking-wide`} />
+        <button type="button" onClick={() => setValeur(motDePasseProvisoire())}
+          className="mt-1.5 inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-marine-900 hover:bg-slate-50">
+          <RefreshCw className="size-4" aria-hidden /> Autre
+        </button>
+      </span>
+      <span className="text-xs font-normal text-slate-500">Notez-le ou envoyez-le sur WhatsApp après la création. La personne le changera dans « Paramètres ».</span>
+    </label>
   );
 }
