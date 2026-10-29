@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { EnregistrerApp } from "@/components/InstallerApp";
 
 export const metadata: Metadata = {
   title: {
@@ -29,7 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <EnregistrerApp />
+        {children}
+      </body>
     </html>
   );
 }

@@ -936,6 +936,19 @@ try {
     && await a.locator("select[aria-label='Fonction de Patience Lukau']").inputValue() === "responsable_commission",
     "la liste des comptes affiche le niveau puis la fonction");
 
+  console.log("Installer l'application");
+  const inst = await navigateur.newPage();
+  const sw = await inst.request.get(`${APP}/sw.js`, { maxRedirects: 0 });
+  ok(sw.status() === 200 && (await sw.text()).includes("Pas de connexion Internet"), "le service worker est servi sans connexion requise");
+  await inst.goto(`${APP}/connexion`);
+  ok(await inst.evaluate(() => navigator.serviceWorker.ready.then((r) => !!r.active)), "le service worker s'installe");
+  await inst.waitForSelector("[data-installer], [data-installer-aide]");
+  ok((await texte(inst)).includes("Installer l'application"), "la page de connexion propose d'installer l'application");
+  const man = await (await inst.request.get(`${APP}/manifest.webmanifest`)).json();
+  ok(man.display === "standalone" && man.icons.some((i) => i.sizes === "512x512") && man.short_name === "PGM Muanda",
+    "le manifeste permet l'icône « PGM Muanda » sur le téléphone ou l'ordinateur");
+  await inst.close();
+
   ok(erreursPage.length === 0, `aucune erreur JavaScript dans les pages${erreursPage.length ? " : " + erreursPage.join(" | ") : ""}`);
   console.log(`\nParcours réussi : ${n} vérifications.`);
 } catch (e) {

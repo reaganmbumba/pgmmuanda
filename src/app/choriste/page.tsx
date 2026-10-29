@@ -1,3 +1,4 @@
+import { InstallerApp } from "@/components/InstallerApp";
 import Link from "next/link";
 import { CalendarDays, ChevronRight, MapPin, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -33,6 +34,7 @@ export default async function AccueilChoriste() {
     <div className="space-y-5">
       <Bienvenue prenom={fiche.prenom} nom={fiche.nom} matricule={fiche.matricule}
         etiquettes={[fiche.voix, fiche.fonction, libelleParoisse(fiche.paroisse)].filter(Boolean)} />
+      <InstallerApp discret />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white p-4 shadow-sm">

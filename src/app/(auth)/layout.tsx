@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { InstallerApp } from "@/components/InstallerApp";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -33,6 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
         <div className="relative -mt-8 w-full flex-1 rounded-t-3xl bg-marine-50 px-5 pb-10 pt-8 lg:mt-0 lg:max-w-sm lg:flex-none lg:rounded-none lg:bg-transparent lg:p-0">
           {children}
+          <div className="mt-8"><InstallerApp /></div>
         </div>
       </main>
     </div>

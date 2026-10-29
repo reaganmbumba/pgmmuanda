@@ -1,3 +1,4 @@
+import { InstallerApp } from "@/components/InstallerApp";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -107,6 +108,7 @@ function TableauReel({ role, chiffres: c }: { role: Role; chiffres: Awaited<Retu
         description="Chiffres réels de votre périmètre, lus dans la base de données."
       />
       <ActionsRapides role={role} />
+      <div className="mb-6 max-w-md empty:hidden"><InstallerApp discret /></div>
       <Indicateurs
         liste={[
           { label: "Choristes inscrits", valeur: c.total, icone: Users },
