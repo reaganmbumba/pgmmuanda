@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { utilisateurCourant } from "@/lib/auth/session";
 import { estAdmin, peutRecevoirAccesFinances, rolesAttribuables, type Role } from "@/lib/auth/roles";
 import { emailTechnique, messageAcces, motDePasseProvisoire } from "@/lib/auth/comptes";
-import { creerClientAdmin } from "@/lib/supabase/admin";
+import { creerClientAdmin, problemeCleServeur } from "@/lib/supabase/admin";
 import { URL_SITE } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
 import { schemaNouveauCompte, schemaModification } from "@/lib/validation/utilisateurs";
@@ -15,6 +15,9 @@ export type EtatAcces = (NonNullable<Etat> & { acces?: { nom: string; identifian
 
 /** Raison lisible d'un refus de Supabase Auth, pour que l'administration sache quoi faire. */
 function raisonAuth(e: { code?: string; message?: string } | null): string {
+  if (e?.code === "no_authorization" || e?.code === "bad_jwt" || /bearer token|invalid jwt|not_admin/i.test(`${e?.code} ${e?.message}`)) {
+    return `clé serveur refusée par Supabase : ${problemeCleServeur() ?? "la clé SUPABASE_SERVICE_ROLE_KEY de Vercel n'est pas la bonne"}`;
+  }
   if (e?.code === "weak_password") return "mot de passe refusé par les règles de Supabase";
   if (e?.code === "over_request_rate_limit" || e?.code === "over_email_send_rate_limit") return "trop d'essais, réessayez dans quelques minutes";
   if (e?.code === "unexpected_failure" || /database error/i.test(e?.message ?? "")) return "erreur de la base de données";

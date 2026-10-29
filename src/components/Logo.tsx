@@ -22,7 +22,7 @@ export function Logo({ size = 40, avecTexte = false, clair = false }: Props) {
           <span
             className={`block text-sm font-bold tracking-wide ${clair ? "text-white" : "text-marine-900"}`}
           >
-            PGM MUANDA DIGITAL
+            ANTENNE PGM MUANDA
           </span>
           <span className="block text-xs font-medium tracking-[0.2em] text-or-500">
             EBNM KCC

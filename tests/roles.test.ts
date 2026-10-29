@@ -61,3 +61,20 @@ describe("comptes sans e-mail", () => {
     expect(m).toContain("abcd-efgh-jkmn");
   });
 });
+
+describe("clé serveur", () => {
+  const jwt = (o: object) => `x.${Buffer.from(JSON.stringify(o)).toString("base64url")}.y`;
+  it("explique sans l'afficher pourquoi la clé est refusée", async () => {
+    const { problemeCleServeur } = await import("@/lib/supabase/admin");
+    const avant = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = jwt({ role: "anon" });
+    expect(problemeCleServeur()).toContain("« anon »");
+    process.env.SUPABASE_SERVICE_ROLE_KEY = ` ${jwt({ role: "service_role" })}\n`;
+    expect(problemeCleServeur()).toBeNull();
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "sb_publishable_abc";
+    expect(problemeCleServeur()).toContain("publique");
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "abc";
+    expect(problemeCleServeur()).toContain("format");
+    process.env.SUPABASE_SERVICE_ROLE_KEY = avant;
+  });
+});
