@@ -62,7 +62,8 @@ export async function creerCompte(_: EtatAcces, form: FormData): Promise<EtatAcc
       role: d.data.role,
       paroisse_id: d.data.paroisseId,
       commission_id: d.data.commissionId,
-      chorale_id: d.data.choraleId,
+      // Seulement si besoin : la colonne n'existe qu'après le fichier SQL du responsable de chorale
+      ...(d.data.choraleId ? { chorale_id: d.data.choraleId } : {}),
       acces_finances: d.data.accesFinances && peutRecevoirAccesFinances(d.data.role),
     })
     .eq("id", data.user.id);
@@ -134,7 +135,8 @@ export async function modifierUtilisateur(_: Etat, form: FormData): Promise<Etat
       role: d.data.role,
       paroisse_id: d.data.paroisseId,
       commission_id: d.data.commissionId,
-      chorale_id: d.data.choraleId,
+      // Seulement si besoin : la colonne n'existe qu'après le fichier SQL du responsable de chorale
+      ...(d.data.choraleId ? { chorale_id: d.data.choraleId } : {}),
       actif: d.data.actif,
       acces_finances: d.data.accesFinances && peutRecevoirAccesFinances(d.data.role),
     })

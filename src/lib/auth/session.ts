@@ -24,11 +24,17 @@ export const utilisateurCourant = cache(async (): Promise<UtilisateurConnecte | 
   const supabase = await creerClientServeur();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profil } = await supabase
+  let { data: profil } = await supabase
     .from("profils")
     .select("nom_affiche, role, paroisse_id, commission_id, chorale_id, actif, acces_finances")
     .eq("id", user.id)
     .single();
+  // Tant que le fichier SQL du responsable de chorale n'a pas été exécuté, la colonne n'existe pas
+  if (!profil) {
+    const { data } = await supabase.from("profils").select("nom_affiche, role, paroisse_id, commission_id, actif, acces_finances")
+      .eq("id", user.id).single();
+    profil = data ? { ...data, chorale_id: null } : null;
+  }
   if (!profil || !profil.actif) return null;
   return {
     id: user.id,

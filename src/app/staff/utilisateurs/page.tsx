@@ -17,8 +17,15 @@ export default async function PageUtilisateurs() {
   const moi = (await exigerAcces("/staff/utilisateurs"))!;
   const supabase = await creerClientServeur();
 
+  const lireProfils = async () => {
+    const r = await supabase.from("profils").select("id, identifiant, nom_affiche, role, paroisse_id, commission_id, chorale_id, actif, acces_finances").order("nom_affiche");
+    if (!r.error) return r;
+    // Colonne chorale_id pas encore créée (fichier SQL du responsable de chorale pas encore exécuté)
+    const r2 = await supabase.from("profils").select("id, identifiant, nom_affiche, role, paroisse_id, commission_id, actif, acces_finances").order("nom_affiche");
+    return { ...r2, data: r2.data?.map((p) => ({ ...p, chorale_id: null as string | null })) ?? null };
+  };
   const [{ data: profils, error }, { data: paroisses }, { data: commissions }, { data: choralesBrutes }] = await Promise.all([
-    supabase.from("profils").select("id, identifiant, nom_affiche, role, paroisse_id, commission_id, chorale_id, actif, acces_finances").order("nom_affiche"),
+    lireProfils(),
     supabase.from("paroisses").select("id, nom").order("nom"),
     supabase.from("commissions").select("id, nom").order("nom"),
     supabase.from("chorales").select("id, nom, paroisses(nom)").order("nom"),
