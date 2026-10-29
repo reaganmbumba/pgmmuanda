@@ -75,9 +75,12 @@ describe("accès aux modules de l'étape 7", () => {
     expect(peutOuvrir("responsable_paroisse", "/staff/hebergement")).toBe(false);
     expect(peutOuvrir("responsable_commission", "/staff/hebergement")).toBe(false);
   });
-  it("ouvre projets et finances à l'administration et aux responsables de commission", () => {
+  it("ouvre les finances à tout le staff, les projets aux commissions", () => {
     expect(peutOuvrir("responsable_commission", "/staff/finances")).toBe(true);
-    expect(peutOuvrir("responsable_paroisse", "/staff/finances")).toBe(false);
+    expect(peutOuvrir("responsable_paroisse", "/staff/finances")).toBe(true);
+    expect(peutOuvrir("presidence", "/staff/finances")).toBe(true);
+    expect(peutOuvrir("controleur", "/staff/finances")).toBe(false);
+    expect(peutOuvrir("choriste", "/staff/finances")).toBe(false);
     expect(peutOuvrir("responsable_paroisse", "/staff/projets/x")).toBe(false);
     expect(peutOuvrir("controleur", "/staff/commissions")).toBe(false);
     expect(peutGererCommission("choriste")).toBe(false);

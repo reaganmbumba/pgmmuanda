@@ -195,12 +195,14 @@ export async function rapportsProjet(id: string): Promise<Rapport[]> {
 export type Operation = {
   id: string; sens: SensOperation; libelle: string; categorie: string; montant: number; devise: Devise;
   date: string; projetId: string | null; projet: string; piece: string;
+  /** Nom de la personne qui a enregistré l'opération. */
+  saisiPar?: string;
 };
 
 export async function listerOperations(f: { projetId?: string; depuis?: string; avant?: string } = {}): Promise<Operation[]> {
   const supabase = await creerClientServeur();
   let q = supabase.from("operations_financieres")
-    .select("id, sens, libelle, categorie, montant, devise, date_operation, projet_id, piece, projets(titre)")
+    .select("id, sens, libelle, categorie, montant, devise, date_operation, projet_id, piece, saisi_par_nom, projets(titre)")
     .order("date_operation", { ascending: false }).order("saisi_le", { ascending: false });
   if (f.projetId) q = q.eq("projet_id", f.projetId);
   if (f.depuis) q = q.gte("date_operation", f.depuis);
@@ -208,10 +210,10 @@ export async function listerOperations(f: { projetId?: string; depuis?: string; 
   const { data, error } = await q;
   if (error) throw new Error("Lecture des finances impossible.");
   type L = { id: string; sens: SensOperation; libelle: string; categorie: string; montant: number; devise: Devise;
-    date_operation: string; projet_id: string | null; piece: string; projets: { titre: string } | null };
+    date_operation: string; projet_id: string | null; piece: string; saisi_par_nom: string; projets: { titre: string } | null };
   return (data as unknown as L[]).map((l) => ({
     id: l.id, sens: l.sens, libelle: l.libelle, categorie: l.categorie, montant: Number(l.montant), devise: l.devise,
-    date: l.date_operation, projetId: l.projet_id, projet: l.projets?.titre ?? "", piece: l.piece,
+    date: l.date_operation, projetId: l.projet_id, projet: l.projets?.titre ?? "", piece: l.piece, saisiPar: l.saisi_par_nom,
   }));
 }
 

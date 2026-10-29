@@ -87,19 +87,15 @@ export default async function PageFinances({ searchParams }: { searchParams: Pro
         } />
       <Bilans operations={operations} />
       <div className="mb-6">
-        {admin || ouverts.length > 0 ? (
-          <Repliable titre="Enregistrer une entrée ou une sortie d'argent">
-            <FormulaireRapide action={enregistrerOperation} libelle="Enregistrer" icone={<Save className="size-4" aria-hidden />}>
-              <ChampsOperation projets={ouverts} projetObligatoire={!admin} />
-            </FormulaireRapide>
-          </Repliable>
-        ) : (
-          <p className="text-sm text-slate-500">Créez d&apos;abord un projet pour votre commission pour y enregistrer des dépenses.</p>
-        )}
+        <Repliable titre="Enregistrer une entrée ou une sortie d'argent">
+          <FormulaireRapide action={enregistrerOperation} libelle="Enregistrer" icone={<Save className="size-4" aria-hidden />}>
+            <ChampsOperation projets={ouverts} projetObligatoire={false} />
+          </FormulaireRapide>
+        </Repliable>
       </div>
       <h2 className="mb-3 text-lg font-semibold text-marine-900">Opérations {annee}</h2>
       <Tableau operations={operations} supprimable={admin} recus={recus} joindre />
-      {!admin && <p className="mt-4 text-xs text-slate-500">Vous voyez seulement l&apos;argent des projets de votre commission. Pour corriger une erreur, contactez l&apos;administration.</p>}
+      {!admin && <p className="mt-4 text-xs text-slate-500">Tout le staff voit les finances et peut enregistrer une opération. Pour corriger ou supprimer une erreur, contactez l&apos;administration.</p>}
     </>
   );
 }

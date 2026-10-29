@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { utilisateurCourant } from "@/lib/auth/session";
-import { peutGererCommission } from "@/lib/auth/roles";
+import { peutSuivreFinances } from "@/lib/auth/roles";
 import { MAQUETTE, messageErreur, type Etat } from "@/lib/etat-action";
 import { formatMontant } from "@/lib/organisation/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
@@ -12,7 +12,7 @@ import { schemaOperation } from "@/lib/validation/organisation";
 export async function enregistrerOperation(_: Etat, form: FormData): Promise<Etat> {
   if (!supabaseActif) return MAQUETTE;
   const moi = await utilisateurCourant();
-  if (!moi || !peutGererCommission(moi.role)) return { erreur: "Action réservée à l'administration et aux responsables de commission." };
+  if (!moi || !peutSuivreFinances(moi.role)) return { erreur: "Action réservée au staff de la PGM." };
   const d = schemaOperation.safeParse(Object.fromEntries(form));
   if (!d.success) return { erreur: d.error.issues[0].message };
   const supabase = await creerClientServeur();
@@ -20,7 +20,7 @@ export async function enregistrerOperation(_: Etat, form: FormData): Promise<Eta
     sens: d.data.sens, libelle: d.data.libelle, categorie: d.data.categorie, montant: d.data.montant,
     devise: d.data.devise, date_operation: d.data.dateOperation, projet_id: d.data.projetId, piece: d.data.piece,
   });
-  if (error) return { erreur: messageErreur(error, "Un responsable de commission n'enregistre que les opérations de ses projets.") };
+  if (error) return { erreur: messageErreur(error, "Seule la commission du projet peut y imputer une dépense.") };
   revalidatePath("/staff/finances");
   if (d.data.projetId) revalidatePath(`/staff/projets/${d.data.projetId}`);
   return { succes: `${d.data.sens === "recette" ? "Entrée" : "Sortie"} de ${formatMontant(d.data.montant, d.data.devise)} enregistrée.` };

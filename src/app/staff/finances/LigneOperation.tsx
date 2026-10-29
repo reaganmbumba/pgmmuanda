@@ -24,7 +24,7 @@ export function LigneOperation({ o, recus = [], supprimable, joindre }: { o: Ope
           </span>
           <div>
             <p className="font-medium text-marine-900">{o.libelle}</p>
-            <p className="text-xs text-slate-500">{formatJour(o.date)} · {o.categorie}{o.projet && ` · ${o.projet}`}{o.piece && ` · Reçu n° ${o.piece}`}</p>
+            <p className="text-xs text-slate-500">{formatJour(o.date)} · {o.categorie}{o.projet && ` · ${o.projet}`}{o.piece && ` · Reçu n° ${o.piece}`}{o.saisiPar && ` · par ${o.saisiPar}`}</p>
             <Recus documents={recus} />
           </div>
         </div>

@@ -52,8 +52,9 @@ set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000f';
 insert into public.documents (titre, nom_fichier, type_mime, taille, contenu, operation_id)
 values ('Reçu menuisier', 'recu.jpg', 'image/jpeg', 3, '/9j/', :'depense');
 select pg_temp.affirmer(true, 'le responsable joint le reçu d''une dépense de son projet');
-select pg_temp.refuse($$insert into public.documents (titre, nom_fichier, type_mime, taille, contenu, operation_id)
-  values ('Reçu', 'r.jpg', 'image/jpeg', 3, '/9j/', '$$ || :'cotisations' || $$')$$, 'row-level security', 'pas à une opération hors de ses projets');
+insert into public.documents (titre, nom_fichier, type_mime, taille, contenu, operation_id)
+values ('Reçu cotisations', 'r.jpg', 'image/jpeg', 3, '/9j/', :'cotisations');
+select pg_temp.affirmer(true, 'le staff joint aussi le reçu d''une opération générale (suivi des finances)');
 delete from public.documents where titre = 'Reçu menuisier';
 select pg_temp.affirmer((select count(*) = 1 from public.documents where titre = 'Reçu menuisier'), 'il ne peut pas supprimer un reçu');
 select pg_temp.refuse($$update public.documents set contenu = 'AAAA' where titre = 'Partition'$$, 'ne se modifie pas',
@@ -65,7 +66,11 @@ set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000c';
 select pg_temp.affirmer((select count(*) = 0 from public.documents where operation_id is not null), 'un choriste ne voit aucun reçu');
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
-select pg_temp.affirmer((select count(*) = 0 from public.documents where operation_id is not null), 'un responsable de paroisse non plus');
+select pg_temp.affirmer((select count(*) = 2 from public.documents where operation_id is not null), 'un responsable de paroisse voit les reçus');
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000d';
+select pg_temp.affirmer((select count(*) = 0 from public.documents where operation_id is not null), 'le contrôleur ne voit aucun reçu');
+select pg_temp.refuse($$insert into public.documents (titre, nom_fichier, type_mime, taille, contenu, operation_id)
+  values ('Reçu', 'r.jpg', 'image/jpeg', 3, '/9j/', '$$ || :'cotisations' || $$')$$, 'row-level security', 'ni n''en dépose');
 commit;
 
 -- Documents pour choristes

@@ -144,8 +144,11 @@ insert into public.operations_financieres (sens, libelle, montant, devise, proje
 values ('depense', 'Acompte menuisier', 150000, 'CDF', '90000000-0000-0000-0000-00000000000a', '70000000-0000-0000-0000-00000000000b');
 select pg_temp.affirmer((select commission_id = '70000000-0000-0000-0000-00000000000a' from public.operations_financieres),
   'une dépense de projet est rattachée à la commission du projet');
-select pg_temp.refuse($$insert into public.operations_financieres (sens, libelle, montant) values ('recette', 'Collecte', 1000)$$,
-  'row-level security', 'le responsable ne saisit pas d''opération hors de ses projets');
+select pg_temp.refuse($$insert into public.operations_financieres (sens, libelle, montant, projet_id)
+  values ('depense', 'Autre', 1000, '90000000-0000-0000-0000-00000000000c')$$,
+  'row-level security', 'le responsable n''impute rien aux projets d''une autre commission');
+select pg_temp.affirmer((select saisi_par_nom <> '' from public.operations_financieres where libelle = 'Acompte menuisier'),
+  'le nom de la personne qui enregistre est gardé avec l''opération');
 select pg_temp.refuse($$insert into public.operations_financieres (sens, libelle, montant, projet_id)
   values ('depense', 'Négatif', -5, '90000000-0000-0000-0000-00000000000a')$$, 'montant', 'un montant est toujours positif');
 update public.operations_financieres set montant = 1;
@@ -165,10 +168,20 @@ commit;
 begin;
 set local role authenticated;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000f';
-select pg_temp.affirmer((select count(*) = 1 from public.operations_financieres), 'le responsable ne voit que les opérations de sa commission');
+select pg_temp.affirmer((select count(*) = 2 from public.operations_financieres), 'le responsable de commission voit toutes les finances');
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';
-select pg_temp.affirmer((select count(*) = 0 from public.operations_financieres) and (select count(*) = 0 from public.projets),
-  'le responsable de paroisse ne voit ni projets ni finances');
+select pg_temp.affirmer((select count(*) = 2 from public.operations_financieres) and (select count(*) = 0 from public.projets),
+  'le responsable de paroisse suit aussi les finances (mais pas les projets des commissions)');
+insert into public.operations_financieres (sens, libelle, montant, devise) values ('recette', 'Quête paroisse A', 50000, 'CDF');
+select pg_temp.affirmer((select saisi_par_nom = (select nom_affiche from public.profils where id = '00000000-0000-0000-0000-00000000000b')
+  from public.operations_financieres where libelle = 'Quête paroisse A'), 'il enregistre une entrée d''argent, signée de son nom');
+update public.operations_financieres set montant = 1 where libelle = 'Quête paroisse A';
+delete from public.operations_financieres where libelle = 'Quête paroisse A';
+select pg_temp.affirmer((select montant = 50000 from public.operations_financieres where libelle = 'Quête paroisse A'),
+  'il ne peut ni corriger ni supprimer une opération');
+select pg_temp.refuse($$insert into public.operations_financieres (sens, libelle, montant, projet_id)
+  values ('depense', 'Pupitres', 1000, '90000000-0000-0000-0000-00000000000a')$$,
+  'row-level security', 'il n''impute rien au projet d''une commission');
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000d';
 select pg_temp.affirmer((select count(*) = 0 from public.operations_financieres), 'le contrôleur non plus');
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000c';

@@ -618,10 +618,23 @@ try {
   ok(t.startsWith("﻿Date;") && t.includes("Acompte menuisier") && t.includes("-150000,00;CDF") && t.includes("300,00;USD"), "export Excel des finances");
   await rc.goto(`${APP}/staff/finances`);
   t = await texte(rc);
-  ok(t.includes("Acompte menuisier") && !t.includes("Cotisations d'octobre"), "le responsable de commission ne voit que l'argent de ses projets");
+  ok(t.includes("Acompte menuisier") && t.includes("Cotisations d'octobre"), "le responsable de commission suit toutes les finances");
   await r.goto(`${APP}/staff/finances`);
-  ok(!new URL(r.url()).pathname.startsWith("/staff/finances"), "un responsable de paroisse n'a pas accès aux finances");
-  rep = await r.request.get(`${APP}/staff/finances/export?annee=${new Date().getFullYear()}`);
+  t = await texte(r);
+  ok(t.includes("Acompte menuisier") && t.includes("Cotisations d'octobre") && t.includes("par Resp Artistique"),
+    "le responsable de paroisse aussi, avec le nom de qui a enregistré");
+  z = await ouvrir(r, "Enregistrer une entrée ou une sortie");
+  await z.locator("input[name=sens][value=recette]").check();
+  await z.locator("input[name=libelle]").fill("Quête de la paroisse");
+  await z.locator("input[name=montant]").fill("25000");
+  await z.locator("button[type=submit]").click();
+  await r.waitForSelector("text=Entrée de 25 000 FC enregistrée.");
+  ok((await r.locator("[data-operation='Quête de la paroisse'] button:has-text('Supprimer')").count()) === 0,
+    "il enregistre une entrée d'argent, sans pouvoir supprimer");
+  const ctl = await session("controleur.e2e");
+  await ctl.goto(`${APP}/staff/finances`);
+  ok(!new URL(ctl.url()).pathname.startsWith("/staff/finances"), "le contrôleur n'a pas accès aux finances");
+  rep = await ctl.request.get(`${APP}/staff/finances/export?annee=${new Date().getFullYear()}`);
   ok(!(await rep.text()).includes("Acompte menuisier") && !rep.url().includes("/export"), "ni à leur export (renvoyé vers son espace)");
 
   // Hébergement
