@@ -146,3 +146,19 @@ export async function modifierUtilisateur(_: Etat, form: FormData): Promise<Etat
   revalidatePath("/staff/utilisateurs");
   return { succes: "Modification enregistrée." };
 }
+
+/** Corriger le nom affiché d'un compte (administration), y compris le sien. */
+export async function renommerUtilisateur(_: Etat, form: FormData): Promise<Etat> {
+  const moi = await utilisateurCourant();
+  if (!moi || !estAdmin(moi.role)) return { erreur: "Action réservée à l'administration." };
+  const nom = String(form.get("nom") ?? "").trim().replace(/\s+/g, " ");
+  if (nom.length < 2 || nom.length > 80) return { erreur: "Le nom doit avoir entre 2 et 80 caractères." };
+  const id = String(form.get("id") ?? "");
+  // Client de l'utilisateur : la base vérifie elle-même les droits (RLS).
+  const supabase = await creerClientServeur();
+  const { data, error } = await supabase.from("profils").update({ nom_affiche: nom }).eq("id", id).select("id");
+  if (error || !data?.length) return { erreur: "Modification refusée." };
+  revalidatePath("/staff/utilisateurs");
+  revalidatePath("/", "layout");
+  return { succes: `Nom corrigé : ${nom}.` };
+}

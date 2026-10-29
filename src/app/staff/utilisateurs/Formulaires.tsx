@@ -2,12 +2,13 @@
 
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Copy, KeyRound, Loader2, MessageCircle, RefreshCw, UserPlus } from "lucide-react";
+import { Copy, KeyRound, Loader2, MessageCircle, Pencil, RefreshCw, UserPlus } from "lucide-react";
+import { useLectureSeule } from "@/components/LectureSeule";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
 import { LIBELLES_NIVEAUX, LIBELLES_ROLES, estLecteurGeneral, ROLES_PAR_NIVEAU, niveauDe, peutRecevoirAccesFinances, type Niveau, type Role } from "@/lib/auth/roles";
 import { lienWhatsApp } from "@/lib/programmes/libelles";
 import { motDePasseProvisoire } from "@/lib/auth/comptes";
-import { creerCompte, modifierUtilisateur, nouveauMotDePasse, type EtatAcces } from "./actions";
+import { creerCompte, modifierUtilisateur, nouveauMotDePasse, renommerUtilisateur, type EtatAcces } from "./actions";
 
 type Option = { id: string; nom: string };
 type Listes = { roles: Role[]; paroisses: Option[]; commissions: Option[]; chorales: Option[] };
@@ -239,8 +240,28 @@ export function LigneUtilisateur({ u, roles, paroisses, commissions, chorales, e
       ) : <span />}
       {etat && <div className="lg:col-span-5"><MessageFormulaire etat={etat} /></div>}
     </form>
+    {(modifiable || estMoi) && <CorrigerNom id={u.id} nom={u.nom} />}
     {modifiable && <BoutonNouveauMotDePasse id={u.id} nom={u.nom} />}
     </div>
+  );
+}
+
+/** « Corriger le nom » d'un compte, replié tant qu'on n'en a pas besoin. */
+function CorrigerNom({ id, nom }: { id: string; nom: string }) {
+  const [etat, action] = useActionState(renommerUtilisateur, undefined);
+  if (useLectureSeule()) return null;
+  return (
+    <details className="px-4 pb-3 text-xs">
+      <summary className="inline-flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 font-medium text-marine-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+        <Pencil className="size-3.5" aria-hidden /> Corriger le nom
+      </summary>
+      <form action={action} className="mt-2 flex flex-wrap items-start gap-2">
+        <input type="hidden" name="id" value={id} />
+        <input name="nom" required minLength={2} maxLength={80} defaultValue={nom} aria-label={`Nouveau nom de ${nom}`} className={`${classeChamp} min-w-48 flex-1`} />
+        <BoutonEnvoi className="sm:w-auto">Enregistrer</BoutonEnvoi>
+        <div className="w-full"><MessageFormulaire etat={etat} /></div>
+      </form>
+    </details>
   );
 }
 

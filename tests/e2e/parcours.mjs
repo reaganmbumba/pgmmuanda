@@ -1018,6 +1018,17 @@ try {
   await a.reload();
   ok(!(await texte(a)).includes("Oracle E2E"), "la chorale urbaine de test est retirée");
 
+  console.log("Corriger le nom d'un compte");
+  for (const [ancien, nouveau] of [["Admin E2E", "Admin Corrigé"], ["Admin Corrigé", "Admin E2E"]]) {
+    await a.goto(`${APP}/staff/utilisateurs`);
+    await a.locator("summary:has-text('Corriger le nom')").locator("xpath=..").filter({ has: a.locator(`input[aria-label='Nouveau nom de ${ancien}']`) }).locator("summary").click();
+    await a.fill(`input[aria-label='Nouveau nom de ${ancien}']`, nouveau);
+    await a.locator("form", { has: a.locator(`input[aria-label='Nouveau nom de ${ancien}']`) }).locator("button:has-text('Enregistrer')").click();
+    await a.waitForSelector(`text=Nom corrigé : ${nouveau}.`);
+  }
+  await a.reload();
+  ok((await texte(a)).includes("Admin E2E (vous)"), "l'administration corrige le nom d'un compte, même le sien");
+
   console.log("Conseil et réunions");
   const local = (jours) => new Date(Date.now() + jours * 86400_000 + 3600_000).toISOString().slice(0, 16);
   await a.goto(`${APP}/staff/conseil`);
