@@ -18,6 +18,16 @@ export const LIBELLES_ROLES: Record<Role, string> = {
   choriste: "Choriste",
 };
 
+/** Les trois niveaux affichés : le détail (périmètre staff, type d'admin) se choisit ensuite. */
+export type Niveau = "membre" | "staff" | "admin";
+export const LIBELLES_NIVEAUX: Record<Niveau, string> = { membre: "Membre", staff: "Membre staff", admin: "Admin" };
+export const ROLES_PAR_NIVEAU: Record<Niveau, Role[]> = {
+  membre: ["choriste"],
+  staff: ["responsable_paroisse", "responsable_commission", "controleur"],
+  admin: ["presidence", "super_admin"],
+};
+export const niveauDe = (role: Role): Niveau => (estAdmin(role) ? "admin" : estStaff(role) ? "staff" : "membre");
+
 export type Espace = "staff" | "choriste";
 
 export const estStaff = (role: Role | null | undefined) => !!role && role !== "choriste";

@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Copy, KeyRound, MessageCircle, UserPlus } from "lucide-react";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
-import { LIBELLES_ROLES, type Role } from "@/lib/auth/roles";
+import { LIBELLES_NIVEAUX, LIBELLES_ROLES, ROLES_PAR_NIVEAU, niveauDe, type Niveau, type Role } from "@/lib/auth/roles";
 import { lienWhatsApp } from "@/lib/programmes/libelles";
 import { creerCompte, modifierUtilisateur, nouveauMotDePasse, type EtatAcces } from "./actions";
 
@@ -27,6 +27,38 @@ function ChampsPerimetre({ role, paroisses, commissions, paroisseId, commissionI
         {commissions.map((c) => <option key={c.id} value={c.id}>{c.nom}</option>)}
       </select>
     </>
+  );
+}
+
+/**
+ * Choix du rôle en deux temps : d'abord Membre, Membre staff ou Admin, puis, s'il y a
+ * plusieurs possibilités, la fonction précise (responsable de paroisse, contrôleur…).
+ */
+function ChoixRole({ roles, role, onChange, disabled, pour }: {
+  roles: Role[]; role: Role; onChange: (r: Role) => void; disabled?: boolean; pour?: string;
+}) {
+  const niveau = niveauDe(role);
+  const niveaux = (Object.keys(ROLES_PAR_NIVEAU) as Niveau[]).filter(
+    (n) => n === niveau || ROLES_PAR_NIVEAU[n].some((r) => roles.includes(r)));
+  const fonctions = ROLES_PAR_NIVEAU[niveau].filter((r) => r === role || roles.includes(r));
+  const suffixe = pour ? ` de ${pour}` : "";
+  return (
+    <div className="grid gap-2">
+      <input type="hidden" name="role" value={role} />
+      <select value={niveau} disabled={disabled} aria-label={`Niveau${suffixe}`} className={classeChamp}
+        onChange={(e) => {
+          const n = e.target.value as Niveau;
+          onChange(ROLES_PAR_NIVEAU[n].find((r) => roles.includes(r)) ?? ROLES_PAR_NIVEAU[n][0]);
+        }}>
+        {niveaux.map((n) => <option key={n} value={n}>{LIBELLES_NIVEAUX[n]}</option>)}
+      </select>
+      {fonctions.length > 1 && (
+        <select value={role} disabled={disabled} aria-label={`Fonction${suffixe}`} className={classeChamp}
+          onChange={(e) => onChange(e.target.value as Role)}>
+          {fonctions.map((r) => <option key={r} value={r}>{LIBELLES_ROLES[r]}</option>)}
+        </select>
+      )}
+    </div>
   );
 }
 
@@ -105,12 +137,10 @@ function ChampsCompte({ roles, paroisses, commissions }: Listes) {
         <input name="identifiant" required value={identifiant ?? identifiantPour(nom)} onChange={(e) => setIdentifiant(e.target.value)}
           placeholder="Ex. : daniel.nkanga" autoCapitalize="none" className={classeChamp} />
       </label>
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Rôle
-        <select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)} className={classeChamp}>
-          {roles.map((r) => <option key={r} value={r}>{LIBELLES_ROLES[r]}</option>)}
-        </select>
-      </label>
+      <div className="grid gap-1 text-sm font-medium text-slate-700">
+        Type de compte
+        <ChoixRole roles={roles} role={role} onChange={setRole} />
+      </div>
       <label className="grid gap-1 text-sm font-medium text-slate-700">
         <span>Adresse e-mail <span className="font-normal text-slate-400">(facultatif)</span></span>
         <input name="email" type="email" placeholder="Si la personne en a une" className={classeChamp} />
@@ -166,10 +196,7 @@ export function LigneUtilisateur({ u, roles, paroisses, commissions, estMoi }: L
         <p className="truncate font-medium text-marine-900">{u.nom}{estMoi && " (vous)"}</p>
         <p className="truncate text-xs text-slate-500">{u.email ?? "—"}{u.identifiant && ` · ${u.identifiant}`}</p>
       </div>
-      <select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)} disabled={!modifiable}
-        aria-label={`Rôle de ${u.nom}`} className={classeChamp}>
-        {(modifiable ? roles : [u.role]).map((r) => <option key={r} value={r}>{LIBELLES_ROLES[r]}</option>)}
-      </select>
+      <ChoixRole roles={modifiable ? roles : [u.role]} role={role} onChange={setRole} disabled={!modifiable} pour={u.nom} />
       <div>
         <ChampsPerimetre role={role} paroisses={paroisses} commissions={commissions} paroisseId={u.paroisseId} commissionId={u.commissionId} />
       </div>

@@ -869,6 +869,28 @@ try {
   await ancien.close();
   ok(new URL((await session("josephine.mbala", mdpNouveau)).url()).pathname === "/choriste", "l'ancien mot de passe ne marche plus, le nouveau oui");
 
+  console.log("Trois niveaux de compte");
+  await a.goto(`${APP}/staff/utilisateurs`);
+  await a.click("summary:has-text('Créer un compte')");
+  const niveaux = await a.locator("details[open] select[aria-label=Niveau] option").allTextContents();
+  ok(niveaux.join("|") === "Membre|Membre staff|Admin" && !(await a.isVisible("details[open] select[aria-label=Fonction]")),
+    "le type de compte se choisit parmi Membre, Membre staff et Admin");
+  await a.selectOption("details[open] select[aria-label=Niveau]", "staff");
+  const fonctions = await a.locator("details[open] select[aria-label=Fonction] option").allTextContents();
+  ok(fonctions.join("|") === "Responsable de paroisse|Responsable de commission|Contrôleur" && await a.isVisible("details[open] select[name=paroisseId]"),
+    "Membre staff demande ensuite la fonction, puis la paroisse");
+  await a.selectOption("details[open] select[aria-label=Fonction]", "responsable_commission");
+  await a.selectOption("details[open] select[name=commissionId]", { index: 1 });
+  await a.fill("input[name=nom]", "Patience Lukau");
+  await a.click("button:has-text('Créer le compte')");
+  await a.waitForSelector("[data-mot-de-passe]");
+  const { data: pl } = await admin.from("profils").select("role, commission_id").eq("identifiant", "patience.lukau").single();
+  ok(pl.role === "responsable_commission" && pl.commission_id, "un Membre staff est créé avec sa fonction et sa commission");
+  await a.goto(`${APP}/staff/utilisateurs`);
+  ok(await a.locator("select[aria-label='Niveau de Patience Lukau']").inputValue() === "staff"
+    && await a.locator("select[aria-label='Fonction de Patience Lukau']").inputValue() === "responsable_commission",
+    "la liste des comptes affiche le niveau puis la fonction");
+
   ok(erreursPage.length === 0, `aucune erreur JavaScript dans les pages${erreursPage.length ? " : " + erreursPage.join(" | ") : ""}`);
   console.log(`\nParcours réussi : ${n} vérifications.`);
 } catch (e) {
