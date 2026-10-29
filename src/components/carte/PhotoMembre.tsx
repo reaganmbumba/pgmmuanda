@@ -8,8 +8,25 @@ import { MessageFormulaire } from "@/components/ui/Formulaire";
 import { enregistrerPhoto } from "@/app/staff/cartes/actions";
 
 /** Réduit la photo dans le navigateur : portrait 4:5, 360 × 450 px, JPEG ≈ 30 Ko. */
+async function lireImage(fichier: File): Promise<ImageBitmap | HTMLImageElement> {
+  try {
+    return await createImageBitmap(fichier);
+  } catch {
+    // Certains téléphones (photos HEIC de l'iPhone) : on passe par une image classique
+    const url = URL.createObjectURL(fichier);
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      return img;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+}
+
 async function reduire(fichier: File): Promise<string> {
-  const image = await createImageBitmap(fichier);
+  const image = await lireImage(fichier);
   const L = 360, H = 450;
   const echelle = Math.max(L / image.width, H / image.height);
   const w = image.width * echelle, h = image.height * echelle;
@@ -41,7 +58,7 @@ export function PhotoMembre({ membre, id }: { membre: { prenom: string; nom: str
             <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-marine-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
               {envoi ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Camera className="size-3.5" aria-hidden />}
               {membre.photo ? "Changer la photo" : "Ajouter une photo"}
-              <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Photo du membre"
+              <input type="file" accept="image/*" className="sr-only" aria-label="Photo du membre"
                 onChange={async (e) => {
                   const f = e.target.files?.[0];
                   setErreur(null);

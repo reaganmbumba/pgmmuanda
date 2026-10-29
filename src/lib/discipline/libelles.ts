@@ -26,7 +26,7 @@ export const SEUIL_ABSENCES = 2;
 
 /** Rappel du règlement, à envoyer par WhatsApp au membre souvent absent. */
 export const messageRappelAbsences = (prenom: string, nombre: number, jours: number) => [
-  `Bonjour ${prenom},`,
+  `Paix ${prenom},`,
   `La PGM a noté ${nombre} absence${nombre > 1 ? "s" : ""} sans motif de votre part ces ${jours} derniers jours.`,
   "Règlement intérieur, art. 27 : « toute absence ou retard non justifié dans les différentes activités » ne peut être toléré.",
   "Art. 16 : la qualité de membre se perd aussi « par absence prolongée et non justifiée ».",

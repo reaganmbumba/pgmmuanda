@@ -35,7 +35,7 @@ export function motDePasseProvisoire() {
 /** Message prêt à partager sur WhatsApp avec la personne concernée. */
 export function messageAcces(nom: string, identifiant: string, motDePasse: string, site: string) {
   return [
-    `Bonjour ${nom}, voici votre accès à PGM MUANDA DIGITAL :`,
+    `Paix ${nom}, voici votre accès à l'application PGM Antenne de Muanda :`,
     `Site : ${site}`,
     `Identifiant : ${identifiant}`,
     `Mot de passe provisoire : ${motDePasse}`,

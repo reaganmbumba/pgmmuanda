@@ -654,7 +654,7 @@ try {
   ok(await ligneGrace.count() === 1 && (await a.textContent("[data-nb-payes]")).trim() === "0",
     "la page Cotisations liste les membres actifs qui n'ont pas encore payé");
   ok(decodeURIComponent(await ligneGrace.locator("a[aria-label^='Rappel WhatsApp']").getAttribute("href"))
-      .match(/^https:\/\/wa\.me\/243992223333\?text=Bonjour Grace,[\s\S]*Art\. 27/),
+      .match(/^https:\/\/wa\.me\/243992223333\?text=Paix Grace,[\s\S]*Art\. 27/),
     "le rappel WhatsApp part vers son numéro et cite le Règlement intérieur");
   await ligneGrace.locator("form[aria-label^='Rappeler'] button").click();
   await ligneGrace.locator("text=Rappel envoyé dans l'application.").waitFor();

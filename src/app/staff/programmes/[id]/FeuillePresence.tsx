@@ -35,7 +35,7 @@ export function FeuillePresence({ activite, lignes, lectureSeule: figee }: { act
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
-            <tr><th className="py-2 pr-3">Membre</th><th className="py-2 pr-3">Paroisse</th><th className="py-2">Présence</th></tr>
+            <tr><th className="py-2 pr-3">Membre</th><th className="hidden py-2 pr-3 sm:table-cell">Paroisse</th><th className="py-2">Présence</th></tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {lignes.map((l) => (
@@ -44,7 +44,7 @@ export function FeuillePresence({ activite, lignes, lectureSeule: figee }: { act
                   <span className="font-medium text-marine-900">{l.nom}</span>
                   <span className="block font-mono text-xs text-slate-400">{l.matricule}{l.voix ? ` · ${l.voix}` : ""}</span>
                 </td>
-                <td className="py-2 pr-3 text-slate-600">{l.paroisse}</td>
+                <td className="hidden py-2 pr-3 text-slate-600 sm:table-cell">{l.paroisse}</td>
                 <td className="py-2">
                   <input type="hidden" name={`o_${l.id}`} value={l.statut} />
                   <input type="hidden" name={`p_${l.id}`} value={valeurs[l.id]} />

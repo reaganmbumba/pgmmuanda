@@ -23,7 +23,7 @@ export const libelleMois = (mois: string) => `${MOIS[Number(mois.slice(5, 7)) - 
 
 /** Rappel du règlement, à envoyer par WhatsApp au membre qui n'a pas encore payé. */
 export const messageRappel = (nom: string, mois: string) => [
-  `Bonjour ${nom},`,
+  `Paix ${nom},`,
   `La PGM vous rappelle que votre cotisation de ${libelleMois(mois)} n'est pas encore payée.`,
   "Règlement intérieur, art. 2 et 3 : chaque membre « doit s'acquitter régulièrement de ses contributions ».",
   "Art. 27 : le refus de s'acquitter de ses contributions est un manquement qui ne peut pas être toléré.",

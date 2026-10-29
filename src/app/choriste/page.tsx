@@ -109,7 +109,7 @@ function Bienvenue({ prenom, nom, matricule, etiquettes }: { prenom: string; nom
   return (
     <section className="relative overflow-hidden rounded-3xl bg-marine-900 p-5 text-white shadow-lg">
       <div className="absolute -right-10 -top-10 size-36 rounded-full border-8 border-or-500/20" />
-      <p className="text-sm text-marine-100/80">Bonjour,</p>
+      <p className="text-sm text-marine-100/80">Paix,</p>
       <p className="text-2xl font-bold">{prenom} {nom}</p>
       <p className="mt-1 font-mono text-sm text-or-400">{matricule}</p>
       <div className="mt-4 flex flex-wrap gap-2 text-xs">

@@ -38,7 +38,10 @@ for (const [nom, prenom, voix] of fictifs) {
 }
 
 // --- Enregistrement ---------------------------------------------------------
-const TAILLE = { width: 1280, height: 720 };
+// FORMAT=telephone : tout est filmé sur un écran de téléphone (vidéo verticale).
+const TELEPHONE = process.env.FORMAT === "telephone";
+const TAILLE = TELEPHONE ? { width: 390, height: 693 } : { width: 1280, height: 720 };
+const MOBILE = TELEPHONE ? { isMobile: true, hasTouch: true } : {};
 const navigateur = await chromium.launch({ slowMo: 120 });
 const LEGENDE = () => {
   const afficher = () => {
@@ -60,7 +63,7 @@ const LEGENDE = () => {
   window.__legende = afficher;
 };
 async function ouvrir(nomVideo) {
-  const ctx = await navigateur.newContext({ viewport: TAILLE, recordVideo: { dir: `${SORTIE}/${nomVideo}`, size: TAILLE }, locale: "fr-FR" });
+  const ctx = await navigateur.newContext({ viewport: TAILLE, recordVideo: { dir: `${SORTIE}/${nomVideo}`, size: TAILLE }, locale: "fr-FR", ...MOBILE });
   await ctx.addInitScript(LEGENDE);
   const p = await ctx.newPage();
   debuts.set(p, { video: nomVideo, t0: Date.now() });
@@ -93,7 +96,7 @@ const defiler = async (p, px) => { await p.mouse.wheel(0, px); await pause(p, 1.
 // 1. Administration
 const { ctx: ca, p: a } = await ouvrir("1-admin");
 await aller(a, "/connexion");
-await dire(a, "PGM Antenne de Muanda", "Bienvenue ! Voici comment utiliser l'application.", 4);
+await dire(a, "PGM Antenne de Muanda", "Paix ! Voici comment utiliser l'application.", 4);
 await dire(a, "1. Se connecter", "On écrit son identifiant et son mot de passe, puis on touche « Se connecter ».", 2);
 await taper(a, "input[name=identifiant]", "admin");
 await taper(a, "input[name=motDePasse]", MDP);
@@ -124,7 +127,11 @@ await a.getByRole("button", { name: "Activer", exact: true }).first().click();
 await pause(a, 1);
 await a.getByRole("button", { name: "Confirmer" }).click();
 await a.waitForSelector("text=Modification enregistrée.");
-await dire(a, "3. Inscrire un membre", "Ruth Mbala est maintenant un membre actif.", 3);
+await dire(a, "3. Inscrire un membre", "Ruth Mbala est maintenant un membre actif. On ajoute sa photo d'identité.", 2);
+await a.locator("input[type=file][aria-label='Photo du membre']").setInputFiles(fs.existsSync(".e2e/silhouette.jpg") ? ".e2e/silhouette.jpg" : "tests/e2e/photo-test.jpg");
+await a.waitForSelector("text=Photo enregistrée.");
+await a.locator("text=Photo enregistrée.").scrollIntoViewIfNeeded();
+await pause(a, 2.5);
 
 await aller(a, "/staff/utilisateurs");
 await dire(a, "4. Créer un compte", "Utilisateurs et permissions → Créer un compte, pour que Ruth se connecte.", 3);
@@ -152,7 +159,9 @@ await a.getByRole("button", { name: /Émettre les cartes manquantes/ }).first().
 await pause(a, 1);
 await a.getByRole("button", { name: "Confirmer" }).click();
 await a.waitForSelector("text=/cartes? émises?/");
-await dire(a, "5. Cartes de membre", "Les cartes s'impriment sur une feuille A4. Le QR code ne contient aucune information privée.", 5);
+await a.goto(fiche);
+await a.locator("[data-qr]").first().scrollIntoViewIfNeeded();
+await dire(a, "5. Cartes de membre", "La photo apparaît sur la carte. Les cartes s'impriment sur une feuille A4. Le QR code ne contient aucune information privée.", 5);
 
 await aller(a, `/staff/registre?chorale=${vision.id}`);
 await dire(a, "6. Registre de présence", "Chaque chorale a ses jours : lundi et jeudi répétition, dimanche culte.", 5);
@@ -182,7 +191,8 @@ await dire(a, "7. Cotisations", "Pour un retard, « Rappeler » ouvre WhatsApp a
 await ca.close();
 
 // 2. Espace du choriste (sur téléphone)
-const ctxC = await navigateur.newContext({ viewport: { width: 400, height: 720 }, recordVideo: { dir: `${SORTIE}/2-choriste`, size: { width: 400, height: 720 } }, locale: "fr-FR", isMobile: true, hasTouch: true });
+const ECRAN = TELEPHONE ? TAILLE : { width: 400, height: 720 };
+const ctxC = await navigateur.newContext({ viewport: ECRAN, recordVideo: { dir: `${SORTIE}/2-choriste`, size: ECRAN }, locale: "fr-FR", isMobile: true, hasTouch: true });
 await ctxC.addInitScript(LEGENDE);
 const c = await ctxC.newPage();
 debuts.set(c, { video: "2-choriste", t0: Date.now() });
