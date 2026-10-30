@@ -394,3 +394,13 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .ecran-titre small{color:var(--sur-marine-doux)}
 .site-pgm .lire-video{position:absolute;inset:0;display:grid;place-items:center}
 .site-pgm .lire-video svg.i{width:34px;height:34px;padding:8px;border-radius:50%;background:rgba(13,33,73,.75);color:#fff;fill:#fff}
+
+/* Accueil : les autres rubriques, repliées */
+.site-pgm .autres-rubriques{margin-top:14px;border-radius:16px;background:rgba(255,255,255,.07);border:1px solid rgba(232,196,106,.35)}
+.site-pgm .autres-rubriques summary{list-style:none;display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;cursor:pointer;font-weight:700;color:var(--or-clair)}
+.site-pgm .autres-rubriques summary::-webkit-details-marker{display:none}
+.site-pgm .autres-rubriques summary svg.i{width:20px;height:20px}
+.site-pgm .autres-rubriques nav{display:grid;padding:0 10px 10px}
+.site-pgm .autres-rubriques nav a{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 10px;color:var(--sur-marine);text-decoration:none;font-weight:600;border-top:1px solid rgba(255,255,255,.1)}
+.site-pgm .autres-rubriques nav a svg.i{width:20px;height:20px;color:var(--or-clair)}
+.site-pgm .autres-rubriques nav a svg.fl{margin-left:auto;opacity:.6}
