@@ -13,7 +13,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   // Le site public montre les vidéos de la chaîne YouTube de la PGM et ses audios
-  "img-src 'self' data: blob: https://i.ytimg.com",
+  `img-src 'self' data: blob: https://i.ytimg.com${supabase ? ` ${supabase}` : ""}`,
   "font-src 'self'",
   `connect-src 'self'${supabase ? ` ${supabase} ${supabase.replace(/^http/, "ws")}` : ""}`,
   `media-src 'self' blob:${supabase ? ` ${supabase}` : ""}`,
@@ -38,6 +38,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Fichiers déposés : 4 Mo au plus (+ marge pour l'enveloppe du formulaire)
   experimental: { serverActions: { bodySizeLimit: "4.5mb" } },
+  // Ancienne adresse de l'article, déjà partagée : il vit maintenant dans la liste des actualités
+  async redirects() {
+    return [{ source: "/actualites/numerique", destination: "/actualites", permanent: false }];
+  },
   async headers() {
     return [
       { source: "/((?!fichiers/).*)", headers: entetes },

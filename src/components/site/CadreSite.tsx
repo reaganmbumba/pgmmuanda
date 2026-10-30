@@ -11,7 +11,10 @@ export function CadreSite({ children }: { children: React.ReactNode }) {
       <header className="site cadre">
         <div className="col">
           <Link className="marque" href="/">
-            <img src="/logo-pgm.png" alt="" />
+            <span className="logos">
+              <img src="/logo-pgm.png" alt="PGM" />
+              <img className="kcc" src="/logo-kcc.png" alt="KCC" />
+            </span>
             <span>
               <b>PGM ANTENNE DE MUANDA</b>
               <span>EBNM KCC</span>
@@ -26,9 +29,13 @@ export function CadreSite({ children }: { children: React.ReactNode }) {
       {children}
       <footer className="pied cadre">
         <div className="col">
-          <img src="/logo-pgm.png" alt="" />
+          <div className="logos-pied">
+            <img src="/logo-pgm.png" alt="Logo de la PGM" />
+            <img className="kcc" src="/logo-kcc.png" alt="Logo KCC" />
+          </div>
           <b>PGM Antenne de Muanda</b>
-          <span>Présidence générale de la musique · EBNM KCC</span>
+          <span>Présidence générale de la musique, une branche de l&apos;Église Bon Nouveau Message (KCC)</span>
+          <span className="concepteur">Application conçue par le <b>Prédicateur Reagan MBUMBA</b></span>
         </div>
       </footer>
       <NavigationSite />

@@ -9,6 +9,8 @@ import "server-only";
 export type Video = { id: string; titre: string; date: string };
 export type Chaine = {
   lien: string;
+  /** Liste de lecture de toutes les vidéos publiées (UU + identifiant) : lisible dans le site même sans le flux. */
+  listeVideos: string | null;
   lienAbonnement: string;
   id: string | null;
   abonnes: string | null;
@@ -16,7 +18,15 @@ export type Chaine = {
   videos: Video[];
 };
 
-const ENTETES = { "Accept-Language": "fr-FR,fr;q=0.9", "User-Agent": "Mozilla/5.0 (compatible; PGM-Muanda)" };
+// Le cookie évite la page « Avant d'accéder à YouTube » (consentement) servie aux serveurs
+const ENTETES = {
+  "Accept-Language": "fr-FR,fr;q=0.9",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+  Cookie: "CONSENT=YES+cb; SOCS=CAI",
+};
+
+/** Identifiant de la chaîne @pgmmuanda, utilisé quand l'administration n'en a pas donné. */
+export const ID_CHAINE_PGM = "UCdg6aGoM6lstsz2f-or-O9A";
 
 async function lire(url: string, secondes: number): Promise<string | null> {
   try {
@@ -42,14 +52,16 @@ function abonnesDepuis(page: string): string | null {
 export async function lireChaine(nom: string, idManuel: string): Promise<Chaine> {
   const pseudo = nom.replace(/^@/, "").trim() || "pgmmuanda";
   const lien = `https://www.youtube.com/@${encodeURIComponent(pseudo)}`;
-  const chaine: Chaine = { lien, lienAbonnement: `${lien}?sub_confirmation=1`, id: null, abonnes: null, direct: null, videos: [] };
+  const chaine: Chaine = { lien, listeVideos: null, lienAbonnement: `${lien}?sub_confirmation=1`, id: null, abonnes: null, direct: null, videos: [] };
 
   const page = await lire(lien, 3600);
   chaine.id = /^UC[\w-]{22}$/.test(idManuel) ? idManuel
     : page?.match(/"(?:externalId|channelId)":"(UC[\w-]{22})"/)?.[1]
-      ?? page?.match(/youtube\.com\/channel\/(UC[\w-]{22})/)?.[1] ?? null;
+      ?? page?.match(/youtube\.com\/channel\/(UC[\w-]{22})/)?.[1]
+      ?? (pseudo.toLowerCase() === "pgmmuanda" ? ID_CHAINE_PGM : null);
   if (page) chaine.abonnes = abonnesDepuis(page);
   if (!chaine.id) return chaine;
+  chaine.listeVideos = `UU${chaine.id.slice(2)}`;
 
   const [flux, direct] = await Promise.all([
     lire(`https://www.youtube.com/feeds/videos.xml?channel_id=${chaine.id}`, 600),

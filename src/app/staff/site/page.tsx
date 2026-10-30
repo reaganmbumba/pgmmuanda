@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ExternalLink, Eye, EyeOff, Plus, Save, Trash2 } from "lucide-react";
 import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
@@ -10,22 +11,25 @@ import { exigerAcces } from "@/lib/auth/session";
 import { dateLongue, lireCauserie, lireElements, lireReglages, siteEnBase, urlFichier, type ElementSite, type Rubrique } from "@/lib/site/contenu";
 import { basculerElement, enregistrerElement, enregistrerReglages, masquerMessage, supprimerElement, supprimerMessage } from "./actions";
 import { EnvoiAudio } from "./EnvoiAudio";
+import { ChampImage } from "./ChampImage";
+
+const BASE_FICHIERS = urlFichier("").replace(/\/$/, "");
 
 export const metadata = { title: "Site public" };
 
-type Libelles = { nom: string; un: string; titre: string; sousTitre?: string; texte?: string; date?: boolean; ordre?: boolean; page: string };
+type Libelles = { nom: string; un: string; titre: string; sousTitre?: string; texte?: string; date?: boolean; ordre?: boolean; image?: boolean; page: string };
 
 /** Ce que veut dire chaque champ selon la rubrique. */
 const RUBRIQUES: Record<Rubrique, Libelles> = {
-  actualite: { nom: "Actualités", un: "une actualité", titre: "Titre", sousTitre: "Résumé (affiché dans la liste)", texte: "Texte de l'article (une ligne vide entre deux paragraphes)", date: true, page: "/actualites" },
+  actualite: { nom: "Actualités", un: "une actualité", titre: "Titre", sousTitre: "Résumé (affiché dans la liste)", texte: "Texte de l'article (une ligne vide entre deux paragraphes)", date: true, image: true, page: "/actualites" },
   audio: { nom: "Audios des répétitions", un: "un audio", titre: "Titre du chant", sousTitre: "Chorale", texte: "Remarque", date: true, page: "/ecouter" },
   chorale: { nom: "Chorales", un: "une chorale", titre: "Nom de la chorale", sousTitre: "Paroisse", ordre: true, page: "/chorales" },
   programme: { nom: "Programme de la semaine", un: "une ligne du programme", titre: "Jour (ex. Lundi)", sousTitre: "Heure (ex. 15h30 – 17h30)", texte: "Activité", ordre: true, page: "/programme" },
   commission: { nom: "Commissions", un: "une commission", titre: "Nom de la commission", texte: "Son rôle, en une phrase", ordre: true, page: "/commissions" },
   question: { nom: "Questions fréquentes", un: "une question", titre: "Question", texte: "Réponse", ordre: true, page: "/questions" },
-  soiree: { nom: "Soirées musicales", un: "une soirée musicale", titre: "Nom de la soirée", sousTitre: "Heure et lieu (ex. 18h, paroisse Atlantique)", texte: "Présentation (chorales invitées, programme…)", date: true, page: "/soirees" },
-  social: { nom: "Cas sociaux", un: "un cas social", titre: "Titre (ex. Deuil dans la famille de…)", sousTitre: "Chorale ou paroisse", texte: "Message (une ligne vide entre deux paragraphes)", date: true, page: "/cas-sociaux" },
-  pionnier: { nom: "Les pionniers", un: "un pionnier", titre: "Nom du pionnier", sousTitre: "Rôle ou années (ex. 1er président, 1985 – 1998)", texte: "Son histoire (une ligne vide entre deux paragraphes)", ordre: true, page: "/pionniers" },
+  soiree: { nom: "Soirées musicales", un: "une soirée musicale", titre: "Nom de la soirée", sousTitre: "Heure et lieu (ex. 18h, paroisse Atlantique)", texte: "Présentation (chorales invitées, programme…)", date: true, image: true, page: "/soirees" },
+  social: { nom: "Cas sociaux", un: "un cas social", titre: "Titre (ex. Deuil dans la famille de…)", sousTitre: "Chorale ou paroisse", texte: "Message (une ligne vide entre deux paragraphes)", date: true, image: true, page: "/cas-sociaux" },
+  pionnier: { nom: "Les pionniers", un: "un pionnier", titre: "Nom du pionnier", sousTitre: "Rôle ou années (ex. 1er président, 1985 – 1998)", texte: "Son histoire (une ligne vide entre deux paragraphes)", ordre: true, image: true, page: "/pionniers" },
 };
 type Onglet = Rubrique | "causerie" | "reglages";
 const ONGLETS: Onglet[] = ["actualite", "soiree", "audio", "social", "pionnier", "chorale", "programme", "commission", "question", "causerie", "reglages"];
@@ -47,6 +51,7 @@ function Champs({ l, e }: { l: Libelles; e?: ElementSite }) {
         </Champ>
       )}
       {l.date && <Champ libelle="Date"><input name="date" type="date" defaultValue={e?.date ?? ""} className={classeChamp} /></Champ>}
+      {l.image && <ChampImage chemin={e?.image ?? null} base={BASE_FICHIERS} />}
       {l.ordre && <Champ libelle="Position dans la liste" aide="Les plus petits numéros s'affichent en premier."><input name="ordre" type="number" min={0} max={9999} defaultValue={e?.ordre ?? 0} className={classeChamp} /></Champ>}
     </>
   );
@@ -57,6 +62,7 @@ function Element({ e, l }: { e: ElementSite; l: Libelles }) {
     <li className={`py-4 ${e.publie ? "" : "opacity-70"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
+          {e.image && <img src={urlFichier(e.image)} alt="" className="mb-2 h-16 w-28 rounded-lg object-cover" />}
           <p className="font-semibold text-marine-900">{e.titre} {!e.publie && <Badge ton="gris">Masqué</Badge>}</p>
           <p className="text-sm text-slate-600">{[e.sousTitre, e.date && dateLongue(e.date)].filter(Boolean).join(" · ")}</p>
           {e.texte && e.rubrique !== "actualite" && <p className="mt-1 line-clamp-2 text-sm text-slate-500">{e.texte}</p>}

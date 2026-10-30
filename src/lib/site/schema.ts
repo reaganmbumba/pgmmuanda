@@ -10,6 +10,7 @@ export const schemaElementSite = z.object({
   sousTitre: texteLibre(200).default(null),
   texte: texteLibre(20000).default(null),
   date: z.union([z.literal(""), z.iso.date("Date invalide.")]).optional().default("").transform((v) => v || null),
+  image: z.union([z.literal(""), z.string().regex(/^images\/[A-Za-z0-9._-]{1,150}$/, "Image invalide.")]).optional().transform((v) => v || null),
   ordre: z.coerce.number().int().min(0).max(9999).optional().default(0),
 });
 
