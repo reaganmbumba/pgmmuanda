@@ -5,9 +5,16 @@ import {
   FilePen, Gavel, HandCoins, IdCard, Scale, ScrollText, UserMinus,
   GraduationCap, HeartHandshake, HeartPulse, Landmark, ListMusic, LogIn, Lock, MapPin, Megaphone,
   MessageCircle, Mic, Music, Network, Newspaper, PenLine, Phone, QrCode, ShieldCheck, Shirt,
-  Truck, UserPlus, Users, Wallet, type LucideIcon,
+  Truck, UserPlus, Users, Wallet, Radio, Headphones, Play, TvMinimalPlay, BellRing, CalendarHeart, MessagesSquare, Medal, HandHeart, type LucideIcon,
 } from "lucide-react";
 import { CadreSite } from "./CadreSite";
+import { LecteurVideo } from "./LecteurVideo";
+import { BoutonPartager } from "./BoutonPartager";
+import { Causerie } from "./Causerie";
+import {
+  contact, dateLongue, lireElement, lireElements, lireReglages, paragraphes, siteEnBase, urlFichier, type ElementSite,
+} from "@/lib/site/contenu";
+import { lireChaine } from "@/lib/site/youtube";
 
 /*
  * Site public de l'antenne : une page par rubrique. Aucune donnée de membre,
@@ -15,41 +22,18 @@ import { CadreSite } from "./CadreSite";
  * la doctrine KCCiste est respectée, seul le logo de la PGM est utilisé.
  */
 
-const TELEPHONE = "+243825717444";
-const TELEPHONE_AFFICHE = "+243 825 717 444";
-const WHATSAPP = `https://wa.me/243825717444?text=${encodeURIComponent(
-  "Paix ! Je vous écris depuis le site de la PGM Antenne de Muanda.",
-)}`;
-
-const CHORALES = [
-  { nom: "Vision", lieu: "Paroisse Atlantique" },
-  { nom: "Echo", lieu: "Paroisse Pika Pende" },
-  { nom: "Alliance", lieu: "Paroisse Itonde" },
-  { nom: "CHOPDI", lieu: "Paroisse Kitsiaku" },
-  { nom: "Oracle", lieu: "Chorale urbaine, dans toutes les paroisses" },
-];
-
-const SEMAINE: { jour: string; Icone: LucideIcon; seances: { heure: string; quoi: string; Icone: LucideIcon }[] }[] = [
-  { jour: "Lundi", Icone: Mic, seances: [
-    { heure: "15h30 – 17h30", quoi: "Répétition des femmes", Icone: Clock },
-    { heure: "17h30 – 19h30", quoi: "Répétition des hommes", Icone: Clock },
-  ] },
-  { jour: "Jeudi", Icone: Mic, seances: [
-    { heure: "15h30 – 17h30", quoi: "Répétition des femmes", Icone: Clock },
-    { heure: "17h30 – 19h30", quoi: "Répétition des hommes", Icone: Clock },
-  ] },
-  { jour: "Dimanche", Icone: Music, seances: [{ heure: "Culte", quoi: "Louange dans chaque paroisse", Icone: Music }] },
-];
-
-const COMMISSIONS: { nom: string; role: string; Icone: LucideIcon }[] = [
-  { nom: "Coordination des commissions", role: "Relie le travail de toutes les commissions.", Icone: Network },
-  { nom: "Finances & Budget", role: "Cotisations, caisse et budget des activités.", Icone: Wallet },
-  { nom: "Uniforme et Tenue", role: "Les uniformes et la tenue lors des productions.", Icone: Shirt },
-  { nom: "Logistique & Infrastructure", role: "Matériel, salles, transport et hébergement.", Icone: Truck },
-  { nom: "Presse, Communication et Promotion", role: "Annonces, photos, réseaux et ce site.", Icone: Megaphone },
-  { nom: "Censure, Musique & Répertoire", role: "Choix et vérification des chants.", Icone: ListMusic },
-  { nom: "Santé & Assistance", role: "Soutien aux choristes malades ou dans le besoin.", Icone: HeartPulse },
-];
+/** Icône d'une commission d'après son nom (une icône neutre sinon). */
+function iconeCommission(nom: string): LucideIcon {
+  const n = nom.toLowerCase();
+  if (n.includes("coordination")) return Network;
+  if (n.includes("financ") || n.includes("budget")) return Wallet;
+  if (n.includes("uniforme") || n.includes("tenue")) return Shirt;
+  if (n.includes("logistique")) return Truck;
+  if (n.includes("presse") || n.includes("communication")) return Megaphone;
+  if (n.includes("musique") || n.includes("répertoire") || n.includes("censure")) return ListMusic;
+  if (n.includes("santé") || n.includes("assistance")) return HeartPulse;
+  return Landmark;
+}
 
 const ETAPES: { titre: string; texte: string; Icone: LucideIcon }[] = [
   { titre: "Être KCCiste", texte: "La chorale est ouverte aux KCCistes de bonne moralité et disponibles.", Icone: IdCard },
@@ -59,34 +43,24 @@ const ETAPES: { titre: string; texte: string; Icone: LucideIcon }[] = [
   { titre: "L'engagement", texte: "Vous signez l'acte d'engagement (sauf pour la chorale junior).", Icone: PenLine },
 ];
 
-const QUESTIONS: { q: string; r: string }[] = [
-  { q: "Qui peut devenir choriste ?",
-    r: "Tout KCCiste de bonne moralité et disponible, qui fait une demande écrite au Comité directeur de la chorale de sa paroisse, réussit le test et signe l'acte d'engagement. Les enfants vont dans la chorale junior." },
-  { q: "Où trouver le Règlement intérieur ?",
-    r: "Dans la rubrique « Règlement » de ce site : un résumé simple et le texte complet à télécharger." },
-  { q: "Quand ont lieu les répétitions ?",
-    r: "Le lundi et le jeudi : de 15h30 à 17h30 pour les femmes, de 17h30 à 19h30 pour les hommes. Les horaires exacts de chaque chorale sont dans l'espace membres." },
-  { q: "Faut-il payer une cotisation ?",
-    r: "Oui. Chaque membre paie régulièrement sa cotisation, comme le prévoit le Règlement intérieur. Le montant est donné par votre chorale." },
-  { q: "Comment obtenir mon compte dans l'application ?",
-    r: "Votre responsable de chorale crée votre compte et vous envoie, par WhatsApp, votre identifiant et un mot de passe provisoire. Aucune adresse e-mail n'est nécessaire." },
-  { q: "J'ai oublié mon mot de passe. Que faire ?",
-    r: "Sur la page « Se connecter », touchez « Mot de passe oublié ? », ou demandez à votre responsable de chorale de vous en donner un nouveau." },
-  { q: "Comment vérifier une carte de membre ?",
-    r: "Scannez le code QR de la carte avec l'appareil photo d'un téléphone : une page indique tout de suite si la carte est valable." },
-];
-
 /* Les rubriques, dans l'ordre des tuiles de l'accueil. */
 const RUBRIQUES: { href: string; nom: string; Icone: LucideIcon }[] = [
+  { href: "/direct", nom: "Direct", Icone: Radio },
+  { href: "/ecouter", nom: "Écouter", Icone: Headphones },
+  { href: "/causerie", nom: "Causerie", Icone: MessagesSquare },
+  { href: "/soirees", nom: "Soirées musicales", Icone: CalendarHeart },
   { href: "/la-pgm", nom: "La PGM", Icone: BookOpen },
   { href: "/chorales", nom: "Chorales", Icone: Music },
   { href: "/programme", nom: "Programme", Icone: Calendar },
   { href: "/actualites", nom: "Actualités", Icone: Newspaper },
   { href: "/commissions", nom: "Commissions", Icone: Landmark },
+  { href: "/cas-sociaux", nom: "Cas sociaux", Icone: HandHeart },
+  { href: "/pionniers", nom: "Les pionniers", Icone: Medal },
   { href: "/nous-rejoindre", nom: "Nous rejoindre", Icone: UserPlus },
   { href: "/questions", nom: "Questions", Icone: CircleHelp },
   { href: "/contact", nom: "Contact", Icone: Phone },
   { href: "/reglement", nom: "Règlement", Icone: ScrollText },
+  { href: "/connexion", nom: "Se connecter", Icone: LogIn },
 ];
 
 /** Bandeau en haut de chaque rubrique, avec le retour à l'accueil. */
@@ -115,19 +89,16 @@ function Suite({ href, nom }: { href: string; nom: string }) {
   );
 }
 
-function CarteArticle() {
+function CarteArticle({ a }: { a: ElementSite }) {
   return (
-    <Link className="actu" href="/actualites/numerique">
+    <Link className="actu" href={`/actualites/${a.id}`}>
       <div className="vis">
         <img src="/logo-pgm.png" alt="" />
-        <b>La PGM Antenne de Muanda passe au numérique</b>
+        <b>{a.titre}</b>
       </div>
       <div className="txt">
-        <span className="meta"><Calendar className="i" aria-hidden />Muanda, le 30 octobre 2026</span>
-        <p>
-          Avec PGM MUANDA DIGITAL, chaque choriste et chaque responsable a son espace personnel pour
-          suivre la vie de la PGM depuis son téléphone.
-        </p>
+        {a.date && <span className="meta"><Calendar className="i" aria-hidden />Muanda, le {dateLongue(a.date)}</span>}
+        {a.sousTitre && <p>{a.sousTitre}</p>}
         <span className="lire">Lire l&apos;article<ArrowRight className="i" aria-hidden /></span>
       </div>
     </Link>
@@ -163,18 +134,20 @@ function Bloc({ children }: { children: React.ReactNode }) {
   return <section className="bloc cadre"><div className="col">{children}</div></section>;
 }
 
-export function AccueilSite() {
+export async function AccueilSite() {
+  const [r, actualites, chorales, commissions, soirees] = await Promise.all([
+    lireReglages(), lireElements("actualite"), lireElements("chorale"), lireElements("commission"), lireElements("soiree"),
+  ]);
+  const prochaine = aVenir(soirees).at(0);
+  const paroisses = new Set(chorales.map((c) => c.sousTitre).filter((l) => l?.startsWith("Paroisse"))).size;
   return (
     <CadreSite>
       <main>
         <section className="une cadre">
           <div className="col">
             <p className="salut">Paix à vous.</p>
-            <h1>Servir Dieu par le chant, à Muanda</h1>
-            <p className="chapo">
-              La Présidence générale de la musique rassemble les chorales de l&apos;EBNM KCC.
-              L&apos;Antenne de Muanda en est la représentation locale.
-            </p>
+            <h1>{r.accueil_titre}</h1>
+            <p className="chapo">{r.accueil_texte}</p>
             <nav className="raccourcis" aria-label="Rubriques">
               {RUBRIQUES.map(({ href, nom, Icone }) => (
                 <Link key={href} className="tuile" href={href}>
@@ -189,17 +162,34 @@ export function AccueilSite() {
         <div className="chiffres-band cadre">
           <div className="col">
             <div className="chiffres">
-              <div><span className="med"><Building2 className="i" aria-hidden /></span><b>4</b><span>paroisses</span></div>
-              <div><span className="med"><Music className="i" aria-hidden /></span><b>15</b><span>chorales</span></div>
-              <div><span className="med"><Landmark className="i" aria-hidden /></span><b>7</b><span>commissions</span></div>
+              <div><span className="med"><Building2 className="i" aria-hidden /></span><b>{paroisses}</b><span>paroisses</span></div>
+              <div><span className="med"><Music className="i" aria-hidden /></span><b>{chorales.length * 3}</b><span>chorales</span></div>
+              <div><span className="med"><Landmark className="i" aria-hidden /></span><b>{commissions.length}</b><span>commissions</span></div>
             </div>
           </div>
         </div>
 
         <Bloc>
-          <div className="titre"><span className="etiquette">À la une</span></div>
-          <CarteArticle />
+          <Link className="bandeau-direct" href="/direct">
+            <span className="rond"><TvMinimalPlay className="i" aria-hidden /></span>
+            <span><b>PGM Muanda TV</b>Nos vidéos et nos directs sur YouTube</span>
+            <Play className="i" aria-hidden />
+          </Link>
         </Bloc>
+
+        {prochaine && (
+          <Bloc>
+            <div className="titre"><span className="etiquette">Prochaine soirée musicale</span></div>
+            <CarteSoiree s={prochaine} />
+          </Bloc>
+        )}
+
+        {actualites[0] && (
+          <Bloc>
+            <div className="titre"><span className="etiquette">À la une</span></div>
+            <CarteArticle a={actualites[0]} />
+          </Bloc>
+        )}
 
         <Bloc><EspaceMembres /></Bloc>
       </main>
@@ -257,20 +247,22 @@ export function PageLaPgm() {
   );
 }
 
-export function PageChorales() {
+export async function PageChorales() {
+  const chorales = await lireElements("chorale");
   return (
     <CadreSite>
       <main>
         <EnTete Icone={Music} titre="Nos chorales"
-          texte="Cinq groupes, quinze chorales. Chaque groupe a une chorale de femmes, une d'hommes et une chorale junior." />
+          texte="Chaque groupe a une chorale de femmes, une d'hommes et une chorale junior." />
         <Bloc>
           <div className="chorales">
-            {CHORALES.map((c) => (
-              <div key={c.nom} className="chorale">
-                <span className="ini">{c.nom[0]}</span>
+            {chorales.map((c) => (
+              <div key={c.id} className="chorale">
+                <span className="ini">{c.titre[0]}</span>
                 <div>
-                  <h3>{c.nom}</h3>
-                  <p className="lieu"><MapPin className="i" aria-hidden />{c.lieu}</p>
+                  <h3>{c.titre}</h3>
+                  {c.sousTitre && <p className="lieu"><MapPin className="i" aria-hidden />{c.sousTitre}</p>}
+                  {c.texte && <p className="note">{c.texte}</p>}
                   <div className="voix"><span>Femme</span><span>Homme</span><span>Junior</span></div>
                 </div>
               </div>
@@ -284,21 +276,23 @@ export function PageChorales() {
   );
 }
 
-export function PageProgramme() {
+export async function PageProgramme() {
+  const lignes = await lireElements("programme");
+  const jours = [...new Set(lignes.map((l) => l.titre))].map((jour) => ({ jour, seances: lignes.filter((l) => l.titre === jour) }));
   return (
     <CadreSite>
       <main>
         <EnTete Icone={Calendar} titre="Programme" texte="Horaires habituels de la semaine, selon le Règlement intérieur." />
         <Bloc>
           <div className="semaine">
-            {SEMAINE.map(({ jour, Icone, seances }) => (
+            {jours.map(({ jour, seances }) => (
               <div key={jour} className="jour">
-                <div className="j"><Icone className="i" aria-hidden /><b>{jour}</b></div>
+                <div className="j">{/^dimanche/i.test(jour) ? <Music className="i" aria-hidden /> : <Mic className="i" aria-hidden />}<b>{jour}</b></div>
                 <ul>
                   {seances.map((s) => (
-                    <li key={s.quoi}>
-                      <s.Icone className="i" aria-hidden />
-                      <div><time>{s.heure}</time><span>{s.quoi}</span></div>
+                    <li key={s.id}>
+                      {/\d/.test(s.sousTitre ?? "") ? <Clock className="i" aria-hidden /> : <Music className="i" aria-hidden />}
+                      <div><time>{s.sousTitre}</time><span>{s.texte}</span></div>
                     </li>
                   ))}
                 </ul>
@@ -316,13 +310,15 @@ export function PageProgramme() {
   );
 }
 
-export function PageActualites() {
+export async function PageActualites() {
+  const actualites = await lireElements("actualite");
   return (
     <CadreSite>
       <main>
         <EnTete Icone={Newspaper} titre="Actualités" texte="Les nouvelles de la PGM Antenne de Muanda." />
         <Bloc>
-          <CarteArticle />
+          {actualites.length === 0 ? <p className="note">Aucune actualité pour le moment.</p>
+            : actualites.map((a) => <CarteArticle key={a.id} a={a} />)}
           <Suite href="/commissions" nom="Nos commissions" />
         </Bloc>
       </main>
@@ -330,19 +326,23 @@ export function PageActualites() {
   );
 }
 
-export function PageCommissions() {
+export async function PageCommissions() {
+  const commissions = await lireElements("commission");
   return (
     <CadreSite>
       <main>
-        <EnTete Icone={Landmark} titre="Nos commissions" texte="Sept commissions font fonctionner l'antenne." />
+        <EnTete Icone={Landmark} titre="Nos commissions" texte="Les commissions qui font fonctionner l'antenne." />
         <Bloc>
           <ul className="commissions">
-            {COMMISSIONS.map(({ nom, role, Icone }) => (
-              <li key={nom}>
-                <span className="ic"><Icone className="i" aria-hidden /></span>
-                <div><h3>{nom}</h3><span>{role}</span></div>
-              </li>
-            ))}
+            {commissions.map((c) => {
+              const Icone = iconeCommission(c.titre);
+              return (
+                <li key={c.id}>
+                  <span className="ic"><Icone className="i" aria-hidden /></span>
+                  <div><h3>{c.titre}</h3>{c.texte && <span>{c.texte}</span>}</div>
+                </li>
+              );
+            })}
           </ul>
           <Suite href="/nous-rejoindre" nom="Nous rejoindre" />
         </Bloc>
@@ -351,7 +351,8 @@ export function PageCommissions() {
   );
 }
 
-export function PageRejoindre() {
+export async function PageRejoindre() {
+  const c = contact(await lireReglages());
   return (
     <CadreSite>
       <main>
@@ -369,9 +370,11 @@ export function PageRejoindre() {
             Une fois membre, vous participez aux répétitions, vous payez régulièrement vos cotisations et
             vous recevez votre carte de membre avec code QR.
           </p>
-          <a className="btn btn-vert" href={WHATSAPP} target="_blank" rel="noopener noreferrer">
-            <MessageCircle className="i" aria-hidden />Poser une question sur WhatsApp
-          </a>
+          {c.whatsapp && (
+            <a className="btn btn-vert" href={c.whatsapp} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="i" aria-hidden />Poser une question sur WhatsApp
+            </a>
+          )}
           <p className="note">
             La PGM compte aussi la fanfare, les orchestres et les groupes flûte, avec leurs propres
             conditions d&apos;adhésion.
@@ -384,17 +387,18 @@ export function PageRejoindre() {
   );
 }
 
-export function PageQuestions() {
+export async function PageQuestions() {
+  const questions = await lireElements("question");
   return (
     <CadreSite>
       <main>
         <EnTete Icone={CircleHelp} titre="Questions fréquentes" texte="Touchez une question pour voir la réponse." />
         <Bloc>
           <div className="faq">
-            {QUESTIONS.map(({ q, r }) => (
-              <details key={q}>
-                <summary>{q}</summary>
-                <p>{r}</p>
+            {questions.map((q) => (
+              <details key={q.id}>
+                <summary>{q.titre}</summary>
+                {paragraphes(q.texte).map((p) => <p key={p}>{p}</p>)}
               </details>
             ))}
           </div>
@@ -491,26 +495,306 @@ export function PageReglement() {
   );
 }
 
-export function PageContact() {
+export async function PageContact() {
+  const c = contact(await lireReglages());
   return (
     <CadreSite>
       <main>
         <EnTete Icone={Phone} titre="Contact" texte="Une question ? Écrivez-nous ou appelez-nous." />
         <Bloc>
           <div className="contact-actions">
-            <a className="c-btn" href={WHATSAPP} target="_blank" rel="noopener noreferrer">
+            <a className="c-btn" href={c.whatsapp} target="_blank" rel="noopener noreferrer">
               <span className="rond wa"><MessageCircle className="i" aria-hidden /></span>WhatsApp<small>Écrire un message</small>
             </a>
-            <a className="c-btn" href={`tel:${TELEPHONE}`}>
-              <span className="rond tel"><Phone className="i" aria-hidden /></span>Appeler<small>{TELEPHONE_AFFICHE}</small>
+            <a className="c-btn" href={`tel:${c.tel}`}>
+              <span className="rond tel"><Phone className="i" aria-hidden /></span>Appeler<small>{c.affiche}</small>
             </a>
           </div>
           <div className="carte lignes">
-            <div className="ligne-c"><span className="ic"><Phone className="i" aria-hidden /></span><div><small>Téléphone et WhatsApp</small>{TELEPHONE_AFFICHE}</div></div>
+            <div className="ligne-c"><span className="ic"><Phone className="i" aria-hidden /></span><div><small>Téléphone et WhatsApp</small>{c.affiche}</div></div>
             <div className="ligne-c"><span className="ic"><MapPin className="i" aria-hidden /></span><div><small>Lieu</small>Muanda, Kongo-Central, RD Congo</div></div>
             <div className="ligne-c"><span className="ic"><Users className="i" aria-hidden /></span><div><small>Questions sur une chorale</small>Adressez-vous au responsable de la chorale de votre paroisse.</div></div>
           </div>
           <EspaceMembres />
+        </Bloc>
+      </main>
+    </CadreSite>
+  );
+}
+
+const miniature = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+
+export async function PageDirect({ v }: { v?: string }) {
+  const r = await lireReglages();
+  const chaine = await lireChaine(r.youtube_chaine, r.youtube_id);
+  const choisie = (v && chaine.videos.some((x) => x.id === v) ? v : null) ?? chaine.direct ?? chaine.videos[0]?.id ?? null;
+  const enDirect = choisie !== null && choisie === chaine.direct;
+  const titre = chaine.videos.find((x) => x.id === choisie)?.titre ?? (enDirect ? "En direct" : "");
+  return (
+    <CadreSite>
+      <main>
+        <EnTete Icone={Radio} titre="Direct" texte="Les cultes, louanges et productions de la PGM Antenne de Muanda, en vidéo." />
+        <Bloc>
+          <div className="chaine carte">
+            <img src="/logo-pgm.png" alt="" />
+            <div>
+              <b>PGM Muanda</b>
+              <span>@{r.youtube_chaine.replace(/^@/, "")}{chaine.abonnes && <> · {chaine.abonnes} abonnés</>}</span>
+            </div>
+            <a className="btn-abonner" href={chaine.lienAbonnement} target="_blank" rel="noopener noreferrer">
+              <BellRing className="i" aria-hidden />S&apos;abonner
+            </a>
+          </div>
+          <p className="abonnez">Abonnez-vous à la chaîne : vous serez prévenu à chaque nouvelle vidéo et à chaque direct.</p>
+
+          {choisie ? (
+            <div className="ecran" id="lecteur">
+              <LecteurVideo id={choisie} titre={titre} direct={enDirect} />
+              <div className="ecran-titre">
+                {enDirect
+                  ? <span className="badge-direct"><span className="point" />En direct</span>
+                  : <span className="badge-video"><Play className="i" aria-hidden />{v ? "Vidéo" : "Dernière vidéo"}</span>}
+                <b>{titre}</b>
+              </div>
+            </div>
+          ) : (
+            <div className="carte vide-direct">
+              <span className="ic"><TvMinimalPlay className="i" aria-hidden /></span>
+              <p>Les vidéos de la chaîne s&apos;affichent ici. Vous pouvez aussi les regarder directement sur YouTube.</p>
+              <a className="btn btn-marine" href={chaine.lien} target="_blank" rel="noopener noreferrer">
+                <TvMinimalPlay className="i" aria-hidden />Voir la chaîne
+              </a>
+            </div>
+          )}
+
+          {chaine.videos.length > 0 && (
+            <>
+              <div className="titre"><span className="etiquette">Nos vidéos</span></div>
+              <ul className="videos">
+                {chaine.videos.map((x) => (
+                  <li key={x.id}>
+                    <Link href={`/direct?v=${x.id}#lecteur`} className={x.id === choisie ? "actif" : undefined}>
+                      <span className="vignette">
+                        <img src={miniature(x.id)} alt="" loading="lazy" width={320} height={180} />
+                        {x.id === chaine.direct && <span className="badge-direct"><span className="point" />Direct</span>}
+                      </span>
+                      <span className="v-txt">
+                        <b>{x.titre}</b>
+                        {x.date && <small>{dateLongue(x.date.slice(0, 10))}</small>}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <a className="btn btn-ligne-sombre" href={chaine.lien} target="_blank" rel="noopener noreferrer">
+                <TvMinimalPlay className="i" aria-hidden />Toutes les vidéos sur YouTube
+              </a>
+            </>
+          )}
+          <Suite href="/ecouter" nom="Écouter les répétitions" />
+        </Bloc>
+      </main>
+    </CadreSite>
+  );
+}
+
+export async function PageEcouter({ chorale }: { chorale?: string }) {
+  const audios = await lireElements("audio");
+  const chorales = [...new Set(audios.map((a) => a.sousTitre).filter((c): c is string => !!c))];
+  const liste = chorale ? audios.filter((a) => a.sousTitre === chorale) : audios;
+  return (
+    <CadreSite>
+      <main>
+        <EnTete Icone={Headphones} titre="Écouter" texte="Les audios des répétitions des chorales, pour apprendre et réviser les chants." />
+        <Bloc>
+          {chorales.length > 1 && (
+            <nav className="filtres" aria-label="Choisir une chorale">
+              <Link href="/ecouter" className={!chorale ? "actif" : undefined}>Toutes</Link>
+              {chorales.map((c) => (
+                <Link key={c} href={`/ecouter?chorale=${encodeURIComponent(c)}`} className={c === chorale ? "actif" : undefined}>{c}</Link>
+              ))}
+            </nav>
+          )}
+          {liste.length === 0 ? (
+            <div className="carte vide-direct">
+              <span className="ic"><Headphones className="i" aria-hidden /></span>
+              <p>Aucun audio pour le moment. Les audios des répétitions seront ajoutés ici par l&apos;administration.</p>
+            </div>
+          ) : (
+            <ul className="audios">
+              {liste.map((a) => (
+                <li key={a.id} className="carte">
+                  <div className="a-tete">
+                    <span className="ic"><Music className="i" aria-hidden /></span>
+                    <div>
+                      <b>{a.titre}</b>
+                      <small>{[a.sousTitre, a.date && dateLongue(a.date)].filter(Boolean).join(" · ")}</small>
+                    </div>
+                  </div>
+                  {a.texte && <p>{a.texte}</p>}
+                  {a.fichier && <audio controls preload="none" src={urlFichier(a.fichier)} />}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="note">Un audio consomme des données internet : écoutez de préférence avec le Wi-Fi.</p>
+          <Suite href="/programme" nom="Programme" />
+        </Bloc>
+      </main>
+    </CadreSite>
+  );
+}
+
+export async function PageActualite({ id }: { id: string }) {
+  const a = await lireElement(id);
+  if (!a || a.rubrique !== "actualite" || !a.publie) return null;
+  return (
+    <CadreSite>
+      <main className="vue-article cadre">
+        <div className="col article">
+          <Link className="retour" href="/actualites"><ArrowLeft className="i" aria-hidden />Retour</Link>
+          <span className="etiquette">Actualité</span>
+          <h1>{a.titre}</h1>
+          {a.date && <span className="meta"><Calendar className="i" aria-hidden />Muanda, le {dateLongue(a.date)}</span>}
+          {a.sousTitre && <p className="chapo-article">{a.sousTitre}</p>}
+          {paragraphes(a.texte).map((p, i) => <p key={i}>{p}</p>)}
+          <div className="signature"><b>La Présidence de la PGM Antenne de Muanda</b>EBNM KCC · Muanda</div>
+          <Link className="btn btn-or" href="/connexion"><LogIn className="i" aria-hidden />Se connecter à mon espace</Link>
+        </div>
+      </main>
+    </CadreSite>
+  );
+}
+
+/* Soirées musicales : les dates à venir d'abord (la plus proche en premier), puis les passées. */
+const aujourdhui = () => new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 10); // heure de Muanda
+const aVenir = (l: ElementSite[]) => l.filter((s) => s.date && s.date >= aujourdhui()).reverse();
+const passees = (l: ElementSite[]) => l.filter((s) => !s.date || s.date < aujourdhui());
+
+function CarteSoiree({ s, passee = false }: { s: ElementSite; passee?: boolean }) {
+  const jour = s.date ? new Date(`${s.date}T12:00:00Z`) : null;
+  const annonce = [`Soirée musicale de la PGM Antenne de Muanda : ${s.titre}`,
+    s.date && `le ${dateLongue(s.date)}`, s.sousTitre].filter(Boolean).join(", ");
+  return (
+    <article className={`soiree carte${passee ? " passee" : ""}`} id={`soiree-${s.id}`}>
+      {jour && (
+        <div className="calendrier" aria-hidden>
+          <small>{jour.toLocaleDateString("fr-FR", { month: "short", timeZone: "UTC" })}</small>
+          <b>{jour.getUTCDate()}</b>
+          <small>{jour.toLocaleDateString("fr-FR", { weekday: "short", timeZone: "UTC" })}</small>
+        </div>
+      )}
+      <div className="s-txt">
+        <b>{s.titre}</b>
+        {s.date && <span className="meta"><Calendar className="i" aria-hidden />{dateLongue(s.date)}</span>}
+        {s.sousTitre && <span className="meta"><MapPin className="i" aria-hidden />{s.sousTitre}</span>}
+        {s.texte && <p>{s.texte}</p>}
+        {!passee && <BoutonPartager texte={`${annonce}. Venez nombreux !`} chemin={`/soirees#soiree-${s.id}`} />}
+      </div>
+    </article>
+  );
+}
+
+export async function PageSoirees() {
+  const soirees = await lireElements("soiree");
+  const futur = aVenir(soirees);
+  const passe = passees(soirees);
+  return (
+    <CadreSite>
+      <main>
+        <EnTete Icone={CalendarHeart} titre="Soirées musicales" texte="Les dates des soirées musicales de la PGM. Partagez-les autour de vous." />
+        <Bloc>
+          {futur.length === 0
+            ? <div className="carte vide-direct"><span className="ic"><CalendarHeart className="i" aria-hidden /></span><p>Aucune soirée musicale programmée pour le moment. Revenez bientôt !</p></div>
+            : futur.map((s) => <CarteSoiree key={s.id} s={s} />)}
+          {passe.length > 0 && (
+            <>
+              <div className="titre"><span className="etiquette">Soirées passées</span></div>
+              {passe.map((s) => <CarteSoiree key={s.id} s={s} passee />)}
+            </>
+          )}
+          <Suite href="/direct" nom="Revoir en vidéo" />
+        </Bloc>
+      </main>
+    </CadreSite>
+  );
+}
+
+export async function PageCasSociaux() {
+  const [cas, r] = await Promise.all([lireElements("social"), lireReglages()]);
+  const c = contact(r);
+  return (
+    <CadreSite>
+      <main>
+        <EnTete Icone={HandHeart} titre="Cas sociaux" texte="Joies et peines de la famille PGM : soutenons-nous les uns les autres." />
+        <Bloc>
+          {cas.length === 0
+            ? <div className="carte vide-direct"><span className="ic"><HandHeart className="i" aria-hidden /></span><p>Aucun cas social annoncé pour le moment.</p></div>
+            : cas.map((x) => (
+              <article key={x.id} className="carte cas">
+                <div className="a-tete">
+                  <span className="ic"><HeartHandshake className="i" aria-hidden /></span>
+                  <div>
+                    <b>{x.titre}</b>
+                    <small>{[x.sousTitre, x.date && dateLongue(x.date)].filter(Boolean).join(" · ")}</small>
+                  </div>
+                </div>
+                {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
+              </article>
+            ))}
+          <div className="carte lignes">
+            <div className="ligne-c"><span className="ic"><HeartPulse className="i" aria-hidden /></span><div><small>Pour aider ou signaler un cas</small>Contactez la commission Santé &amp; Assistance, ou appelez le {c.affiche}.</div></div>
+          </div>
+          <Suite href="/pionniers" nom="Les pionniers" />
+        </Bloc>
+      </main>
+    </CadreSite>
+  );
+}
+
+export async function PagePionniers() {
+  const pionniers = await lireElements("pionnier");
+  return (
+    <CadreSite>
+      <main>
+        <EnTete Icone={Medal} titre="Les pionniers" texte="Ceux qui ont posé les fondations de la PGM à Muanda. Nous honorons leur mémoire et leur travail." />
+        <Bloc>
+          {pionniers.length === 0
+            ? <div className="carte vide-direct"><span className="ic"><Medal className="i" aria-hidden /></span><p>L&apos;histoire de nos pionniers sera bientôt racontée ici.</p></div>
+            : (
+              <ul className="pionniers">
+                {pionniers.map((x) => (
+                  <li key={x.id} className="carte">
+                    <span className="ini" aria-hidden>{x.titre.split(/\s+/).map((m) => m[0]).slice(0, 2).join("").toUpperCase()}</span>
+                    <div>
+                      <b>{x.titre}</b>
+                      {x.sousTitre && <small>{x.sousTitre}</small>}
+                      {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          <Suite href="/la-pgm" nom="La PGM" />
+        </Bloc>
+      </main>
+    </CadreSite>
+  );
+}
+
+export async function PageCauserie() {
+  const [r, active] = await Promise.all([lireReglages(), siteEnBase()]);
+  return (
+    <CadreSite>
+      <main>
+        <EnTete Icone={MessagesSquare} titre="Causerie" texte="Discutez en direct avec la famille PGM. Sans compte et sans numéro : un prénom suffit." />
+        <Bloc>
+          <Causerie ouverte={r.causerie_ouverte === "oui"} active={active} />
+          <ul className="regles-causerie">
+            <li><ShieldCheck className="i" aria-hidden />Restez respectueux : les messages déplacés sont retirés par l&apos;administration.</li>
+            <li><Lock className="i" aria-hidden />N&apos;écrivez pas de numéro de téléphone ni d&apos;information privée : tout le monde lit la causerie.</li>
+          </ul>
+          <Suite href="/soirees" nom="Soirées musicales" />
         </Bloc>
       </main>
     </CadreSite>

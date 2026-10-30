@@ -55,7 +55,7 @@ export function peutOuvrir(role: Role, chemin: string, accesFinances = false): b
   if (!estStaff(role)) return false;
   if (role === "controleur") return chemin === "/staff/scanner" || chemin === "/staff/presences";
   if (estLecteurGeneral(role)) return true;
-  if (chemin.startsWith("/staff/utilisateurs") || chemin.startsWith("/staff/hebergement")) return estAdmin(role);
+  if (chemin.startsWith("/staff/utilisateurs") || chemin.startsWith("/staff/hebergement") || chemin.startsWith("/staff/site")) return estAdmin(role);
   if (chemin.startsWith("/staff/projets")) return peutGererCommission(role);
   if (chemin.startsWith("/staff/discipline") || chemin.startsWith("/staff/registre")) return peutGererMembres(role);
   if (chemin.startsWith("/staff/cotisations")) return peutSuivreFinances(role, accesFinances);
