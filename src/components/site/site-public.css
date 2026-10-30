@@ -128,7 +128,7 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .commissions{display:grid;gap:10px;list-style:none;margin:0;padding:0}
 .site-pgm .commissions li{display:grid;grid-template-columns:48px 1fr;gap:14px;align-items:center;background:var(--papier);border:1px solid var(--trait);border-radius:16px;padding:12px 14px;box-shadow:var(--ombre)}
 .site-pgm .commissions li div{min-width:0}
-.site-pgm .commissions li span{color:var(--doux);font-size:.92rem}
+.site-pgm .commissions li div>span{color:var(--doux);font-size:.92rem}
 
 /* Rejoindre */
 .site-pgm ol.etapes{list-style:none;padding:0;margin:0;display:grid;gap:0}
@@ -237,3 +237,17 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .telechargements{display:grid;gap:10px}
 .site-pgm .btn-marine{background:var(--marine);color:var(--or-clair)}
 .site-pgm .btn-ligne-sombre{border-color:var(--marine);color:var(--marine);background:transparent}
+
+/* Icônes « médaillon » aux couleurs du logo : rond marine, anneau or, icône or en deux tons. */
+.site-pgm{--medaille:radial-gradient(circle at 32% 28%,#2a4a8f 0%,#13295c 55%,#0b1a3d 100%);--anneau:0 0 0 2px var(--or-clair),0 0 0 4px rgba(232,196,106,.18),0 6px 14px rgba(11,26,61,.28);--creme:#f6eed6}
+.site-pgm .tuile .rond,.site-pgm .ic,.site-pgm .pastille,.site-pgm .page-titre .rond,.site-pgm .chorale .ini,.site-pgm .c-btn .rond.tel,.site-pgm .chiffres .med{background:var(--medaille);color:var(--or-clair);border-radius:50%;box-shadow:var(--anneau)}
+.site-pgm .tuile .rond svg.i,.site-pgm .ic svg.i,.site-pgm .pastille svg.i,.site-pgm .page-titre .rond svg.i,.site-pgm .c-btn .rond svg.i,.site-pgm .chiffres .med svg.i,.site-pgm .jour .j svg.i,.site-pgm .atout svg.i,.site-pgm nav.onglets a.actif svg.i{fill:rgba(232,196,106,.24)}
+.site-pgm .tuile .rond{width:52px;height:52px}
+.site-pgm .tuile{background:rgba(255,255,255,.06);border-color:rgba(232,196,106,.22)}
+.site-pgm .chorale .ini{color:var(--creme);font-size:1.6rem}
+.site-pgm ol.etapes .num{box-shadow:0 0 0 2px var(--papier)}
+.site-pgm .pastille-or{background:var(--medaille);color:var(--or-clair)}
+.site-pgm .chiffres .med{width:38px;height:38px;display:grid;place-items:center;margin-bottom:4px}
+.site-pgm .chiffres .med svg.i{width:18px;height:18px;color:var(--or-clair)}
+.site-pgm .valeur .ic,.site-pgm .commissions .ic,.site-pgm .ligne-c .ic,.site-pgm .regles summary .ic{border-radius:50%}
+.site-pgm .chorale .lieu svg.i,.site-pgm .meta svg.i,.site-pgm .jour li svg.i{fill:rgba(201,154,46,.18)}

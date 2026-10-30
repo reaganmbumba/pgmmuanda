@@ -189,9 +189,9 @@ export function AccueilSite() {
         <div className="chiffres-band cadre">
           <div className="col">
             <div className="chiffres">
-              <div><Building2 className="i" aria-hidden /><b>4</b><span>paroisses</span></div>
-              <div><Music className="i" aria-hidden /><b>15</b><span>chorales</span></div>
-              <div><Landmark className="i" aria-hidden /><b>7</b><span>commissions</span></div>
+              <div><span className="med"><Building2 className="i" aria-hidden /></span><b>4</b><span>paroisses</span></div>
+              <div><span className="med"><Music className="i" aria-hidden /></span><b>15</b><span>chorales</span></div>
+              <div><span className="med"><Landmark className="i" aria-hidden /></span><b>7</b><span>commissions</span></div>
             </div>
           </div>
         </div>
