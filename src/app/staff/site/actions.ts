@@ -24,8 +24,10 @@ function rafraichir() {
   revalidatePath("/staff/site");
 }
 
-const ligne = (d: ReturnType<typeof schemaElementSite.parse>) => ({
+const ligne = (d: ReturnType<typeof schemaElementSite.parse>, form: FormData) => ({
   rubrique: d.rubrique, titre: d.titre, sous_titre: d.sousTitre, texte: d.texte, date_element: d.date, ordre: d.ordre,
+  // l'image n'est envoyée que si elle a changé
+  ...(form.has("image") && form.get("image") !== (form.get("imageAvant") ?? "") ? { image: d.image } : {}),
 });
 
 /** Ajoute un élément (sans id) ou modifie celui dont l'id est donné. */
@@ -38,8 +40,8 @@ export async function enregistrerElement(_: Etat, form: FormData): Promise<Etat>
   const id = String(form.get("id") ?? "");
   if (!id && d.data.rubrique === "audio") return { erreur: "Choisissez le fichier audio à envoyer." };
   const { data, error } = id
-    ? await supabase.from("site_elements").update(ligne(d.data)).eq("id", id).select("id")
-    : await supabase.from("site_elements").insert(ligne(d.data)).select("id");
+    ? await supabase.from("site_elements").update(ligne(d.data, form)).eq("id", id).select("id")
+    : await supabase.from("site_elements").insert(ligne(d.data, form)).select("id");
   if (error || !data?.length) return { erreur: messageErreur(error, REFUS) };
   rafraichir();
   return { succes: id ? "Modification enregistrée. Le site est à jour." : `« ${d.data.titre} » ajouté au site.` };
@@ -54,7 +56,7 @@ export async function ajouterAudio(_: Etat, form: FormData): Promise<Etat> {
   if (!d.success) return { erreur: d.error.issues[0].message };
   const fichier = String(form.get("fichier") ?? "");
   if (!CHEMIN_AUDIO.test(fichier)) return { erreur: "Le fichier audio n'a pas été envoyé. Réessayez." };
-  const { error } = await supabase.from("site_elements").insert({ ...ligne(d.data), fichier });
+  const { error } = await supabase.from("site_elements").insert({ ...ligne(d.data, form), fichier });
   if (error) {
     await supabase.storage.from("site").remove([fichier]);
     return { erreur: messageErreur(error, REFUS) };
@@ -78,9 +80,9 @@ export async function supprimerElement(_: Etat, form: FormData): Promise<Etat> {
   if (!supabaseActif) return MAQUETTE;
   const supabase = await client();
   if (!supabase) return { erreur: REFUS };
-  const { data, error } = await supabase.from("site_elements").delete().eq("id", String(form.get("id"))).select("fichier");
+  const { data, error } = await supabase.from("site_elements").delete().eq("id", String(form.get("id"))).select("*");
   if (error || !data?.length) return { erreur: messageErreur(error, REFUS) };
-  const fichiers = data.map((l) => l.fichier as string | null).filter((f): f is string => !!f);
+  const fichiers = data.flatMap((l) => [l.fichier, l.image] as (string | null | undefined)[]).filter((f): f is string => !!f);
   if (fichiers.length) await supabase.storage.from("site").remove(fichiers);
   rafraichir();
   return { succes: "Supprimé du site." };

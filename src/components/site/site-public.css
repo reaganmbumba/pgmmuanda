@@ -351,3 +351,46 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .regles-causerie{list-style:none;margin:0;padding:0;display:grid;gap:8px;color:var(--doux);font-size:.92rem}
 .site-pgm .regles-causerie li{display:flex;gap:8px;align-items:flex-start}
 .site-pgm .regles-causerie svg.i{flex:none;width:18px;height:18px;color:var(--or);margin-top:2px}
+
+/* Logos PGM et KCC */
+.site-pgm .marque .logos{display:flex;flex:none;align-items:center}
+.site-pgm .marque .logos img.kcc{width:34px;height:34px;margin-left:-8px;background:var(--marine);border:2px solid var(--marine);box-shadow:0 0 0 1px rgba(232,196,106,.5)}
+.site-pgm footer.pied .logos-pied{display:flex;gap:12px;align-items:center}
+.site-pgm footer.pied img.kcc{background:var(--marine);border-color:var(--or)}
+.site-pgm footer.pied .concepteur{margin-top:8px;padding-top:10px;border-top:1px solid var(--trait);font-size:.82rem}
+.site-pgm footer.pied .concepteur b{display:inline;color:var(--fg)}
+
+/* Partage WhatsApp et Facebook */
+.site-pgm .partage{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.site-pgm .partage-titre{width:100%;font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;font-weight:700;color:var(--or)}
+.site-pgm .partage button{display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:0 14px;border-radius:999px;border:0;cursor:pointer;font:inherit;font-weight:700;font-size:.92rem;color:#fff}
+.site-pgm .partage button svg.i{width:18px;height:18px}
+.site-pgm .partage .p-wa{background:#1f9d55}
+.site-pgm .partage .p-fb{background:#1877f2}
+.site-pgm .partage .p-autre{background:var(--voile);color:var(--marine)}
+.site-pgm .partage.compact button{min-height:36px;padding:0 12px;font-size:.85rem}
+.site-pgm .page-tete .partage{margin-top:4px}
+.site-pgm .page-tete .partage .p-autre{background:rgba(255,255,255,.12);color:var(--sur-marine)}
+.site-pgm .ecran .partage{padding:0 14px 14px}
+.site-pgm .ecran .partage .p-autre{background:rgba(255,255,255,.12);color:var(--sur-marine)}
+
+/* Images des publications */
+.site-pgm .actu .vis.photo{padding:0;position:relative;aspect-ratio:16/9;background:var(--marine)}
+.site-pgm .actu .vis.photo img{width:100%;height:100%;object-fit:cover;border-radius:0;border:0}
+.site-pgm .actu .vis.photo b{position:absolute;left:0;right:0;bottom:0;padding:28px 14px 12px;background:linear-gradient(transparent,rgba(13,33,73,.92));color:#fff}
+.site-pgm .photo-pub{width:100%;border-radius:16px;box-shadow:var(--ombre)}
+.site-pgm .affiche{width:100%;max-height:420px;object-fit:cover;border-radius:12px;display:block}
+.site-pgm .soiree-carte{display:grid;gap:12px}
+.site-pgm .s-txt a,.site-pgm .cas a,.site-pgm .pionniers a{color:inherit;text-decoration:none}
+.site-pgm .pionniers li{display:grid;gap:8px}
+.site-pgm .p-tete{display:flex;gap:14px;align-items:center}
+.site-pgm .p-tete>div{display:grid;gap:2px}
+.site-pgm .portrait{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none;box-shadow:var(--anneau)}
+
+/* Écran de PGM Muanda TV */
+.site-pgm .ecran-bandeau{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:var(--or-clair)}
+.site-pgm .ecran-bandeau .tv{display:inline-flex;align-items:center;gap:6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.8rem}
+.site-pgm .ecran-bandeau .tv svg.i{width:16px;height:16px}
+.site-pgm .ecran-titre small{color:var(--sur-marine-doux)}
+.site-pgm .lire-video{position:absolute;inset:0;display:grid;place-items:center}
+.site-pgm .lire-video svg.i{width:34px;height:34px;padding:8px;border-radius:50%;background:rgba(13,33,73,.75);color:#fff;fill:#fff}

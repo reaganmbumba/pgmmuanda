@@ -100,3 +100,15 @@ set local role anon;
 select pg_temp.refuse($$select public.causerie_envoyer('Maman Rose', 'Re', 'appareil-test-0000009')$$, 'fermée',
   'personne n''écrit quand la causerie est fermée');
 rollback;
+
+-- Images des publications
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000b1';
+insert into public.site_elements (rubrique, titre, date_element, image)
+  values ('soiree', 'Grande soirée musicale', '2026-12-20', 'images/2026-10-30-affiche.jpg');
+select pg_temp.affirmer((select image = 'images/2026-10-30-affiche.jpg' from public.site_elements where titre = 'Grande soirée musicale'),
+  'une publication garde son image');
+select pg_temp.refuse($$insert into public.site_elements (rubrique, titre, image) values ('soiree', 'x', 'audios/../x.jpg')$$, null,
+  'le chemin de l''image est contrôlé');
+rollback;

@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { CadreSite } from "./CadreSite";
 import { LecteurVideo } from "./LecteurVideo";
-import { BoutonPartager } from "./BoutonPartager";
+import { Partage } from "./Partage";
+import { GuetteurDirect } from "./GuetteurDirect";
 import { Causerie } from "./Causerie";
 import {
   contact, dateLongue, lireElement, lireElements, lireReglages, paragraphes, siteEnBase, urlFichier, type ElementSite,
@@ -74,6 +75,7 @@ function EnTete({ Icone, titre, texte }: { Icone: LucideIcon; titre: string; tex
           <h1>{titre}</h1>
         </div>
         {texte && <p>{texte}</p>}
+        <Partage texte={`${titre} · PGM Antenne de Muanda`} compact />
       </div>
     </section>
   );
@@ -92,10 +94,17 @@ function Suite({ href, nom }: { href: string; nom: string }) {
 function CarteArticle({ a }: { a: ElementSite }) {
   return (
     <Link className="actu" href={`/actualites/${a.id}`}>
-      <div className="vis">
-        <img src="/logo-pgm.png" alt="" />
-        <b>{a.titre}</b>
-      </div>
+      {a.image ? (
+        <div className="vis photo">
+          <img src={urlFichier(a.image)} alt="" loading="lazy" />
+          <b>{a.titre}</b>
+        </div>
+      ) : (
+        <div className="vis">
+          <img src="/logo-pgm.png" alt="" />
+          <b>{a.titre}</b>
+        </div>
+      )}
       <div className="txt">
         {a.date && <span className="meta"><Calendar className="i" aria-hidden />Muanda, le {dateLongue(a.date)}</span>}
         {a.sousTitre && <p>{a.sousTitre}</p>}
@@ -527,13 +536,16 @@ const miniature = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
 export async function PageDirect({ v }: { v?: string }) {
   const r = await lireReglages();
   const chaine = await lireChaine(r.youtube_chaine, r.youtube_id);
-  const choisie = (v && chaine.videos.some((x) => x.id === v) ? v : null) ?? chaine.direct ?? chaine.videos[0]?.id ?? null;
+  const choisie = (v && (chaine.videos.some((x) => x.id === v) || v === chaine.direct) ? v : null)
+    ?? chaine.direct ?? chaine.videos[0]?.id ?? null;
   const enDirect = choisie !== null && choisie === chaine.direct;
-  const titre = chaine.videos.find((x) => x.id === choisie)?.titre ?? (enDirect ? "En direct" : "");
+  const titre = chaine.videos.find((x) => x.id === choisie)?.titre ?? (enDirect ? "En direct" : "PGM Muanda TV");
+  const lecteur = choisie || chaine.listeVideos;
   return (
     <CadreSite>
       <main>
-        <EnTete Icone={Radio} titre="Direct" texte="Les cultes, louanges et productions de la PGM Antenne de Muanda, en vidéo." />
+        <EnTete Icone={Radio} titre="Direct" texte="PGM Muanda TV : les cultes, louanges et productions de la PGM Antenne de Muanda, sans quitter le site." />
+        {!enDirect && <GuetteurDirect />}
         <Bloc>
           <div className="chaine carte">
             <img src="/logo-pgm.png" alt="" />
@@ -547,36 +559,39 @@ export async function PageDirect({ v }: { v?: string }) {
           </div>
           <p className="abonnez">Abonnez-vous à la chaîne : vous serez prévenu à chaque nouvelle vidéo et à chaque direct.</p>
 
-          {choisie ? (
+          {lecteur ? (
             <div className="ecran" id="lecteur">
-              <LecteurVideo id={choisie} titre={titre} direct={enDirect} />
-              <div className="ecran-titre">
+              <div className="ecran-bandeau">
+                <span className="tv"><Radio className="i" aria-hidden />PGM Muanda TV</span>
                 {enDirect
                   ? <span className="badge-direct"><span className="point" />En direct</span>
-                  : <span className="badge-video"><Play className="i" aria-hidden />{v ? "Vidéo" : "Dernière vidéo"}</span>}
-                <b>{titre}</b>
+                  : <span className="badge-video"><Play className="i" aria-hidden />Rediffusion</span>}
               </div>
+              <LecteurVideo id={choisie ?? undefined} liste={chaine.listeVideos} titre={titre} auto={!v} />
+              <div className="ecran-titre">
+                <b>{titre}</b>
+                {!enDirect && <small>Les vidéos s&apos;enchaînent. Quand un direct commence, il s&apos;affiche ici automatiquement.</small>}
+              </div>
+              {choisie && <Partage texte={`${enDirect ? "En direct maintenant" : "À regarder"} sur PGM Muanda TV : ${titre}`} chemin={`/direct?v=${choisie}`} />}
             </div>
           ) : (
             <div className="carte vide-direct">
               <span className="ic"><TvMinimalPlay className="i" aria-hidden /></span>
-              <p>Les vidéos de la chaîne s&apos;affichent ici. Vous pouvez aussi les regarder directement sur YouTube.</p>
-              <a className="btn btn-marine" href={chaine.lien} target="_blank" rel="noopener noreferrer">
-                <TvMinimalPlay className="i" aria-hidden />Voir la chaîne
-              </a>
+              <p>Les vidéos de la chaîne s&apos;afficheront ici.</p>
             </div>
           )}
 
           {chaine.videos.length > 0 && (
             <>
-              <div className="titre"><span className="etiquette">Nos vidéos</span></div>
+              <div className="titre"><span className="etiquette">Toutes nos vidéos</span></div>
               <ul className="videos">
                 {chaine.videos.map((x) => (
                   <li key={x.id}>
-                    <Link href={`/direct?v=${x.id}#lecteur`} className={x.id === choisie ? "actif" : undefined}>
+                    <Link href={`/direct?v=${x.id}#lecteur`} className={x.id === choisie ? "actif" : undefined} scroll={false}>
                       <span className="vignette">
                         <img src={miniature(x.id)} alt="" loading="lazy" width={320} height={180} />
-                        {x.id === chaine.direct && <span className="badge-direct"><span className="point" />Direct</span>}
+                        {x.id === chaine.direct ? <span className="badge-direct"><span className="point" />Direct</span>
+                          : <span className="lire-video"><Play className="i" aria-hidden /></span>}
                       </span>
                       <span className="v-txt">
                         <b>{x.titre}</b>
@@ -586,9 +601,6 @@ export async function PageDirect({ v }: { v?: string }) {
                   </li>
                 ))}
               </ul>
-              <a className="btn btn-ligne-sombre" href={chaine.lien} target="_blank" rel="noopener noreferrer">
-                <TvMinimalPlay className="i" aria-hidden />Toutes les vidéos sur YouTube
-              </a>
             </>
           )}
           <Suite href="/ecouter" nom="Écouter les répétitions" />
@@ -597,6 +609,9 @@ export async function PageDirect({ v }: { v?: string }) {
     </CadreSite>
   );
 }
+
+/** Image de partage d'une vidéo : sa miniature. */
+export const imageVideo = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
 export async function PageEcouter({ chorale }: { chorale?: string }) {
   const audios = await lireElements("audio");
@@ -633,6 +648,8 @@ export async function PageEcouter({ chorale }: { chorale?: string }) {
                   </div>
                   {a.texte && <p>{a.texte}</p>}
                   {a.fichier && <audio controls preload="none" src={urlFichier(a.fichier)} />}
+                  <Partage compact texte={`Répétition à écouter : ${a.titre}${a.sousTitre ? ` (${a.sousTitre})` : ""}`}
+                    chemin={a.sousTitre ? `/ecouter?chorale=${encodeURIComponent(a.sousTitre)}` : "/ecouter"} />
                 </li>
               ))}
             </ul>
@@ -645,21 +662,47 @@ export async function PageEcouter({ chorale }: { chorale?: string }) {
   );
 }
 
-export async function PageActualite({ id }: { id: string }) {
-  const a = await lireElement(id);
-  if (!a || a.rubrique !== "actualite" || !a.publie) return null;
+/* Publications avec leur propre page (et donc leur image de partage). */
+export const PUBLICATIONS = {
+  actualite: { liste: "/actualites", nom: "Actualités", etiquette: "Actualité" },
+  soiree: { liste: "/soirees", nom: "Soirées musicales", etiquette: "Soirée musicale" },
+  social: { liste: "/cas-sociaux", nom: "Cas sociaux", etiquette: "Cas social" },
+  pionnier: { liste: "/pionniers", nom: "Les pionniers", etiquette: "Nos pionniers" },
+} as const;
+export type Publication = keyof typeof PUBLICATIONS;
+export const lienPublication = (e: ElementSite) => `${PUBLICATIONS[e.rubrique as Publication].liste}/${e.id}`;
+
+/** Texte d'annonce utilisé pour le partage. */
+function annonce(e: ElementSite) {
+  if (e.rubrique === "soiree") return [`Soirée musicale de la PGM Antenne de Muanda : ${e.titre}`, e.date && `le ${dateLongue(e.date)}`, e.sousTitre].filter(Boolean).join(", ") + ". Venez nombreux !";
+  if (e.rubrique === "pionnier") return `Nos pionniers : ${e.titre}`;
+  return e.titre;
+}
+
+export async function PagePublication({ id, rubrique }: { id: string; rubrique: Publication }) {
+  const e = await lireElement(id);
+  if (!e || e.rubrique !== rubrique || !e.publie) return null;
+  const pub = PUBLICATIONS[rubrique];
   return (
     <CadreSite>
       <main className="vue-article cadre">
         <div className="col article">
-          <Link className="retour" href="/actualites"><ArrowLeft className="i" aria-hidden />Retour</Link>
-          <span className="etiquette">Actualité</span>
-          <h1>{a.titre}</h1>
-          {a.date && <span className="meta"><Calendar className="i" aria-hidden />Muanda, le {dateLongue(a.date)}</span>}
-          {a.sousTitre && <p className="chapo-article">{a.sousTitre}</p>}
-          {paragraphes(a.texte).map((p, i) => <p key={i}>{p}</p>)}
-          <div className="signature"><b>La Présidence de la PGM Antenne de Muanda</b>EBNM KCC · Muanda</div>
-          <Link className="btn btn-or" href="/connexion"><LogIn className="i" aria-hidden />Se connecter à mon espace</Link>
+          <Link className="retour" href={pub.liste}><ArrowLeft className="i" aria-hidden />{pub.nom}</Link>
+          <span className="etiquette">{pub.etiquette}</span>
+          <h1>{e.titre}</h1>
+          {e.date && <span className="meta"><Calendar className="i" aria-hidden />{rubrique === "soiree" ? "" : "Muanda, le "}{dateLongue(e.date)}</span>}
+          {e.sousTitre && (rubrique === "soiree"
+            ? <span className="meta"><MapPin className="i" aria-hidden />{e.sousTitre}</span>
+            : <p className="chapo-article">{e.sousTitre}</p>)}
+          {e.image && <img className="photo-pub" src={urlFichier(e.image)} alt="" />}
+          {paragraphes(e.texte).map((p, i) => <p key={i}>{p}</p>)}
+          <Partage texte={annonce(e)} chemin={lienPublication(e)} />
+          {rubrique === "actualite" && (
+            <>
+              <div className="signature"><b>La Présidence de la PGM Antenne de Muanda</b>EBNM KCC · Muanda</div>
+              <Link className="btn btn-or" href="/connexion"><LogIn className="i" aria-hidden />Se connecter à mon espace</Link>
+            </>
+          )}
         </div>
       </main>
     </CadreSite>
@@ -673,24 +716,25 @@ const passees = (l: ElementSite[]) => l.filter((s) => !s.date || s.date < aujour
 
 function CarteSoiree({ s, passee = false }: { s: ElementSite; passee?: boolean }) {
   const jour = s.date ? new Date(`${s.date}T12:00:00Z`) : null;
-  const annonce = [`Soirée musicale de la PGM Antenne de Muanda : ${s.titre}`,
-    s.date && `le ${dateLongue(s.date)}`, s.sousTitre].filter(Boolean).join(", ");
   return (
-    <article className={`soiree carte${passee ? " passee" : ""}`} id={`soiree-${s.id}`}>
-      {jour && (
-        <div className="calendrier" aria-hidden>
-          <small>{jour.toLocaleDateString("fr-FR", { month: "short", timeZone: "UTC" })}</small>
-          <b>{jour.getUTCDate()}</b>
-          <small>{jour.toLocaleDateString("fr-FR", { weekday: "short", timeZone: "UTC" })}</small>
+    <article className={`soiree-carte carte${passee ? " passee" : ""}`}>
+      {s.image && <Link href={lienPublication(s)}><img className="affiche" src={urlFichier(s.image)} alt="" loading="lazy" /></Link>}
+      <div className="soiree">
+        {jour && (
+          <div className="calendrier" aria-hidden>
+            <small>{jour.toLocaleDateString("fr-FR", { month: "short", timeZone: "UTC" })}</small>
+            <b>{jour.getUTCDate()}</b>
+            <small>{jour.toLocaleDateString("fr-FR", { weekday: "short", timeZone: "UTC" })}</small>
+          </div>
+        )}
+        <div className="s-txt">
+          <Link href={lienPublication(s)}><b>{s.titre}</b></Link>
+          {s.date && <span className="meta"><Calendar className="i" aria-hidden />{dateLongue(s.date)}</span>}
+          {s.sousTitre && <span className="meta"><MapPin className="i" aria-hidden />{s.sousTitre}</span>}
+          {s.texte && <p>{s.texte}</p>}
         </div>
-      )}
-      <div className="s-txt">
-        <b>{s.titre}</b>
-        {s.date && <span className="meta"><Calendar className="i" aria-hidden />{dateLongue(s.date)}</span>}
-        {s.sousTitre && <span className="meta"><MapPin className="i" aria-hidden />{s.sousTitre}</span>}
-        {s.texte && <p>{s.texte}</p>}
-        {!passee && <BoutonPartager texte={`${annonce}. Venez nombreux !`} chemin={`/soirees#soiree-${s.id}`} />}
       </div>
+      {!passee && <Partage compact texte={annonce(s)} chemin={lienPublication(s)} />}
     </article>
   );
 }
@@ -732,14 +776,16 @@ export async function PageCasSociaux() {
             ? <div className="carte vide-direct"><span className="ic"><HandHeart className="i" aria-hidden /></span><p>Aucun cas social annoncé pour le moment.</p></div>
             : cas.map((x) => (
               <article key={x.id} className="carte cas">
+                {x.image && <Link href={lienPublication(x)}><img className="affiche" src={urlFichier(x.image)} alt="" loading="lazy" /></Link>}
                 <div className="a-tete">
                   <span className="ic"><HeartHandshake className="i" aria-hidden /></span>
                   <div>
-                    <b>{x.titre}</b>
+                    <Link href={lienPublication(x)}><b>{x.titre}</b></Link>
                     <small>{[x.sousTitre, x.date && dateLongue(x.date)].filter(Boolean).join(" · ")}</small>
                   </div>
                 </div>
                 {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
+                <Partage compact texte={annonce(x)} chemin={lienPublication(x)} />
               </article>
             ))}
           <div className="carte lignes">
@@ -765,12 +811,17 @@ export async function PagePionniers() {
               <ul className="pionniers">
                 {pionniers.map((x) => (
                   <li key={x.id} className="carte">
-                    <span className="ini" aria-hidden>{x.titre.split(/\s+/).map((m) => m[0]).slice(0, 2).join("").toUpperCase()}</span>
-                    <div>
-                      <b>{x.titre}</b>
-                      {x.sousTitre && <small>{x.sousTitre}</small>}
-                      {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
+                    <div className="p-tete">
+                      {x.image
+                        ? <img className="portrait" src={urlFichier(x.image)} alt="" loading="lazy" />
+                        : <span className="ini" aria-hidden>{x.titre.split(/\s+/).map((m) => m[0]).slice(0, 2).join("").toUpperCase()}</span>}
+                      <div>
+                        <Link href={lienPublication(x)}><b>{x.titre}</b></Link>
+                        {x.sousTitre && <small>{x.sousTitre}</small>}
+                      </div>
                     </div>
+                    {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
+                    <Partage compact texte={annonce(x)} chemin={lienPublication(x)} />
                   </li>
                 ))}
               </ul>

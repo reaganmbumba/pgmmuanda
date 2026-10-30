@@ -19,6 +19,7 @@ export type ElementSite = {
   texte: string | null;
   date: string | null;
   fichier: string | null;
+  image: string | null;
   ordre: number;
   publie: boolean;
 };
@@ -38,7 +39,7 @@ export const REGLAGES_DEFAUT: Reglages = {
 };
 
 const el = (rubrique: Rubrique, ordre: number, titre: string, sousTitre: string | null, texte: string | null, date: string | null = null): ElementSite =>
-  ({ id: `defaut-${rubrique}-${ordre}`, rubrique, titre, sousTitre, texte, date, fichier: null, ordre, publie: true });
+  ({ id: `defaut-${rubrique}-${ordre}`, rubrique, titre, sousTitre, texte, date, fichier: null, image: null, ordre, publie: true });
 
 const ELEMENTS_DEFAUT: ElementSite[] = [
   el("actualite", 0, "La PGM Antenne de Muanda passe au numérique",
@@ -71,13 +72,16 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
   el("question", 7, "Où trouver le Règlement intérieur ?", null, "Dans la rubrique « Règlement » de ce site : un résumé simple et le texte complet à télécharger."),
 ];
 
+// « * » : le site marche avant comme après l'ajout de la colonne image
+const COLONNES = "*";
+
 type Ligne = {
   id: string; rubrique: Rubrique; titre: string; sous_titre: string | null; texte: string | null;
-  date_element: string | null; fichier: string | null; ordre: number; publie: boolean;
+  date_element: string | null; fichier: string | null; image: string | null; ordre: number; publie: boolean;
 };
 const versElement = (l: Ligne): ElementSite => ({
   id: l.id, rubrique: l.rubrique, titre: l.titre, sousTitre: l.sous_titre, texte: l.texte,
-  date: l.date_element, fichier: l.fichier, ordre: l.ordre, publie: l.publie,
+  date: l.date_element, fichier: l.fichier, image: l.image ?? null, ordre: l.ordre, publie: l.publie,
 });
 
 const PAR_DATE: Rubrique[] = ["actualite", "audio", "soiree", "social"];
@@ -87,7 +91,7 @@ export async function lireElements(rubrique: Rubrique, tous = false): Promise<El
   const defaut = ELEMENTS_DEFAUT.filter((e) => e.rubrique === rubrique);
   if (!supabaseActif) return defaut;
   const supabase = await creerClientServeur();
-  let q = supabase.from("site_elements").select("id, rubrique, titre, sous_titre, texte, date_element, fichier, ordre, publie")
+  let q = supabase.from("site_elements").select(COLONNES)
     .eq("rubrique", rubrique);
   if (!tous) q = q.eq("publie", true);
   q = PAR_DATE.includes(rubrique)
@@ -102,7 +106,7 @@ export async function lireElement(id: string): Promise<ElementSite | null> {
   if (!supabaseActif || !/^[0-9a-f-]{36}$/i.test(id)) return ELEMENTS_DEFAUT.find((e) => e.id === id) ?? null;
   const supabase = await creerClientServeur();
   const { data } = await supabase.from("site_elements")
-    .select("id, rubrique, titre, sous_titre, texte, date_element, fichier, ordre, publie").eq("id", id).maybeSingle();
+    .select(COLONNES).eq("id", id).maybeSingle();
   return data ? versElement(data as Ligne) : null;
 }
 
@@ -135,7 +139,7 @@ export async function lireCauserie(): Promise<MessageCauserie[]> {
   return (data ?? []).map((m) => ({ id: m.id, pseudo: m.pseudo, texte: m.texte, masque: m.masque, creeLe: m.cree_le }));
 }
 
-/** Adresse publique d'un fichier audio du site. */
+/** Adresse publique d'un fichier du site (audio ou image). */
 export const urlFichier = (chemin: string) => `${SUPABASE_URL}/storage/v1/object/public/site/${chemin}`;
 
 /** Numéro pour les liens tel: et WhatsApp (chiffres seulement, avec l'indicatif). */
