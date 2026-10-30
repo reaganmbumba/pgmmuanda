@@ -1,7 +1,6 @@
 "use client";
 
-import { Link2, MessageCircle, Share2 } from "lucide-react";
-import { useState } from "react";
+import { MessageCircle } from "lucide-react";
 
 /** Le « f » de Facebook (lucide n'a plus de logos de marques). */
 function Facebook() {
@@ -17,19 +16,9 @@ function Facebook() {
  * publication, miniature de la vidéo ou logo) s'affiche dans l'aperçu du partage.
  */
 export function Partage({ texte, chemin, compact = false }: { texte: string; chemin?: string; compact?: boolean }) {
-  const [copie, setCopie] = useState(false);
   const adresse = () => (chemin ? new URL(chemin, window.location.origin).toString() : window.location.href.split("#")[0]);
   const ouvrir = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
-  async function autre() {
-    const url = adresse();
-    if (navigator.share) return navigator.share({ title: texte, text: texte, url }).catch(() => {});
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopie(true);
-      setTimeout(() => setCopie(false), 2500);
-    } catch { /* presse-papiers refusé */ }
-  }
 
   return (
     <div className={`partage${compact ? " compact" : ""}`}>
@@ -39,9 +28,6 @@ export function Partage({ texte, chemin, compact = false }: { texte: string; che
       </button>
       <button type="button" className="p-fb" onClick={() => ouvrir(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(adresse())}`)}>
         <Facebook />Facebook
-      </button>
-      <button type="button" className="p-autre" onClick={autre} aria-label="Autres façons de partager">
-        {copie ? <><Link2 className="i" aria-hidden />Lien copié</> : <Share2 className="i" aria-hidden />}
       </button>
     </div>
   );

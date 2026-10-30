@@ -5,7 +5,7 @@ import {
   FilePen, Gavel, HandCoins, IdCard, Scale, ScrollText, UserMinus,
   GraduationCap, HeartHandshake, HeartPulse, Landmark, ListMusic, LogIn, Lock, MapPin, Megaphone,
   MessageCircle, Mic, Music, Network, Newspaper, PenLine, Phone, QrCode, ShieldCheck, Shirt,
-  Truck, UserPlus, Users, Wallet, Radio, Headphones, Play, TvMinimalPlay, BellRing, CalendarHeart, MessagesSquare, Medal, HandHeart, type LucideIcon,
+  Truck, UserPlus, Users, Wallet, Radio, Headphones, Play, TvMinimalPlay, BellRing, CalendarHeart, MessagesSquare, Medal, HandHeart, Menu, type LucideIcon,
 } from "lucide-react";
 import { CadreSite } from "./CadreSite";
 import { LecteurVideo } from "./LecteurVideo";
@@ -64,6 +64,9 @@ const RUBRIQUES: { href: string; nom: string; Icone: LucideIcon }[] = [
   { href: "/connexion", nom: "Se connecter", Icone: LogIn },
 ];
 
+/* Sur l'accueil, seulement six grandes tuiles ; le reste est dans « Toutes les rubriques ». */
+const PRINCIPALES = ["/direct", "/ecouter", "/soirees", "/actualites", "/chorales", "/causerie"];
+
 /** Bandeau en haut de chaque rubrique, avec le retour à l'accueil. */
 function EnTete({ Icone, titre, texte }: { Icone: LucideIcon; titre: string; texte?: string }) {
   return (
@@ -75,7 +78,6 @@ function EnTete({ Icone, titre, texte }: { Icone: LucideIcon; titre: string; tex
           <h1>{titre}</h1>
         </div>
         {texte && <p>{texte}</p>}
-        <Partage texte={`${titre} · PGM Antenne de Muanda`} compact />
       </div>
     </section>
   );
@@ -157,14 +159,22 @@ export async function AccueilSite() {
             <p className="salut">Paix à vous.</p>
             <h1>{r.accueil_titre}</h1>
             <p className="chapo">{r.accueil_texte}</p>
-            <nav className="raccourcis" aria-label="Rubriques">
-              {RUBRIQUES.map(({ href, nom, Icone }) => (
+            <nav className="raccourcis" aria-label="Rubriques principales">
+              {RUBRIQUES.filter((r) => PRINCIPALES.includes(r.href)).map(({ href, nom, Icone }) => (
                 <Link key={href} className="tuile" href={href}>
                   <span className="rond"><Icone className="i" aria-hidden /></span>
                   {nom}
                 </Link>
               ))}
             </nav>
+            <details className="autres-rubriques">
+              <summary><Menu className="i" aria-hidden />Toutes les rubriques</summary>
+              <nav aria-label="Autres rubriques">
+                {RUBRIQUES.filter((r) => !PRINCIPALES.includes(r.href) && r.href !== "/connexion").map(({ href, nom, Icone }) => (
+                  <Link key={href} href={href}><Icone className="i" aria-hidden />{nom}<ArrowRight className="i fl" aria-hidden /></Link>
+                ))}
+              </nav>
+            </details>
           </div>
         </section>
 
@@ -648,8 +658,6 @@ export async function PageEcouter({ chorale }: { chorale?: string }) {
                   </div>
                   {a.texte && <p>{a.texte}</p>}
                   {a.fichier && <audio controls preload="none" src={urlFichier(a.fichier)} />}
-                  <Partage compact texte={`Répétition à écouter : ${a.titre}${a.sousTitre ? ` (${a.sousTitre})` : ""}`}
-                    chemin={a.sousTitre ? `/ecouter?chorale=${encodeURIComponent(a.sousTitre)}` : "/ecouter"} />
                 </li>
               ))}
             </ul>
@@ -785,7 +793,6 @@ export async function PageCasSociaux() {
                   </div>
                 </div>
                 {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
-                <Partage compact texte={annonce(x)} chemin={lienPublication(x)} />
               </article>
             ))}
           <div className="carte lignes">
@@ -821,7 +828,6 @@ export async function PagePionniers() {
                       </div>
                     </div>
                     {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
-                    <Partage compact texte={annonce(x)} chemin={lienPublication(x)} />
                   </li>
                 ))}
               </ul>
