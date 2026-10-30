@@ -1,57 +1,48 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowUp, Calendar, House, Music, Newspaper, Phone } from "lucide-react";
 
 const ONGLETS = [
-  { id: "accueil", nom: "Accueil", Icone: House },
-  { id: "chorales", nom: "Chorales", Icone: Music },
-  { id: "programme", nom: "Programme", Icone: Calendar },
-  { id: "actualites", nom: "Actualités", Icone: Newspaper },
-  { id: "contact", nom: "Contact", Icone: Phone },
+  { href: "/", nom: "Accueil", Icone: House },
+  { href: "/chorales", nom: "Chorales", Icone: Music },
+  { href: "/programme", nom: "Programme", Icone: Calendar },
+  { href: "/actualites", nom: "Actualités", Icone: Newspaper },
+  { href: "/contact", nom: "Contact", Icone: Phone },
 ];
 
-/**
- * Barre d'onglets en bas de l'écran du site public. Sur la page d'accueil, l'onglet
- * de la partie visible s'allume ; sur une autre page (un article), on choisit l'onglet.
- */
-export function NavigationSite({ fixe, prefixe = "" }: { fixe?: string; prefixe?: string }) {
-  const [actif, setActif] = useState(fixe ?? "accueil");
+/** Barre d'onglets en bas de l'écran du site public, et bouton pour remonter en haut. */
+export function NavigationSite() {
+  const chemin = usePathname();
   const [haut, setHaut] = useState(false);
 
   useEffect(() => {
-    if (fixe) return;
-    const suivre = () => {
-      const y = window.scrollY + window.innerHeight * 0.35;
-      let id = "accueil";
-      for (const o of ONGLETS) {
-        const s = document.getElementById(o.id);
-        if (s && s.offsetTop <= y) id = o.id;
-      }
-      if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) id = "contact";
-      setActif(id);
-      setHaut(window.scrollY > 600);
-    };
+    const suivre = () => setHaut(window.scrollY > 600);
     suivre();
     window.addEventListener("scroll", suivre, { passive: true });
     return () => window.removeEventListener("scroll", suivre);
-  }, [fixe]);
+  }, []);
 
   return (
     <>
       {haut && (
-        <a className="haut" href="#accueil" aria-label="Revenir en haut">
+        <button type="button" className="haut" aria-label="Revenir en haut" onClick={() => window.scrollTo({ top: 0 })}>
           <ArrowUp className="i" aria-hidden />
-        </a>
+        </button>
       )}
       <nav className="onglets" aria-label="Menu principal">
         <div className="col">
-          {ONGLETS.map(({ id, nom, Icone }) => (
-            <a key={id} href={`${prefixe}#${id}`} className={actif === id ? "actif" : undefined}>
-              <span className="pill"><Icone className="i" aria-hidden /></span>
-              {nom}
-            </a>
-          ))}
+          {ONGLETS.map(({ href, nom, Icone }) => {
+            const actif = href === "/" ? chemin === "/" : chemin.startsWith(href);
+            return (
+              <Link key={href} href={href} className={actif ? "actif" : undefined} aria-current={actif ? "page" : undefined}>
+                <span className="pill"><Icone className="i" aria-hidden /></span>
+                {nom}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </>

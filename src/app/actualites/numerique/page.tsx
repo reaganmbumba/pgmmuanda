@@ -9,10 +9,10 @@ export const metadata = {
 
 export default function ArticleNumerique() {
   return (
-    <CadreSite onglet="actualites" prefixe="/">
+    <CadreSite>
       <main className="vue-article cadre">
         <div className="col article">
-          <Link className="retour" href="/#actualites"><ArrowLeft className="i" aria-hidden />Retour</Link>
+          <Link className="retour" href="/actualites"><ArrowLeft className="i" aria-hidden />Retour</Link>
           <span className="etiquette">Communiqué officiel</span>
           <h1>La PGM Antenne de Muanda passe au numérique</h1>
           <span className="meta"><Calendar className="i" aria-hidden />Muanda, le 30 octobre 2026</span>
