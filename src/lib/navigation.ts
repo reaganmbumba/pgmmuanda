@@ -29,6 +29,7 @@ import {
   Gavel,
   Landmark,
   Presentation,
+  Globe,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -61,6 +62,7 @@ export const menuStaff: EntreeMenu[] = [
   { href: "/staff/chants", label: "Chants et partitions", icone: BookOpen, etape: 7, description: "Répertoire, partitions et enregistrements.", groupe: "Activités" },
   { href: "/staff/formations", label: "Formations", icone: GraduationCap, etape: 7, description: "Formations, supports et évaluations.", groupe: "Activités" },
   { href: "/staff/communication", label: "Communication", icone: Megaphone, etape: 6, description: "Annonces, communiqués et invitations.", groupe: "Activités" },
+  { href: "/staff/site", label: "Site public", icone: Globe, etape: 9, description: "Ajouter, modifier ou retirer ce qui s'affiche sur le site public.", groupe: "Activités" },
   { href: "/staff/documents", label: "Documents", icone: FileText, etape: 8, description: "Documents à disposition des choristes.", groupe: "Activités" },
   { href: "/staff/projets", label: "Projets", icone: FolderKanban, etape: 7, description: "Projets, calendrier et rapports d'avancement.", groupe: "Gestion" },
   { href: "/staff/cotisations", label: "Cotisations", icone: Coins, etape: 9, description: "Qui a payé sa cotisation du mois, qui est en retard.", groupe: "Gestion" },

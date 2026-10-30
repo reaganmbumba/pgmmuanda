@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowUp, Calendar, House, Music, Newspaper, Phone } from "lucide-react";
+import { ArrowUp, Headphones, House, Newspaper, Phone, Radio } from "lucide-react";
 
 const ONGLETS = [
   { href: "/", nom: "Accueil", Icone: House },
-  { href: "/chorales", nom: "Chorales", Icone: Music },
-  { href: "/programme", nom: "Programme", Icone: Calendar },
+  { href: "/direct", nom: "Direct", Icone: Radio },
+  { href: "/ecouter", nom: "Écouter", Icone: Headphones },
   { href: "/actualites", nom: "Actualités", Icone: Newspaper },
   { href: "/contact", nom: "Contact", Icone: Phone },
 ];
