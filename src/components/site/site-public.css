@@ -143,7 +143,7 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .atout svg.i{color:var(--or-clair);width:20px;height:20px}
 
 /* Contact */
-.site-pgm .contact-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.site-pgm .contact-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .site-pgm .c-btn{display:grid;justify-items:center;gap:8px;padding:14px 6px;border-radius:16px;background:var(--papier);border:1px solid var(--trait);box-shadow:var(--ombre);text-decoration:none;font-weight:700;font-size:.9rem;color:var(--fg)}
 .site-pgm .c-btn .rond{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#fff}
 .site-pgm .c-btn small{font-weight:600;color:var(--doux);font-size:.72rem}

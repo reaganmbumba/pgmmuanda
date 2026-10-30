@@ -2,13 +2,19 @@
 import Link from "next/link";
 import {
   ArrowRight, BookOpen, Calendar, Church, CircleCheck, Clock, FilePen, GraduationCap,
-  HeartHandshake, HeartPulse, Landmark, ListMusic, LogIn, Lock, Mail, MapPin, Megaphone,
+  HeartHandshake, HeartPulse, Landmark, ListMusic, LogIn, Lock, MapPin, Megaphone,
   MessageCircle, Mic, Music, Network, Newspaper, PenLine, Phone, QrCode, ShieldCheck, Shirt,
   Truck, UserPlus, Users, Wallet, type LucideIcon,
 } from "lucide-react";
 import { CadreSite } from "./CadreSite";
 
 /* Contenu public : aucune donnée de membre, seulement l'organisation de l'antenne. */
+
+const TELEPHONE = "+243825717444";
+const TELEPHONE_AFFICHE = "+243 825 717 444";
+const WHATSAPP = `https://wa.me/243825717444?text=${encodeURIComponent(
+  "Paix ! Je vous écris depuis le site de la PGM Antenne de Muanda.",
+)}`;
 
 const CHORALES = [
   { nom: "Vision", lieu: "Paroisse Atlantique" },
@@ -255,13 +261,16 @@ export function SitePublic() {
         <section className="bloc cadre" id="contact">
           <div className="col">
             <Titre Icone={Phone} etiquette="Contact" titre="Nous trouver" />
-            {/* Numéros et e-mail à recevoir de la Présidence de l'antenne. */}
             <div className="contact-actions">
-              <span className="c-btn"><span className="rond wa"><MessageCircle className="i" aria-hidden /></span>WhatsApp<small>à compléter</small></span>
-              <span className="c-btn"><span className="rond tel"><Phone className="i" aria-hidden /></span>Appeler<small>à compléter</small></span>
-              <span className="c-btn"><span className="rond mail"><Mail className="i" aria-hidden /></span>E-mail<small>à compléter</small></span>
+              <a className="c-btn" href={WHATSAPP} target="_blank" rel="noopener noreferrer">
+                <span className="rond wa"><MessageCircle className="i" aria-hidden /></span>WhatsApp<small>Écrire un message</small>
+              </a>
+              <a className="c-btn" href={`tel:${TELEPHONE}`}>
+                <span className="rond tel"><Phone className="i" aria-hidden /></span>Appeler<small>{TELEPHONE_AFFICHE}</small>
+              </a>
             </div>
             <div className="carte lignes">
+              <div className="ligne-c"><span className="ic"><Phone className="i" aria-hidden /></span><div><small>Téléphone et WhatsApp</small>{TELEPHONE_AFFICHE}</div></div>
               <div className="ligne-c"><span className="ic"><MapPin className="i" aria-hidden /></span><div><small>Lieu</small>Muanda, Kongo-Central, RD Congo</div></div>
               <div className="ligne-c"><span className="ic"><Users className="i" aria-hidden /></span><div><small>Questions sur une chorale</small>Adressez-vous au responsable de la chorale de votre paroisse.</div></div>
             </div>
