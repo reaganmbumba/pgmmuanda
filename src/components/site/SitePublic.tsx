@@ -687,6 +687,22 @@ function annonce(e: ElementSite) {
   return e.titre;
 }
 
+/* Les adresses web écrites dans un texte (www.… ou https://…) deviennent des liens. */
+function avecLiens(texte: string) {
+  return texte.split(/((?:https?:\/\/|www\.)[^\s]+[^\s.,;:!?)])/g).map((morceau, i) =>
+    i % 2 === 1
+      ? <a key={i} href={morceau.startsWith("http") ? morceau : `https://${morceau}`} target="_blank" rel="noopener noreferrer">{morceau}</a>
+      : morceau);
+}
+
+/* Le texte d'un article, avec ses autres photos placées au milieu. */
+function paragraphesAvecPhotos(e: ElementSite) {
+  const ps = paragraphes(e.texte);
+  const milieu = Math.ceil(ps.length / 2);
+  const photos = (e.photos ?? []).map((src) => <img key={src} className="photo-pub" src={urlFichier(src)} alt="" loading="lazy" />);
+  return ps.flatMap((p, i) => [<p key={i}>{avecLiens(p)}</p>, ...(i === milieu - 1 ? photos : [])]);
+}
+
 export async function PagePublication({ id, rubrique }: { id: string; rubrique: Publication }) {
   const e = await lireElement(id);
   if (!e || e.rubrique !== rubrique || !e.publie) return null;
@@ -703,7 +719,7 @@ export async function PagePublication({ id, rubrique }: { id: string; rubrique: 
             ? <span className="meta"><MapPin className="i" aria-hidden />{e.sousTitre}</span>
             : <p className="chapo-article">{e.sousTitre}</p>)}
           {e.image && <img className="photo-pub" src={urlFichier(e.image)} alt="" />}
-          {paragraphes(e.texte).map((p, i) => <p key={i}>{p}</p>)}
+          {paragraphesAvecPhotos(e)}
           <Partage texte={annonce(e)} chemin={lienPublication(e)} />
           {rubrique === "actualite" && (
             <>
