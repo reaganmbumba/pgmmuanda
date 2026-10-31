@@ -45,8 +45,8 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .une{background:radial-gradient(120% 80% at 100% 0%,#24418a 0%,transparent 60%),linear-gradient(180deg,var(--marine) 0%,var(--marine-2) 100%);color:var(--sur-marine);position:relative;overflow:hidden}
 .site-pgm .une .col{padding-block:30px 30px;display:grid;gap:16px;position:relative;z-index:1}
 .site-pgm .salut{font-family:var(--display);font-style:italic;font-size:1.45rem;color:var(--or-clair)}
-.site-pgm .une h1{font-family:var(--display);font-weight:700;font-size:clamp(2.3rem,9vw,3.6rem);line-height:1.04;margin:0;text-wrap:balance}
-.site-pgm .une p.chapo{font-size:1.08rem;color:var(--sur-marine-doux);max-width:36ch}
+.site-pgm .une h1{font-family:var(--display);font-weight:700;font-size:clamp(2.3rem,9vw,3.6rem);line-height:1.04;margin:0}
+.site-pgm .une p.chapo{font-size:1.08rem;color:var(--sur-marine-doux)}
 .site-pgm .actions{display:grid;gap:10px;margin-top:4px}
 .site-pgm .btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:12px 18px;border-radius:14px;font-weight:700;font-size:1.05rem;text-decoration:none;border:2px solid transparent;cursor:pointer;font-family:inherit;transition:transform .12s ease}
 .site-pgm .btn:active{transform:scale(.98)}
@@ -404,15 +404,3 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .autres-rubriques nav a svg.i{width:20px;height:20px;color:var(--or-clair)}
 .site-pgm .autres-rubriques nav a svg.fl{margin-left:auto;opacity:.6}
 
-/* Accueil : logos PGM et KCC à côté du titre */
-.site-pgm .une-tete{display:grid;gap:16px}
-.site-pgm .une-tete>div:first-child{display:grid;gap:16px}
-.site-pgm .une-logos{display:flex;align-items:center;gap:14px;order:-1}
-.site-pgm .une-logos img{width:64px;height:64px;border-radius:50%;object-fit:cover;background:#fff;box-shadow:0 0 0 3px var(--or-clair),0 8px 24px rgba(0,0,0,.35)}
-.site-pgm .une-logos img.kcc{background:var(--marine)}
-@media (min-width:700px){
-  .site-pgm .une-tete{grid-template-columns:1fr auto;align-items:center;gap:32px}
-  .site-pgm .une-logos{order:0;flex-direction:column;gap:18px}
-  .site-pgm .une-logos img{width:150px;height:150px}
-  .site-pgm .une-logos img.kcc{width:96px;height:96px}
-}
