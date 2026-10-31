@@ -103,6 +103,12 @@ jobs:
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
             # Seuls les caractères base64 sont gardés : un copier-coller ajoute parfois espaces ou retours à la ligne.
             cle=$(printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -cd 'A-Za-z0-9+/=')
+            # Une clé PKCS12 commence par « MII » et finit au premier « = » de remplissage :
+            # le texte collé en trop avant ou après est ignoré.
+            if [[ "$cle" == *MII* ]]; then
+              cle="MII${cle#*MII}"
+              [[ "$cle" == *=* ]] && cle="${cle%%=*}$(printf '%s' "${cle#*=}" | grep -o '^=*' || true)="
+            fi
             # Longueur et empreinte seulement (jamais le contenu) pour vérifier le copier-coller.
             echo "Clé collée : ${#cle} caractères, empreinte $(printf '%s' "$cle" | sha256sum | cut -c1-12)"
             printf '%s' "$cle" | base64 -d > android/app/pgm-upload.jks \
