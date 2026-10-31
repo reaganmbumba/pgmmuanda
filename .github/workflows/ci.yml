@@ -98,9 +98,13 @@ jobs:
       - name: Préparer la clé de signature (si configurée)
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PGM_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/pgm-upload.jks
+            # Les espaces et retours à la ligne ajoutés par un copier-coller sont retirés.
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d ' \t\r\n' | base64 -d > android/app/pgm-upload.jks
+            keytool -list -keystore android/app/pgm-upload.jks -storepass "$PGM_KEYSTORE_PASSWORD" > /dev/null \
+              || { echo "::error::La clé ou son mot de passe est incorrect : recopiez les secrets ANDROID_*."; exit 1; }
           fi
       - name: Compiler
         working-directory: android
