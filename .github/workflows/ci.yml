@@ -109,6 +109,18 @@ jobs:
           PGM_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           PGM_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew assembleDebug assembleRelease bundleRelease --no-daemon
+      - name: Vérifier la signature du fichier AAB
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          aab=android/app/build/outputs/bundle/release/app-release.aab
+          if keytool -printcert -jarfile "$aab" | grep -q "Owner:"; then
+            echo "AAB signé par :"; keytool -printcert -jarfile "$aab" | grep -m1 "Owner:"
+          elif [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::La clé est configurée mais l'AAB n'est pas signé."; exit 1
+          else
+            echo "::warning::AAB NON SIGNÉ : ajoutez les secrets ANDROID_* pour publier sur le Play Store."
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: pgm-muanda-android
