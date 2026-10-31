@@ -7,7 +7,8 @@ android {
         applicationId "org.ebnmkcc.pgmmuanda"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        // Chaque compilation GitHub a un numéro qui augmente : Google Play refuse deux fois le même code.
+        versionCode (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
