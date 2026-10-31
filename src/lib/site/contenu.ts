@@ -20,6 +20,8 @@ export type ElementSite = {
   date: string | null;
   fichier: string | null;
   image: string | null;
+  /** Autres photos de l'article (actualités écrites dans le code seulement). */
+  photos?: string[];
   ordre: number;
   publie: boolean;
 };
@@ -72,6 +74,29 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
   el("question", 7, "Où trouver le Règlement intérieur ?", null, "Dans la rubrique « Règlement » de ce site : un résumé simple et le texte complet à télécharger."),
 ];
 
+/*
+ * Actualités écrites ici, avec leurs photos dans public/actualites/ : elles
+ * s'affichent toujours, en plus de celles saisies dans l'administration.
+ */
+const ACTUALITES_FIXES: ElementSite[] = [
+  {
+    id: "culte-consolation-chouchouna", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
+    titre: "Culte de consolation chez la maman diaconesse Chouchouna",
+    sousTitre: "Jeudi 29 octobre 2026, toute la chorale de la PGM Antenne de Muanda s'est rassemblée à la résidence de la maman diaconesse Chouchouna pour un culte de consolation.",
+    texte: [
+      "Le jeudi 29 octobre 2026, la Présidence générale de la musique (PGM), Antenne de Muanda, a rendu visite à la maman diaconesse Chouchouna, en sa résidence. Les choristes s'y sont retrouvés pour un culte de consolation qui a regroupé toute la chorale.",
+      "En fin d'après-midi, la cour s'est remplie. Mamans, papas et jeunes choristes ont pris place côte à côte, à l'ombre des arbres, pour entourer la maman diaconesse et sa famille de leur présence, de leurs chants et de leurs prières.",
+      "Le culte s'est déroulé dans le recueillement et dans la paix. Les chants de consolation, entonnés d'une seule voix, ont rempli tout le quartier, et la parole partagée a rappelé à chacun que nul ne porte seul ses épreuves : la grande famille de la PGM se tient aux côtés de chacun de ses membres, dans la joie comme dans la peine.",
+      "Ce fut un moment fort, simple et fraternel, à l'image de ce que la PGM veut vivre : servir Dieu par le chant et se soutenir les uns les autres. Tous les participants s'accordent à le dire : c'était vraiment super bien.",
+      "La PGM Antenne de Muanda remercie chaleureusement les choristes et les responsables qui ont répondu présents. Elle continue de porter la maman diaconesse Chouchouna et toute sa famille dans ses prières. Que Dieu les console et les fortifie.",
+      "Pour plus d'infos : www.jesuiskcciste.com",
+    ].join("\n\n"),
+    date: "2026-10-29",
+    image: "/actualites/consolation-chouchouna-1.jpg",
+    photos: ["/actualites/consolation-chouchouna-2.jpg"],
+  },
+];
+
 // « * » : le site marche avant comme après l'ajout de la colonne image
 const COLONNES = "*";
 
@@ -88,6 +113,14 @@ const PAR_DATE: Rubrique[] = ["actualite", "audio", "soiree", "social"];
 
 /** Les éléments d'une rubrique, dans l'ordre d'affichage (rubriques datées : les plus récents d'abord). */
 export async function lireElements(rubrique: Rubrique, tous = false): Promise<ElementSite[]> {
+  const base = await lireElementsBase(rubrique, tous);
+  // l'administration (tous) ne liste que ce qu'elle peut modifier
+  const fixes = tous ? [] : ACTUALITES_FIXES.filter((e) => e.rubrique === rubrique);
+  if (fixes.length === 0) return base;
+  return [...fixes, ...base].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+}
+
+async function lireElementsBase(rubrique: Rubrique, tous: boolean): Promise<ElementSite[]> {
   const defaut = ELEMENTS_DEFAUT.filter((e) => e.rubrique === rubrique);
   if (!supabaseActif) return defaut;
   const supabase = await creerClientServeur();
@@ -103,6 +136,8 @@ export async function lireElements(rubrique: Rubrique, tous = false): Promise<El
 }
 
 export async function lireElement(id: string): Promise<ElementSite | null> {
+  const fixe = ACTUALITES_FIXES.find((e) => e.id === id);
+  if (fixe) return fixe;
   if (!supabaseActif || !/^[0-9a-f-]{36}$/i.test(id)) return ELEMENTS_DEFAUT.find((e) => e.id === id) ?? null;
   const supabase = await creerClientServeur();
   const { data } = await supabase.from("site_elements")
@@ -140,7 +175,7 @@ export async function lireCauserie(): Promise<MessageCauserie[]> {
 }
 
 /** Adresse publique d'un fichier du site (audio ou image). */
-export const urlFichier = (chemin: string) => `${SUPABASE_URL}/storage/v1/object/public/site/${chemin}`;
+export const urlFichier = (chemin: string) => chemin.startsWith("/") ? chemin : `${SUPABASE_URL}/storage/v1/object/public/site/${chemin}`;
 
 /** Numéro pour les liens tel: et WhatsApp (chiffres seulement, avec l'indicatif). */
 export function contact(r: Reglages) {

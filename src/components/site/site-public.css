@@ -184,6 +184,7 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .article ul{list-style:disc;margin:0;padding-left:1.2em;display:grid;gap:4px}
 .site-pgm .article ul li::marker{color:var(--or)}
 .site-pgm .article blockquote{margin:6px 0;padding:2px 0 2px 18px;border-left:3px solid var(--or);font-family:var(--display);font-size:1.35rem;line-height:1.35;font-style:italic}
+.site-pgm .article p a{color:var(--marine,inherit);font-weight:600;text-decoration:underline;text-underline-offset:3px;word-break:break-word}
 .site-pgm .signature{border-top:1px solid var(--trait);padding-top:14px;color:var(--doux)}
 .site-pgm .signature b{color:var(--fg);display:block}
 
