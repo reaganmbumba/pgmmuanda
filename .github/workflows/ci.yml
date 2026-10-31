@@ -94,10 +94,6 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm ci
-      - uses: actions/download-artifact@v4
-        with:
-          name: version-html
-          path: export-html
       - run: npx cap sync android
       - name: Préparer la clé de signature (si configurée)
         env:
@@ -132,10 +128,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - uses: actions/download-artifact@v4
-        with:
-          name: version-html
-          path: export-html
       - run: npx cap sync ios
       - name: Compiler sans signature
         working-directory: ios/App

@@ -36,6 +36,7 @@ export function CadreSite({ children }: { children: React.ReactNode }) {
           <b>PGM Antenne de Muanda</b>
           <span>Présidence générale de la musique, une branche de l&apos;Église Bon Nouveau Message (KCC)</span>
           <span className="concepteur">Application conçue par le <b>Prédicateur Reagan MBUMBA</b></span>
+          <Link className="lien-pied" href="/confidentialite">Confidentialité</Link>
         </div>
       </footer>
       <NavigationSite />

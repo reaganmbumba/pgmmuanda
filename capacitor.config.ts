@@ -1,12 +1,18 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// Application mobile (Android et iOS) : elle embarque la version HTML
-// générée par `npm run export:html` dans le dossier export-html/.
+// Application mobile (Android et iOS) : elle ouvre le site en ligne
+// www.pgmmuanda.com. Le dossier app-mobile/ ne sert qu'à afficher une page
+// d'attente quand le téléphone n'a pas Internet.
 const config: CapacitorConfig = {
   appId: "org.ebnmkcc.pgmmuanda",
   appName: "PGM Muanda",
-  webDir: "export-html",
+  webDir: "app-mobile",
   backgroundColor: "#0b1f4b",
+  server: {
+    url: "https://www.pgmmuanda.com",
+    allowNavigation: ["www.pgmmuanda.com", "pgmmuanda.com"],
+    errorPath: "hors-ligne.html",
+  },
   android: { allowMixedContent: false },
 };
 
