@@ -95,24 +95,27 @@ function Suite({ href, nom }: { href: string; nom: string }) {
 
 function CarteArticle({ a }: { a: ElementSite }) {
   return (
-    <Link className="actu" href={`/actualites/${a.id}`}>
-      {a.image ? (
-        <div className="vis photo">
-          <img src={urlFichier(a.image)} alt="" loading="lazy" />
-          <b>{a.titre}</b>
+    <div className="actu-bloc">
+      <Link className="actu" href={`/actualites/${a.id}`}>
+        {a.image ? (
+          <div className="vis photo">
+            <img src={urlFichier(a.image)} alt="" loading="lazy" />
+            <b>{a.titre}</b>
+          </div>
+        ) : (
+          <div className="vis">
+            <img src="/logo-pgm.png" alt="" />
+            <b>{a.titre}</b>
+          </div>
+        )}
+        <div className="txt">
+          {a.date && <span className="meta"><Calendar className="i" aria-hidden />Muanda, le {dateLongue(a.date)}</span>}
+          {a.sousTitre && <p>{a.sousTitre}</p>}
+          <span className="lire">Lire l&apos;article<ArrowRight className="i" aria-hidden /></span>
         </div>
-      ) : (
-        <div className="vis">
-          <img src="/logo-pgm.png" alt="" />
-          <b>{a.titre}</b>
-        </div>
-      )}
-      <div className="txt">
-        {a.date && <span className="meta"><Calendar className="i" aria-hidden />Muanda, le {dateLongue(a.date)}</span>}
-        {a.sousTitre && <p>{a.sousTitre}</p>}
-        <span className="lire">Lire l&apos;article<ArrowRight className="i" aria-hidden /></span>
-      </div>
-    </Link>
+      </Link>
+      <Partage compact texte={a.titre} chemin={`/actualites/${a.id}`} image={a.image ? urlFichier(a.image) : null} />
+    </div>
   );
 }
 
@@ -582,7 +585,7 @@ export async function PageDirect({ v }: { v?: string }) {
                 <b>{titre}</b>
                 {!enDirect && <small>Les vidéos s&apos;enchaînent. Quand un direct commence, il s&apos;affiche ici automatiquement.</small>}
               </div>
-              {choisie && <Partage texte={`${enDirect ? "En direct maintenant" : "À regarder"} sur PGM Muanda TV : ${titre}`} chemin={`/direct?v=${choisie}`} />}
+              {choisie && <Partage texte={`${enDirect ? "En direct maintenant" : "À regarder"} sur PGM Muanda TV : ${titre}`} chemin={`/direct?v=${choisie}`} image={imageVideo(choisie)} />}
             </div>
           ) : (
             <div className="carte vide-direct">
@@ -704,7 +707,7 @@ export async function PagePublication({ id, rubrique }: { id: string; rubrique: 
             : <p className="chapo-article">{e.sousTitre}</p>)}
           {e.image && <img className="photo-pub" src={urlFichier(e.image)} alt="" />}
           {paragraphes(e.texte).map((p, i) => <p key={i}>{p}</p>)}
-          <Partage texte={annonce(e)} chemin={lienPublication(e)} />
+          <Partage texte={annonce(e)} chemin={lienPublication(e)} image={e.image ? urlFichier(e.image) : null} />
           {rubrique === "actualite" && (
             <>
               <div className="signature"><b>La Présidence de la PGM Antenne de Muanda</b>EBNM KCC · Muanda</div>
@@ -742,7 +745,7 @@ function CarteSoiree({ s, passee = false }: { s: ElementSite; passee?: boolean }
           {s.texte && <p>{s.texte}</p>}
         </div>
       </div>
-      {!passee && <Partage compact texte={annonce(s)} chemin={lienPublication(s)} />}
+      {!passee && <Partage compact texte={annonce(s)} chemin={lienPublication(s)} image={s.image ? urlFichier(s.image) : null} />}
     </article>
   );
 }
@@ -793,6 +796,7 @@ export async function PageCasSociaux() {
                   </div>
                 </div>
                 {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
+                <Partage compact texte={annonce(x)} chemin={lienPublication(x)} image={x.image ? urlFichier(x.image) : null} />
               </article>
             ))}
           <div className="carte lignes">
@@ -828,6 +832,7 @@ export async function PagePionniers() {
                       </div>
                     </div>
                     {paragraphes(x.texte).map((p, i) => <p key={i}>{p}</p>)}
+                    <Partage compact texte={annonce(x)} chemin={lienPublication(x)} image={x.image ? urlFichier(x.image) : null} />
                   </li>
                 ))}
               </ul>

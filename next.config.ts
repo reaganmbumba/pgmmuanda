@@ -15,7 +15,7 @@ const csp = [
   // Le site public montre les vidéos de la chaîne YouTube de la PGM et ses audios
   `img-src 'self' data: blob: https://i.ytimg.com${supabase ? ` ${supabase}` : ""}`,
   "font-src 'self'",
-  `connect-src 'self'${supabase ? ` ${supabase} ${supabase.replace(/^http/, "ws")}` : ""}`,
+  `connect-src 'self' https://i.ytimg.com${supabase ? ` ${supabase} ${supabase.replace(/^http/, "ws")}` : ""}`,
   `media-src 'self' blob:${supabase ? ` ${supabase}` : ""}`,
   "frame-src https://www.youtube-nocookie.com",
   "object-src 'none'",
