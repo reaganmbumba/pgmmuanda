@@ -101,8 +101,12 @@ jobs:
           PGM_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            # Les espaces et retours à la ligne ajoutés par un copier-coller sont retirés.
-            printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d ' \t\r\n' | base64 -d > android/app/pgm-upload.jks
+            # Seuls les caractères base64 sont gardés : un copier-coller ajoute parfois espaces ou retours à la ligne.
+            cle=$(printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -cd 'A-Za-z0-9+/=')
+            # Longueur et empreinte seulement (jamais le contenu) pour vérifier le copier-coller.
+            echo "Clé collée : ${#cle} caractères, empreinte $(printf '%s' "$cle" | sha256sum | cut -c1-12)"
+            printf '%s' "$cle" | base64 -d > android/app/pgm-upload.jks \
+              || { echo "::error::La clé ANDROID_KEYSTORE_BASE64 est incomplète : recollez tout le fichier."; exit 1; }
             keytool -list -keystore android/app/pgm-upload.jks -storepass "$PGM_KEYSTORE_PASSWORD" > /dev/null \
               || { echo "::error::La clé ou son mot de passe est incorrect : recopiez les secrets ANDROID_*."; exit 1; }
           fi
