@@ -405,3 +405,7 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .autres-rubriques nav a svg.fl{margin-left:auto;opacity:.6}
 
 .site-pgm footer.pied .lien-pied{font-size:.82rem;color:var(--doux)}
+
+/* Boutons de partage sous les cartes des listes */
+.site-pgm .actu-bloc{display:grid;gap:8px}
+.site-pgm .pionniers li>.partage{display:flex}
