@@ -43,7 +43,6 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 
 /* Une */
 .site-pgm .une{background:radial-gradient(120% 80% at 100% 0%,#24418a 0%,transparent 60%),linear-gradient(180deg,var(--marine) 0%,var(--marine-2) 100%);color:var(--sur-marine);position:relative;overflow:hidden}
-.site-pgm .une::after{content:"𝄞";position:absolute;right:-18px;top:40px;font-size:300px;line-height:1;color:var(--or-clair);opacity:.07;pointer-events:none;font-family:serif}
 .site-pgm .une .col{padding-block:30px 30px;display:grid;gap:16px;position:relative;z-index:1}
 .site-pgm .salut{font-family:var(--display);font-style:italic;font-size:1.45rem;color:var(--or-clair)}
 .site-pgm .une h1{font-family:var(--display);font-weight:700;font-size:clamp(2.3rem,9vw,3.6rem);line-height:1.04;margin:0;text-wrap:balance}
@@ -404,3 +403,16 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .autres-rubriques nav a{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 10px;color:var(--sur-marine);text-decoration:none;font-weight:600;border-top:1px solid rgba(255,255,255,.1)}
 .site-pgm .autres-rubriques nav a svg.i{width:20px;height:20px;color:var(--or-clair)}
 .site-pgm .autres-rubriques nav a svg.fl{margin-left:auto;opacity:.6}
+
+/* Accueil : logos PGM et KCC à côté du titre */
+.site-pgm .une-tete{display:grid;gap:16px}
+.site-pgm .une-tete>div:first-child{display:grid;gap:16px}
+.site-pgm .une-logos{display:flex;align-items:center;gap:14px;order:-1}
+.site-pgm .une-logos img{width:64px;height:64px;border-radius:50%;object-fit:cover;background:#fff;box-shadow:0 0 0 3px var(--or-clair),0 8px 24px rgba(0,0,0,.35)}
+.site-pgm .une-logos img.kcc{background:var(--marine)}
+@media (min-width:700px){
+  .site-pgm .une-tete{grid-template-columns:1fr auto;align-items:center;gap:32px}
+  .site-pgm .une-logos{order:0;flex-direction:column;gap:18px}
+  .site-pgm .une-logos img{width:150px;height:150px}
+  .site-pgm .une-logos img.kcc{width:96px;height:96px}
+}

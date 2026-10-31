@@ -156,9 +156,17 @@ export async function AccueilSite() {
       <main>
         <section className="une cadre">
           <div className="col">
-            <p className="salut">Paix à vous.</p>
-            <h1>{r.accueil_titre}</h1>
-            <p className="chapo">{r.accueil_texte}</p>
+            <div className="une-tete">
+              <div>
+                <p className="salut">Paix à vous.</p>
+                <h1>{r.accueil_titre}</h1>
+                <p className="chapo">{r.accueil_texte}</p>
+              </div>
+              <div className="une-logos">
+                <img src="/logo-pgm.png" alt="Logo de la PGM Antenne de Muanda" />
+                <img className="kcc" src="/logo-kcc.png" alt="Logo KCC" />
+              </div>
+            </div>
             <nav className="raccourcis" aria-label="Rubriques principales">
               {RUBRIQUES.filter((r) => PRINCIPALES.includes(r.href)).map(({ href, nom, Icone }) => (
                 <Link key={href} className="tuile" href={href}>
