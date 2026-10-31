@@ -857,3 +857,60 @@ export async function PageCauserie() {
     </CadreSite>
   );
 }
+
+const CONFIDENTIALITE = [
+  {
+    titre: "Ce que nous recevons",
+    points: [
+      "Visiteurs du site : aucun compte n'est demandé et aucune publicité n'est affichée.",
+      "Causerie : le nom que vous choisissez et votre message, visibles par tous. Une clé anonyme, gardée sur votre téléphone, sert seulement à limiter les abus.",
+      "Membres : nom, postnom, prénom, photo, sexe, téléphone, paroisse, chorale, voix, fonction, présences et cotisations, saisis par les responsables de la PGM.",
+    ],
+  },
+  {
+    titre: "À quoi cela sert",
+    points: [
+      "Faire vivre la PGM : cartes de membre, présences, cotisations, annonces et formations.",
+      "Vérifier une carte de membre quand on scanne son code QR.",
+      "Rien n'est vendu ni donné à une entreprise ou à un annonceur.",
+    ],
+  },
+  {
+    titre: "Qui peut voir vos informations",
+    points: [
+      "Un membre voit ses propres informations.",
+      "Les responsables voient seulement ce dont ils ont besoin pour leur service (leur chorale, leur paroisse ou les finances quand l'administration le permet).",
+      "Les données sont gardées chez Supabase et le site chez Vercel, avec une connexion chiffrée (https). Une copie de sauvegarde chiffrée est faite chaque nuit.",
+    ],
+  },
+  {
+    titre: "Vos droits",
+    points: [
+      "Vous pouvez demander à voir, corriger ou supprimer vos informations.",
+      "Un message de la Causerie peut être retiré sur simple demande.",
+      "Pour toute demande, contactez la PGM Antenne de Muanda au +243 825 717 444 (WhatsApp ou appel).",
+    ],
+  },
+];
+
+export function PageConfidentialite() {
+  return (
+    <CadreSite>
+      <main>
+        <EnTete Icone={ShieldCheck} titre="Confidentialité"
+          texte="Comment la PGM Antenne de Muanda protège vos informations, sur le site et dans l'application." />
+        <Bloc>
+          <div className="faq regles">
+            {CONFIDENTIALITE.map(({ titre, points }) => (
+              <details key={titre} open>
+                <summary><span>{titre}</span></summary>
+                <ul className="puces">{points.map((p) => <li key={p}>{p}</li>)}</ul>
+              </details>
+            ))}
+          </div>
+          <p className="note">Dernière mise à jour : 31 octobre 2026.</p>
+        </Bloc>
+      </main>
+    </CadreSite>
+  );
+}

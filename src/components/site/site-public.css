@@ -404,3 +404,4 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 .site-pgm .autres-rubriques nav a svg.i{width:20px;height:20px;color:var(--or-clair)}
 .site-pgm .autres-rubriques nav a svg.fl{margin-left:auto;opacity:.6}
 
+.site-pgm footer.pied .lien-pied{font-size:.82rem;color:var(--doux)}
