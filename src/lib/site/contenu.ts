@@ -80,6 +80,23 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
  */
 const ACTUALITES_FIXES: ElementSite[] = [
   {
+    id: "communique-programme-assistance", rubrique: "actualite", ordre: 0, publie: true, fichier: null, image: null,
+    titre: "Communiqué : programme d'assistance aux cas sociaux de premier degré",
+    sousTitre: "Du lundi 2 au lundi 23 novembre 2026, la PGM Antenne de Muanda assiste ses membres frappés par un deuil. Premier rendez-vous : lundi 2 novembre à 16h30, à la paroisse Kitsiaku.",
+    texte: [
+      "Paix à tous les choristes et à tous les membres de la PGM Antenne de Muanda.",
+      "Dans le cadre du recensement des cas sociaux de premier degré au sein de la PGM Muanda, la Présidence générale de la musique (PGM), Antenne de Muanda, organise un programme d'assistance. Cette opération a pour but de régler tous les cas de deuil enregistrés et d'apporter à chaque membre éprouvé le soutien de toute la famille de la PGM.",
+      "Ouverture du programme : le lundi 2 novembre 2026, à 16h30, à la paroisse Kitsiaku.",
+      "Clôture du programme : le lundi 23 novembre 2026, à la paroisse Atlantique. Ce dernier rendez-vous permettra de terminer et de clôturer tous les cas d'assistance.",
+      "Sont concernés les cas sociaux de premier degré, c'est-à-dire les membres de la PGM qui ont perdu un proche de premier degré. Chaque membre concerné qui n'a pas encore été recensé est prié de se faire connaître auprès du responsable de sa chorale avant le début du programme.",
+      "Tous les choristes et responsables sont invités à venir nombreux, dans la ponctualité, pour entourer nos frères et sœurs éprouvés de notre présence, de nos chants et de nos prières. Nul ne porte seul ses épreuves : la PGM se tient aux côtés de chacun de ses membres, dans la joie comme dans la peine.",
+      "En lingala : Kimia ! Programme ya assistance ekobanda lundi 02/11/2026, tokozala na paroisse Kitsiaku na 16h30. Suite et fin le 23/11/2026 na paroisse Atlantique pona kolongola ba cas nyonso ya assistance.",
+      "Merci à tous. Que Dieu vous bénisse.",
+      "La Présidence de la PGM Antenne de Muanda.",
+    ].join("\n\n"),
+    date: "2026-10-31",
+  },
+  {
     id: "culte-consolation-chouchouna", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
     titre: "Culte de consolation chez la maman diaconesse Chouchouna",
     sousTitre: "Jeudi 29 octobre 2026, toute la chorale de la PGM Antenne de Muanda s'est rassemblée à la résidence de la maman diaconesse Chouchouna pour un culte de consolation.",
