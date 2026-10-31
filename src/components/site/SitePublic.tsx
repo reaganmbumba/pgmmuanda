@@ -97,7 +97,7 @@ function CarteArticle({ a }: { a: ElementSite }) {
   return (
     <Link className="actu" href={`/actualites/${a.id}`}>
       {a.image ? (
-        <div className="vis photo">
+        <div className={a.affiche ? "vis photo affiche" : "vis photo"}>
           <img src={urlFichier(a.image)} alt="" loading="lazy" />
           <b>{a.titre}</b>
         </div>

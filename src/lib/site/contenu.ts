@@ -22,6 +22,8 @@ export type ElementSite = {
   image: string | null;
   /** Autres photos de l'article (actualités écrites dans le code seulement). */
   photos?: string[];
+  /** L'image est une affiche avec son propre texte : le titre se place dessous, pas dessus. */
+  affiche?: boolean;
   ordre: number;
   publie: boolean;
 };
@@ -80,7 +82,8 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
  */
 const ACTUALITES_FIXES: ElementSite[] = [
   {
-    id: "communique-programme-assistance", rubrique: "actualite", ordre: 0, publie: true, fichier: null, image: null,
+    id: "communique-programme-assistance", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
+    image: "/actualites/programme-assistance.jpg", affiche: true,
     titre: "Communiqué : programme d'assistance aux cas sociaux de premier degré",
     sousTitre: "Du lundi 2 au lundi 23 novembre 2026, la PGM Antenne de Muanda assiste ses membres frappés par un deuil. Premier rendez-vous : lundi 2 novembre à 16h30, à la paroisse Kitsiaku.",
     texte: [
