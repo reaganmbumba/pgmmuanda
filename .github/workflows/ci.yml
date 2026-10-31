@@ -121,7 +121,8 @@ jobs:
         env:
           PGM_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           PGM_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          PGM_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          # Clé PKCS12 : le mot de passe de la clé est celui du fichier.
+          PGM_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: ./gradlew assembleDebug assembleRelease bundleRelease --no-daemon
       - name: Vérifier la signature du fichier AAB
         env:
