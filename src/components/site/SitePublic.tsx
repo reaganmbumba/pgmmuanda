@@ -45,7 +45,7 @@ const ETAPES: { titre: string; texte: string; Icone: LucideIcon }[] = [
 ];
 
 /* Les rubriques, dans l'ordre des tuiles de l'accueil. */
-const RUBRIQUES: { href: string; nom: string; Icone: LucideIcon }[] = [
+export const RUBRIQUES: { href: string; nom: string; Icone: LucideIcon }[] = [
   { href: "/direct", nom: "Direct", Icone: Radio },
   { href: "/ecouter", nom: "Écouter", Icone: Headphones },
   { href: "/causerie", nom: "Causerie", Icone: MessagesSquare },
@@ -684,14 +684,14 @@ export type Publication = keyof typeof PUBLICATIONS;
 export const lienPublication = (e: ElementSite) => `${PUBLICATIONS[e.rubrique as Publication].liste}/${e.id}`;
 
 /** Texte d'annonce utilisé pour le partage. */
-function annonce(e: ElementSite) {
+export function annonce(e: ElementSite) {
   if (e.rubrique === "soiree") return [`Soirée musicale de la PGM Antenne de Muanda : ${e.titre}`, e.date && `le ${dateLongue(e.date)}`, e.sousTitre].filter(Boolean).join(", ") + ". Venez nombreux !";
   if (e.rubrique === "pionnier") return `Nos pionniers : ${e.titre}`;
   return e.titre;
 }
 
 /* Les adresses web écrites dans un texte (www.… ou https://…) deviennent des liens. */
-function avecLiens(texte: string) {
+export function avecLiens(texte: string) {
   return texte.split(/((?:https?:\/\/|www\.)[^\s]+[^\s.,;:!?)])/g).map((morceau, i) =>
     i % 2 === 1
       ? <a key={i} href={morceau.startsWith("http") ? morceau : `https://${morceau}`} target="_blank" rel="noopener noreferrer">{morceau}</a>

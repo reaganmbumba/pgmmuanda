@@ -1,6 +1,6 @@
 import { InstallerApp } from "@/components/InstallerApp";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, MapPin, QrCode } from "lucide-react";
+import { CalendarDays, ChevronRight, Globe, MapPin, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { activites, annonces, choristeConnecte as moi, mesPresences } from "@/lib/demo-data";
 import { formatDate, formatDateHeure, libelleParoisse } from "@/lib/format";
@@ -13,6 +13,7 @@ import { mesNotifications } from "@/lib/notifications";
 import { listerActivites, listerAnnonces, presencesMembre, taux } from "@/lib/programmes/depot";
 import { dansJours, depuisSaisieLocale, jourLocal } from "@/lib/programmes/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
+import { dateLongue, lireElements, urlFichier, type ElementSite } from "@/lib/site/contenu";
 
 export const metadata = { title: "Accueil" };
 
@@ -21,9 +22,9 @@ export default async function AccueilChoriste() {
   const u = await utilisateurCourant();
   const fiche = u ? await maFiche(u.id) : null;
   if (!fiche) return <FicheNonReliee />;
-  const [cartes, notifications, prochaines, dernieres, presences] = await Promise.all([
+  const [cartes, notifications, prochaines, dernieres, presences, actualites] = await Promise.all([
     cartesDuMembre(fiche.id), mesNotifications(3),
-    listerActivites({ depuis: depuisSaisieLocale(`${jourLocal(dansJours(0))}T00:00`), limite: 3 }), listerAnnonces({ limite: 2 }), presencesMembre(fiche.id),
+    listerActivites({ depuis: depuisSaisieLocale(`${jourLocal(dansJours(0))}T00:00`), limite: 3 }), listerAnnonces({ limite: 2 }), presencesMembre(fiche.id), lireElements("actualite"),
   ]);
   const active = cartes.find((c) => c.statutCode === "active");
   const prochaine = prochaines.find((a) => a.statutCode !== "annulee");
@@ -73,6 +74,8 @@ export default async function AccueilChoriste() {
       </Link>
 
       <Raccourcis />
+
+      <SiteDeLaPgm actualites={actualites.slice(0, 2)} />
 
       <DernieresAnnonces liste={dernieres.map((a) => ({ id: a.id, titre: a.titre, type: a.type, date: a.date }))} />
 
@@ -174,6 +177,38 @@ function DernieresAnnonces({ liste }: { liste: { id: string; titre: string; type
   );
 }
 
+/** Les dernières actualités du site public, lisibles depuis l'espace membre. */
+function SiteDeLaPgm({ actualites }: { actualites: ElementSite[] }) {
+  return (
+    <section className="rounded-2xl bg-white shadow-sm">
+      <div className="flex items-center justify-between p-4 pb-2">
+        <h2 className="flex items-center gap-2 font-semibold text-marine-900"><Globe className="size-4 text-or-600" aria-hidden />Le site de la PGM</h2>
+        <Link href="/choriste/site" className="text-sm font-medium text-marine-700">Tout voir</Link>
+      </div>
+      {actualites.length === 0 ? (
+        <p className="px-4 pb-4 text-sm text-slate-500">Aucune actualité pour le moment.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {actualites.map((a) => (
+            <li key={a.id}>
+              <Link href={`/choriste/site/${a.id}`} className="flex items-center gap-3 p-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={a.image ? urlFichier(a.image) : "/logo-pgm.png"} alt="" loading="lazy"
+                  className={`size-14 shrink-0 rounded-xl ${a.image ? "object-cover" : "bg-marine-50 object-contain p-2"}`} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium leading-snug text-marine-900">{a.titre}</span>
+                  {a.date && <span className="block text-xs text-slate-400">{dateLongue(a.date)}</span>}
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-slate-300" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function Raccourcis() {
   // Grandes cases, avec un libellé complet : faciles à toucher et à comprendre
   const raccourcis = ["/choriste/qr", "/choriste/chants", "/choriste/formations", "/choriste/documents", "/choriste/chambre", "/choriste/profil"]
@@ -198,7 +233,8 @@ function Raccourcis() {
 }
 
 /** Accueil de démonstration, affiché uniquement en mode maquette (sans Supabase). */
-function AccueilDemo() {
+async function AccueilDemo() {
+  const actualites = await lireElements("actualite");
   const prochaine = activites[0];
   const presents = mesPresences.filter((p) => p.statut === "Présent").length;
   const tauxDemo = Math.round((presents / mesPresences.length) * 100);
@@ -219,6 +255,7 @@ function AccueilDemo() {
         </div>
       </div>
       <Raccourcis />
+      <SiteDeLaPgm actualites={actualites.slice(0, 2)} />
       <DernieresAnnonces liste={annonces.slice(0, 2)} />
     </div>
   );
