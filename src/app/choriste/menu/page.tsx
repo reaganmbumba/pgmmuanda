@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, LogOut } from "lucide-react";
+import { ChevronRight, Globe, LogOut } from "lucide-react";
 import { deconnexion } from "@/app/(auth)/actions";
 import { menuChoriste } from "@/lib/navigation";
 
@@ -25,6 +25,9 @@ export default function MenuChoriste() {
           </li>
         ))}
       </ul>
+      <Link href="/" className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-white py-3 text-base font-semibold text-marine-800 shadow-sm">
+        <Globe className="size-4" aria-hidden /> Site de la PGM
+      </Link>
       <form action={deconnexion}>
         <button
           type="submit"
