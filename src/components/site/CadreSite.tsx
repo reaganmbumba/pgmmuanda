@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { LogIn } from "lucide-react";
+import { BoutonEspace } from "./BoutonEspace";
 import { NavigationSite } from "./NavigationSite";
 import "./site-public.css";
 
@@ -20,10 +20,7 @@ export function CadreSite({ children }: { children: React.ReactNode }) {
               <span>EBNM KCC</span>
             </span>
           </Link>
-          <Link className="btn-connexion" href="/connexion">
-            <LogIn className="i" aria-hidden />
-            Se connecter
-          </Link>
+          <BoutonEspace />
         </div>
       </header>
       {children}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bell, LogOut, Menu, Search, X } from "lucide-react";
+import { Bell, Globe, LogOut, Menu, Search, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { deconnexion } from "@/app/(auth)/actions";
 import { estLecteurGeneral, peutOuvrir, type Role } from "@/lib/auth/roles";
@@ -53,6 +53,14 @@ function MenuLateral({ role, accesFinances, onNavigate }: { role: Role; accesFin
         })}
       </ul>
       <div className="border-t border-white/10 p-3">
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-marine-100/80 hover:bg-white/5 hover:text-white"
+        >
+          <Globe className="size-4.5" aria-hidden />
+          Site de la PGM
+        </Link>
         <form action={deconnexion}>
           <button
             type="submit"

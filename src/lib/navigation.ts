@@ -87,6 +87,7 @@ export const menuChoriste: EntreeMenu[] = [
   { href: "/choriste/cotisations", label: "Mes cotisations", icone: Coins, etape: 9, description: "Les mois que vous avez payés." },
   { href: "/choriste/reunions", label: "Mes réunions", icone: Presentation, etape: 9, description: "Convocations du Conseil, si vous en êtes membre." },
   { href: "/choriste/documents", label: "Mes documents", icone: FileText, etape: 8, description: "Documents mis à votre disposition." },
+  { href: "/choriste/site", label: "Le site de la PGM", icone: Globe, etape: 9, description: "Actualités, direct, chorales et toutes les rubriques du site." },
   { href: "/choriste/notifications", label: "Notifications", icone: Bell, etape: 5, description: "Vos notifications." },
   { href: "/choriste/parametres", label: "Paramètres du compte", icone: Settings, etape: 2, description: "Mot de passe et préférences." },
 ];
@@ -94,4 +95,4 @@ export const menuChoriste: EntreeMenu[] = [
 /** Entrée de menu (staff ou choriste) correspondant à un chemin. */
 export const entreeMenu = (href: string) => [...menuStaff, ...menuChoriste].find((e) => e.href === href)!;
 
-export const ongletsChoriste = ["/choriste", "/choriste/carte", "/choriste/programme", "/choriste/annonces"];
+export const ongletsChoriste = ["/choriste", "/choriste/carte", "/choriste/programme", "/choriste/annonces", "/choriste/site"];

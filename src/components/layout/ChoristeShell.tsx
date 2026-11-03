@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CalendarDays, CreditCard, Home, LayoutGrid, Megaphone } from "lucide-react";
+import { Bell, CalendarDays, CreditCard, Globe, Home, LayoutGrid, Megaphone } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 const onglets = [
@@ -10,6 +10,7 @@ const onglets = [
   { href: "/choriste/carte", label: "Carte", icone: CreditCard },
   { href: "/choriste/programme", label: "Programme", icone: CalendarDays },
   { href: "/choriste/annonces", label: "Annonces", icone: Megaphone },
+  { href: "/choriste/site", label: "Le site", icone: Globe },
   { href: "/choriste/menu", label: "Menu", icone: LayoutGrid },
 ];
 
@@ -39,7 +40,7 @@ export function ChoristeShell({ children, nonLues = 0 }: { children: React.React
         className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
         aria-label="Navigation principale"
       >
-        <ul className="mx-auto grid max-w-2xl grid-cols-5">
+        <ul className="mx-auto grid max-w-2xl grid-cols-6">
           {onglets.map(({ href, label, icone: Icone }) => {
             const actif = href === "/choriste" ? pathname === href : pathname.startsWith(href);
             return (
@@ -47,11 +48,11 @@ export function ChoristeShell({ children, nonLues = 0 }: { children: React.React
                 <Link
                   href={href}
                   aria-current={actif ? "page" : undefined}
-                  className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
+                  className={`flex flex-col items-center gap-1 py-2.5 text-[10.5px] font-medium ${
                     actif ? "text-marine-900" : "text-slate-400"
                   }`}
                 >
-                  <span className={`rounded-full px-4 py-1 ${actif ? "bg-or-100 text-or-600" : ""}`}>
+                  <span className={`rounded-full px-3 py-1 ${actif ? "bg-or-100 text-or-600" : ""}`}>
                     <Icone className="size-5" aria-hidden />
                   </span>
                   {label}
