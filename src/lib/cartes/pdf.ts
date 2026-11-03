@@ -175,7 +175,7 @@ async function recto(doc: PDFDocument, page: PDFPage, c: CarteImprimable, r: Res
   // Pied : bande dorée et adresse du site
   page.drawRectangle({ x, y, width: W, height: 11, color: MARINE_FONCE });
   page.drawRectangle({ x, y: y + 11, width: W, height: 1.2, color: OR });
-  ecrire(page, "Membre de la Présidence générale de la musique de Muanda", x + 10, y + 4, r.normal, 3.9, MARINE_CLAIR);
+  ecrire(page, "Membre de la Présidence générale de la Musique Antenne de Muanda", x + 10, y + 4, r.normal, 3.9, MARINE_CLAIR);
   const ls = r.gras.widthOfTextAtSize(SITE, 4.2);
   ecrire(page, SITE, x + W - 10 - ls, y + 4, r.gras, 4.2, OR_CLAIR);
 }

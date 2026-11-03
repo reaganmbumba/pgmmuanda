@@ -105,7 +105,7 @@ export function CarteMembre({ membre }: { membre: DonneesCarte }) {
 
         {/* Pied */}
         <div className="flex items-center justify-between border-t-[0.5cqw] border-or-500 bg-marine-950 px-[4cqw] py-[1.2cqw] text-[1.7cqw]">
-          <span className="truncate text-marine-100/80">Membre de la Présidence générale de la musique de Muanda</span>
+          <span className="truncate text-marine-100/80">Membre de la Présidence générale de la Musique Antenne de Muanda</span>
           <span className="shrink-0 font-bold text-or-400">www.pgmmuanda.com</span>
         </div>
       </div>
