@@ -413,3 +413,174 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
 /* Boutons de partage sous les cartes des listes */
 .site-pgm .actu-bloc{display:grid;gap:8px}
 .site-pgm .pionniers li>.partage{display:flex}
+
+/* ===== Accueil professionnel (2026-11) ===== */
+.site-pgm .col.large{max-width:1160px}
+
+/* En-tête : menu sur ordinateur */
+.site-pgm .menu-haut{display:none}
+.site-pgm footer.pied{background:var(--marine);color:var(--sur-marine-doux);text-align:left;border-top:3px solid var(--or-clair);margin-top:40px}
+.site-pgm footer.pied .col{padding-block:36px 22px;display:grid;gap:22px;justify-items:stretch}
+.site-pgm .pied-grille{display:grid;gap:26px}
+.site-pgm .pied-marque{display:grid;gap:6px;justify-items:start}
+.site-pgm .pied-marque b{color:var(--sur-marine);font-size:1.05rem}
+.site-pgm footer.pied .logos-pied{margin-bottom:6px}
+.site-pgm footer.pied img{border-color:var(--or-clair)}
+.site-pgm .pied-liens{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;align-content:start}
+.site-pgm .pied-liens b{grid-column:1/-1;color:var(--or-clair);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:4px}
+.site-pgm .pied-liens a{color:var(--sur-marine-doux);text-decoration:none;min-height:34px;display:flex;align-items:center}
+.site-pgm .pied-liens a:hover{color:var(--or-clair)}
+.site-pgm .pied-bas{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12)}
+.site-pgm footer.pied .concepteur{margin:0;padding:0;border:0;font-size:.85rem}
+.site-pgm footer.pied .concepteur b{color:var(--or-clair)}
+.site-pgm footer.pied .lien-pied{color:var(--sur-marine-doux)}
+
+/* Bandeau principal */
+.site-pgm .accueil .hero{position:relative;overflow:hidden;color:var(--sur-marine);background:radial-gradient(90% 70% at 100% 0%,#2a4a94 0%,transparent 60%),radial-gradient(60% 60% at 0% 100%,rgba(201,154,46,.16) 0%,transparent 70%),linear-gradient(180deg,#0b1c42 0%,var(--marine-2) 100%)}
+.site-pgm .accueil .hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(232,196,106,.13) 1px,transparent 1.4px);background-size:22px 22px;mask-image:linear-gradient(180deg,#000,transparent 85%);pointer-events:none}
+.site-pgm .ondes{position:absolute;right:-60px;bottom:40px;width:min(560px,120vw);opacity:.13;fill:var(--or-clair);pointer-events:none}
+.site-pgm .hero-grille{position:relative;z-index:1;display:grid;gap:26px;padding-block:34px 58px}
+.site-pgm .hero-texte{display:grid;gap:14px;align-content:center}
+.site-pgm .surtitre{display:flex;align-items:center;gap:10px;font-size:.74rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--or-clair)}
+.site-pgm .surtitre .filet{width:28px;height:2px;background:var(--or-clair);flex:none}
+.site-pgm .accueil .salut{font-size:1.5rem}
+.site-pgm .accueil .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(2.5rem,10vw,4.4rem);line-height:1.02;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.site-pgm .accueil .hero .chapo{font-size:1.1rem;color:var(--sur-marine-doux);max-width:36em}
+.site-pgm .hero-actions,.site-pgm .tv-actions,.site-pgm .cb-actions{display:grid;gap:10px;margin-top:6px}
+.site-pgm .btn-ligne:hover{background:rgba(255,255,255,.12)}
+.site-pgm .btn-or:hover{filter:brightness(1.04)}
+
+/* Carte « Nos rendez-vous » du bandeau */
+.site-pgm .hero-semaine{background:rgba(255,255,255,.07);border:1px solid rgba(232,196,106,.3);border-radius:22px;padding:18px;display:grid;gap:12px;backdrop-filter:blur(6px);box-shadow:0 20px 40px rgba(5,12,30,.3)}
+.site-pgm .hs-tete{display:flex;align-items:center;gap:12px}
+.site-pgm .hs-tete small{display:block;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--or-clair);font-weight:700}
+.site-pgm .hs-tete b{font-family:var(--display);font-size:1.5rem;line-height:1.1}
+.site-pgm .med{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--medaille);color:var(--or-clair);box-shadow:var(--anneau)}
+.site-pgm .hero-semaine ul{list-style:none;margin:0;padding:0;display:grid}
+.site-pgm .hero-semaine li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:11px 0;border-top:1px solid rgba(255,255,255,.1)}
+.site-pgm .hs-jour{font-weight:700;color:var(--or-clair)}
+.site-pgm .hs-detail{display:grid;gap:3px;font-size:.93rem;color:var(--sur-marine-doux);min-width:0}
+.site-pgm .hs-detail time{color:var(--sur-marine);font-weight:700;font-variant-numeric:tabular-nums}
+.site-pgm .hs-lien{justify-self:start;display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--or-clair);text-decoration:none}
+.site-pgm .hs-lien svg.i{width:18px;height:18px}
+
+/* Chiffres */
+.site-pgm .accueil .chiffres{grid-template-columns:repeat(2,1fr);margin-top:-30px;border-radius:20px}
+.site-pgm .accueil .chiffres div{padding:16px 6px}
+.site-pgm .accueil .chiffres div+div{border-left:0}
+.site-pgm .accueil .chiffres div:nth-child(even){border-left:1px solid var(--trait)}
+.site-pgm .accueil .chiffres div:nth-child(n+3){border-top:1px solid var(--trait)}
+
+/* Sections de l'accueil */
+.site-pgm .accueil .section .col{padding-block:44px 0;display:grid;gap:18px}
+.site-pgm .titre-section{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.site-pgm .titre-section>div{display:grid;gap:6px}
+.site-pgm .titre-section h2{font-size:clamp(1.9rem,6vw,2.5rem)}
+.site-pgm .voir-tout{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--marine);text-decoration:none;font-size:.95rem}
+.site-pgm .voir-tout svg.i{width:18px;height:18px;color:var(--or)}
+
+/* Découvrir : grandes cartes à icône */
+.site-pgm .decouvrir{display:grid;gap:10px}
+.site-pgm .d-carte{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--papier);border:1px solid var(--trait);border-radius:18px;box-shadow:var(--ombre);text-decoration:none;color:var(--fg);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
+.site-pgm .d-carte:hover{transform:translateY(-2px);border-color:var(--or-clair);box-shadow:0 2px 4px rgba(13,33,73,.06),0 14px 30px rgba(13,33,73,.12)}
+.site-pgm .d-carte:active{transform:scale(.98)}
+.site-pgm .d-carte .rond{width:52px;height:52px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--medaille);color:var(--or-clair);box-shadow:var(--anneau)}
+.site-pgm .d-carte .rond svg.i{width:24px;height:24px;fill:rgba(232,196,106,.24)}
+.site-pgm .d-txt{flex:1;min-width:0;display:grid;line-height:1.3}
+.site-pgm .d-txt b{font-size:1.08rem}
+.site-pgm .d-txt small{color:var(--doux);font-size:.9rem}
+.site-pgm .d-carte .fl{color:var(--or)}
+.site-pgm .accueil .autres-rubriques{margin-top:0;background:var(--papier);border:1px solid var(--trait);box-shadow:var(--ombre)}
+.site-pgm .accueil .autres-rubriques summary{color:var(--marine)}
+.site-pgm .accueil .autres-rubriques summary svg.i{color:var(--or)}
+.site-pgm .accueil .autres-rubriques nav a{color:var(--fg);border-top-color:var(--trait)}
+.site-pgm .accueil .autres-rubriques nav a svg.i{color:var(--or)}
+
+/* PGM Muanda TV */
+.site-pgm .tv{display:grid;gap:20px;padding:22px 18px;border-radius:24px;color:var(--sur-marine);background:radial-gradient(100% 120% at 100% 0%,#2a4a94 0%,transparent 60%),var(--marine);border:1px solid rgba(232,196,106,.35);box-shadow:0 18px 40px rgba(13,33,73,.22);overflow:hidden}
+.site-pgm .tv-txt{display:grid;gap:10px;align-content:center}
+.site-pgm .tv-marque{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--or-clair)}
+.site-pgm .tv-marque svg.i{width:18px;height:18px}
+.site-pgm .tv h2{color:var(--sur-marine)}
+.site-pgm .tv p{color:var(--sur-marine-doux)}
+.site-pgm .tv-ecran{position:relative;display:block;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:radial-gradient(circle,#1d3a7a,#0b1a3d);box-shadow:0 0 0 2px rgba(232,196,106,.45),0 12px 30px rgba(0,0,0,.35)}
+.site-pgm .tv-ecran img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
+.site-pgm .tv-ecran img.tv-logo{width:34%;height:auto;position:absolute;inset:0;margin:auto;opacity:.9;border-radius:50%}
+.site-pgm .tv-ecran:hover img:not(.tv-logo){transform:scale(1.03)}
+.site-pgm .tv-play{position:absolute;inset:0;margin:auto;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:rgba(13,33,73,.78);border:2px solid var(--or-clair);color:var(--or-clair)}
+.site-pgm .tv-play svg.i{width:28px;height:28px;fill:var(--or-clair);margin-left:4px}
+.site-pgm .tv-ecran .badge-direct{position:absolute;left:12px;top:12px}
+.site-pgm .tv-titre{position:absolute;left:0;right:0;bottom:0;padding:26px 14px 10px;background:linear-gradient(transparent,rgba(8,18,42,.9));color:#fff;font-weight:600;font-size:.92rem;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* À la une */
+.site-pgm .une-grille,.site-pgm .une-seule{display:grid;gap:18px}
+.site-pgm .une-soiree{display:grid;gap:10px;align-content:start}
+.site-pgm .accueil .actu{border-radius:20px;transition:box-shadow .15s ease}
+.site-pgm .accueil .actu:hover{box-shadow:0 2px 4px rgba(13,33,73,.06),0 14px 30px rgba(13,33,73,.12)}
+
+/* Qui sommes-nous */
+.site-pgm .apropos-txt{display:grid;gap:16px;align-content:start}
+.site-pgm .apropos-txt>p{color:var(--doux);font-size:1.05rem}
+.site-pgm .apropos-txt .btn{justify-self:start}
+.site-pgm .apropos-valeurs{display:grid;gap:10px}
+
+/* Contact */
+.site-pgm .contact-band{display:grid;gap:16px;padding:22px 18px;border-radius:24px;background:linear-gradient(135deg,#fbf3dc,#f4e2ad);border:1px solid #ead08a}
+.site-pgm .contact-band>div:first-child{display:grid;gap:6px}
+.site-pgm .contact-band .etiquette{color:#8a6614}
+.site-pgm .contact-band p{color:#4d4429}
+.site-pgm .cb-actions{grid-template-columns:1fr 1fr}
+
+@media (min-width:600px){
+  .site-pgm .accueil .chiffres{grid-template-columns:repeat(4,1fr)}
+  .site-pgm .accueil .chiffres div:nth-child(n){border-top:0;border-left:1px solid var(--trait)}
+  .site-pgm .accueil .chiffres div:first-child{border-left:0}
+  .site-pgm .decouvrir{grid-template-columns:1fr 1fr}
+  .site-pgm .hero-actions,.site-pgm .tv-actions{grid-template-columns:auto auto;justify-content:start}
+  .site-pgm .pied-grille{grid-template-columns:1fr 1fr}
+  .site-pgm .pied-marque{grid-column:1/-1}
+}
+@media (min-width:900px){
+  .site-pgm .hero-grille{grid-template-columns:1.25fr .9fr;gap:56px;padding-block:72px 96px;align-items:center}
+  .site-pgm .ondes{right:-40px;bottom:-6px;width:640px;opacity:.1}
+  .site-pgm .decouvrir{grid-template-columns:repeat(3,1fr);gap:16px}
+  .site-pgm .d-carte{flex-direction:column;align-items:flex-start;padding:22px;gap:16px}
+  .site-pgm .d-carte .fl{position:absolute;right:20px;top:24px}
+  .site-pgm .d-carte{position:relative}
+  .site-pgm .d-carte .rond{width:58px;height:58px}
+  .site-pgm .tv{grid-template-columns:1fr 1.15fr;padding:34px;gap:34px;align-items:center}
+  .site-pgm .une-grille{grid-template-columns:1.5fr 1fr;align-items:start}
+  .site-pgm .une-seule .actu{grid-template-columns:1.2fr 1fr}
+  .site-pgm .une-seule .actu .txt{align-content:center;padding:26px}
+  .site-pgm .apropos{grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+  .site-pgm .contact-band{grid-template-columns:1fr auto;align-items:center;padding:30px 34px}
+  .site-pgm .cb-actions{grid-template-columns:auto auto}
+  .site-pgm .pied-grille{grid-template-columns:1.4fr 1fr 1fr;gap:40px}
+  .site-pgm .pied-marque{grid-column:auto}
+}
+/* Sur ordinateur : menu dans l'en-tête, plus de barre d'onglets en bas */
+@media (min-width:1000px){
+  .site-pgm{padding-bottom:0}
+  .site-pgm header.site .col{gap:24px}
+  .site-pgm .marque{flex:none}
+  .site-pgm .menu-haut{display:flex;flex:1;justify-content:center;gap:4px}
+  .site-pgm .menu-haut a{color:var(--sur-marine-doux);text-decoration:none;font-weight:600;font-size:.95rem;padding:8px 12px;border-radius:999px;transition:color .15s ease,background .15s ease}
+  .site-pgm .menu-haut a:hover{color:var(--or-clair);background:rgba(255,255,255,.07)}
+  .site-pgm nav.onglets{display:none}
+  .site-pgm .haut{bottom:24px}
+}
+.site-pgm .sur-pc{display:none}
+.site-pgm .sur-tel .hero-semaine{background:radial-gradient(100% 120% at 100% 0%,#2a4a94 0%,transparent 60%),var(--marine);color:var(--sur-marine);border-color:rgba(232,196,106,.35);box-shadow:0 14px 30px rgba(13,33,73,.2)}
+@media (min-width:900px){
+  .site-pgm .sur-pc{display:grid}
+  .site-pgm .sur-tel{display:none}
+}
+@media (max-width:899px){.site-pgm .ondes{bottom:auto;top:30px;right:-120px;opacity:.09}}
+@media (max-width:599px){
+  .site-pgm .accueil .chiffres{grid-template-columns:repeat(4,1fr)}
+  .site-pgm .accueil .chiffres div{padding:14px 2px;border-top:0!important;border-left:1px solid var(--trait)!important}
+  .site-pgm .accueil .chiffres div:first-child{border-left:0!important}
+  .site-pgm .accueil .chiffres .med{display:none}
+  .site-pgm .accueil .chiffres b{font-size:1.7rem}
+  .site-pgm .accueil .chiffres span{font-size:.72rem;line-height:1.2}
+}

@@ -148,32 +148,124 @@ function Bloc({ children }: { children: React.ReactNode }) {
   return <section className="bloc cadre"><div className="col">{children}</div></section>;
 }
 
+/** Titre de section de l'accueil : petite étiquette dorée, grand titre, lien « voir tout » facultatif. */
+function TitreSection({ etiquette, titre, lien }: { etiquette: string; titre: string; lien?: { href: string; nom: string } }) {
+  return (
+    <div className="titre-section">
+      <div>
+        <span className="etiquette">{etiquette}</span>
+        <h2>{titre}</h2>
+      </div>
+      {lien && <Link className="voir-tout" href={lien.href}>{lien.nom}<ArrowRight className="i" aria-hidden /></Link>}
+    </div>
+  );
+}
+
+/* Une phrase sous chaque grande tuile de l'accueil. */
+const DESCRIPTIONS: Record<string, string> = {
+  "/direct": "Cultes et louanges en vidéo",
+  "/ecouter": "Les audios des répétitions",
+  "/soirees": "Nos prochains rendez-vous",
+  "/actualites": "Communiqués et nouvelles",
+  "/chorales": "Nos groupes et nos paroisses",
+  "/causerie": "Discuter avec l'antenne",
+};
+
+/** Ondes sonores dorées en fond du grand bandeau (décor musical, sans symbole religieux). */
+function Ondes() {
+  const barres = [18, 34, 52, 30, 64, 88, 58, 40, 76, 104, 70, 46, 90, 120, 84, 56, 98, 72, 44, 66, 38, 24, 48, 30, 16];
+  return (
+    <svg className="ondes" viewBox="0 0 500 140" aria-hidden preserveAspectRatio="xMidYMid meet">
+      {barres.map((h, i) => (
+        <rect key={i} x={i * 20 + 4} y={70 - h / 2} width="8" height={h} rx="4" />
+      ))}
+    </svg>
+  );
+}
+
+/** Les rendez-vous de la semaine (dans le bandeau sur ordinateur, sous les rubriques sur téléphone). */
+function Semaine({ semaine, className }: { semaine: { jour: string; seances: ElementSite[] }[]; className: string }) {
+  return (
+    <aside className={className} aria-label="Nos rendez-vous de la semaine">
+      <div className="hs-tete">
+        <span className="med"><Calendar className="i" aria-hidden /></span>
+        <div><small>Chaque semaine</small><b>Nos rendez-vous</b></div>
+      </div>
+      <ul>
+        {semaine.map(({ jour, seances }) => (
+          <li key={jour}>
+            <span className="hs-jour">{jour}</span>
+            <span className="hs-detail">
+              {seances.map((s) => (
+                <span key={s.id}><time>{s.sousTitre}</time> {s.texte}</span>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <Link className="hs-lien" href="/programme">Tout le programme<ArrowRight className="i" aria-hidden /></Link>
+    </aside>
+  );
+}
+
 export async function AccueilSite() {
-  const [r, actualites, chorales, commissions, soirees] = await Promise.all([
-    lireReglages(), lireElements("actualite"), lireElements("chorale"), lireElements("commission"), lireElements("soiree"),
+  const [r, actualites, chorales, commissions, soirees, programme] = await Promise.all([
+    lireReglages(), lireElements("actualite"), lireElements("chorale"), lireElements("commission"), lireElements("soiree"), lireElements("programme"),
   ]);
+  const chaine = await lireChaine(r.youtube_chaine, r.youtube_id).catch(() => null);
+  const video = chaine?.direct ?? chaine?.videos[0]?.id ?? null;
+  const titreVideo = chaine?.videos.find((x) => x.id === video)?.titre ?? (chaine?.direct ? "En direct" : null);
+  const c = contact(r);
   const prochaine = aVenir(soirees).at(0);
-  const paroisses = new Set(chorales.map((c) => c.sousTitre).filter((l) => l?.startsWith("Paroisse"))).size;
+  const paroisses = new Set(chorales.map((ch) => ch.sousTitre).filter((l) => l?.startsWith("Paroisse"))).size;
+  const semaine = [...new Set(programme.map((l) => l.titre))].map((jour) => ({ jour, seances: programme.filter((l) => l.titre === jour) }));
   return (
     <CadreSite>
-      <main>
-        <section className="une cadre">
-          <div className="col">
-            <p className="salut">Paix à vous.</p>
-            <h1>{r.accueil_titre}</h1>
-            <p className="chapo">{r.accueil_texte}</p>
-            <nav className="raccourcis" aria-label="Rubriques principales">
-              {RUBRIQUES.filter((r) => PRINCIPALES.includes(r.href)).map(({ href, nom, Icone }) => (
-                <Link key={href} className="tuile" href={href}>
+      <main className="accueil">
+        <section className="hero cadre">
+          <Ondes />
+          <div className="col large hero-grille">
+            <div className="hero-texte">
+              <p className="surtitre"><span className="filet" />PGM · Antenne de Muanda · EBNM KCC</p>
+              <p className="salut">Paix à vous.</p>
+              <h1>{r.accueil_titre}</h1>
+              <p className="chapo">{r.accueil_texte}</p>
+              <div className="hero-actions">
+                <Link className="btn btn-or" href="/direct"><Play className="i" aria-hidden />Regarder PGM Muanda TV</Link>
+                <Link className="btn btn-ligne" href="/nous-rejoindre"><UserPlus className="i" aria-hidden />Rejoindre une chorale</Link>
+              </div>
+            </div>
+            {semaine.length > 0 && <Semaine semaine={semaine} className="hero-semaine sur-pc" />}
+          </div>
+        </section>
+
+        <div className="chiffres-band cadre">
+          <div className="col large">
+            <div className="chiffres">
+              <div><span className="med"><Building2 className="i" aria-hidden /></span><b>{paroisses}</b><span>paroisses</span></div>
+              <div><span className="med"><Music className="i" aria-hidden /></span><b>{chorales.length * 3}</b><span>chorales</span></div>
+              <div><span className="med"><Landmark className="i" aria-hidden /></span><b>{commissions.length}</b><span>commissions</span></div>
+              <div><span className="med"><Medal className="i" aria-hidden /></span><b>2009</b><span>création de la PGM</span></div>
+            </div>
+          </div>
+        </div>
+
+        <section className="section cadre">
+          <div className="col large">
+            <TitreSection etiquette="Découvrir" titre="Que voulez-vous faire ?" />
+            <nav className="decouvrir" aria-label="Rubriques principales">
+              {PRINCIPALES.map((href) => RUBRIQUES.find((x) => x.href === href)!).map(({ href, nom, Icone }) => (
+                <Link key={href} className="d-carte" href={href}>
                   <span className="rond"><Icone className="i" aria-hidden /></span>
-                  {nom}
+                  <span className="d-txt"><b>{nom}</b><small>{DESCRIPTIONS[href]}</small></span>
+                  <ArrowRight className="i fl" aria-hidden />
                 </Link>
               ))}
             </nav>
             <details className="autres-rubriques">
               <summary><Menu className="i" aria-hidden />Toutes les rubriques</summary>
               <nav aria-label="Autres rubriques">
-                {RUBRIQUES.filter((r) => !PRINCIPALES.includes(r.href) && r.href !== "/connexion").map(({ href, nom, Icone }) => (
+                {RUBRIQUES.filter((x) => !PRINCIPALES.includes(x.href) && x.href !== "/connexion").map(({ href, nom, Icone }) => (
                   <Link key={href} href={href}><Icone className="i" aria-hidden />{nom}<ArrowRight className="i fl" aria-hidden /></Link>
                 ))}
               </nav>
@@ -181,39 +273,92 @@ export async function AccueilSite() {
           </div>
         </section>
 
-        <div className="chiffres-band cadre">
-          <div className="col">
-            <div className="chiffres">
-              <div><span className="med"><Building2 className="i" aria-hidden /></span><b>{paroisses}</b><span>paroisses</span></div>
-              <div><span className="med"><Music className="i" aria-hidden /></span><b>{chorales.length * 3}</b><span>chorales</span></div>
-              <div><span className="med"><Landmark className="i" aria-hidden /></span><b>{commissions.length}</b><span>commissions</span></div>
+        {semaine.length > 0 && (
+          <section className="section cadre sur-tel">
+            <div className="col large"><Semaine semaine={semaine} className="hero-semaine" /></div>
+          </section>
+        )}
+
+        <section className="section cadre">
+          <div className="col large">
+            <div className="tv">
+              <div className="tv-txt">
+                <span className="tv-marque"><TvMinimalPlay className="i" aria-hidden />PGM Muanda TV</span>
+                <h2>Nos cultes et nos louanges, en vidéo</h2>
+                <p>Regardez les directs et les rediffusions de la PGM Antenne de Muanda, sans quitter le site.</p>
+                <div className="tv-actions">
+                  <Link className="btn btn-or" href="/direct"><Play className="i" aria-hidden />Regarder</Link>
+                  {chaine?.lienAbonnement && (
+                    <a className="btn btn-ligne" href={chaine.lienAbonnement} target="_blank" rel="noopener noreferrer"><BellRing className="i" aria-hidden />S&apos;abonner</a>
+                  )}
+                </div>
+              </div>
+              <Link className="tv-ecran" href={video ? `/direct?v=${video}` : "/direct"} aria-label="Ouvrir PGM Muanda TV">
+                {video ? <img src={imageVideo(video)} alt="" loading="lazy" /> : <img className="tv-logo" src="/logo-pgm.png" alt="" />}
+                {video && <span className="tv-play"><Play className="i" aria-hidden /></span>}
+                {chaine?.direct
+                  ? <span className="badge-direct"><span className="point" />En direct</span>
+                  : titreVideo && <span className="tv-titre">{titreVideo}</span>}
+              </Link>
             </div>
           </div>
-        </div>
+        </section>
 
-        <Bloc>
-          <Link className="bandeau-direct" href="/direct">
-            <span className="rond"><TvMinimalPlay className="i" aria-hidden /></span>
-            <span><b>PGM Muanda TV</b>Nos vidéos et nos directs sur YouTube</span>
-            <Play className="i" aria-hidden />
-          </Link>
-        </Bloc>
-
-        {prochaine && (
-          <Bloc>
-            <div className="titre"><span className="etiquette">Prochaine soirée musicale</span></div>
-            <CarteSoiree s={prochaine} />
-          </Bloc>
+        {(actualites[0] || prochaine) && (
+          <section className="section cadre">
+            <div className="col large">
+              <TitreSection etiquette="À la une" titre="Les nouvelles de l'antenne" lien={{ href: "/actualites", nom: "Toutes les actualités" }} />
+              <div className={prochaine && actualites[0] ? "une-grille" : "une-seule"}>
+                {actualites[0] && <CarteArticle a={actualites[0]} />}
+                {prochaine && (
+                  <div className="une-soiree">
+                    <span className="etiquette">Prochaine soirée musicale</span>
+                    <CarteSoiree s={prochaine} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
         )}
 
-        {actualites[0] && (
-          <Bloc>
-            <div className="titre"><span className="etiquette">À la une</span></div>
-            <CarteArticle a={actualites[0]} />
-          </Bloc>
-        )}
+        <section className="section cadre">
+          <div className="col large apropos">
+            <div className="apropos-txt">
+              <TitreSection etiquette="Qui sommes-nous" titre="Une seule famille de chantres" />
+              <p>
+                La Présidence générale de la musique (PGM) organise la musique de l&apos;Église Bon Nouveau
+                Message (KCC) : les chorales, la formation des choristes, les répétitions et les productions
+                lors des cultes. L&apos;Antenne de Muanda en est la représentation locale.
+              </p>
+              <Link className="btn btn-marine" href="/la-pgm"><BookOpen className="i" aria-hidden />Découvrir la PGM</Link>
+            </div>
+            <div className="apropos-valeurs">
+              <div className="valeur"><span className="ic"><Music className="i" aria-hidden /></span><div><h3>La louange</h3><p>Chanter pour Dieu au culte du dimanche et aux activités de l&apos;antenne.</p></div></div>
+              <div className="valeur"><span className="ic"><GraduationCap className="i" aria-hidden /></span><div><h3>La formation</h3><p>Solfège, voix et répertoire, du chantre débutant au chef de chœur.</p></div></div>
+              <div className="valeur"><span className="ic"><HeartHandshake className="i" aria-hidden /></span><div><h3>La fraternité</h3><p>S&apos;entraider entre choristes, dans la discipline et le respect.</p></div></div>
+            </div>
+          </div>
+        </section>
 
-        <Bloc><EspaceMembres /></Bloc>
+        <section className="section cadre">
+          <div className="col large"><EspaceMembres /></div>
+        </section>
+
+        <section className="section cadre">
+          <div className="col large">
+            <div className="contact-band">
+              <div>
+                <span className="etiquette">Contact</span>
+                <h2>Une question ? Écrivez-nous.</h2>
+                <p>Nous répondons sur WhatsApp et par téléphone : {c.affiche}</p>
+              </div>
+              <div className="cb-actions">
+                <a className="btn btn-vert" href={c.whatsapp} target="_blank" rel="noopener noreferrer"><MessageCircle className="i" aria-hidden />WhatsApp</a>
+                <a className="btn btn-marine" href={`tel:${c.tel}`}><Phone className="i" aria-hidden />Appeler</a>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </CadreSite>
   );
