@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Globe, MapPin, Play, TvMinimalPlay } from "lucide-react";
+import { CalendarDays, ChevronRight, Globe, House, MapPin, Play, TvMinimalPlay } from "lucide-react";
 import { PUBLICATIONS, RUBRIQUES, type Publication } from "@/components/site/SitePublic";
 import { dateLongue, lireElements, urlFichier, type ElementSite } from "@/lib/site/contenu";
 
@@ -24,6 +24,9 @@ export default async function SiteDansEspace() {
         <p className="flex items-center gap-2 text-sm text-or-400"><Globe className="size-4" aria-hidden /> www.pgmmuanda.com</p>
         <h1 className="mt-1 text-2xl font-bold">Le site de la PGM</h1>
         <p className="mt-1 text-sm text-marine-100/80">Tout ce qui est publié sur le site, ici dans votre espace.</p>
+        <Link href="/" className="or-degrade mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl py-2.5 text-base font-semibold text-marine-950">
+          <House className="size-5" aria-hidden /> Page d&apos;accueil du site
+        </Link>
       </section>
 
       <Link href="/direct" className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm active:bg-slate-50">
