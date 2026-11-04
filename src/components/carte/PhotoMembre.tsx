@@ -6,39 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
 import { MessageFormulaire } from "@/components/ui/Formulaire";
 import { enregistrerPhoto } from "@/app/staff/cartes/actions";
-
-/** Réduit la photo dans le navigateur : portrait 4:5, 360 × 450 px, JPEG ≈ 30 Ko. */
-async function lireImage(fichier: File): Promise<ImageBitmap | HTMLImageElement> {
-  try {
-    return await createImageBitmap(fichier);
-  } catch {
-    // Certains téléphones (photos HEIC de l'iPhone) : on passe par une image classique
-    const url = URL.createObjectURL(fichier);
-    try {
-      const img = new Image();
-      img.src = url;
-      await img.decode();
-      return img;
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }
-}
-
-async function reduire(fichier: File): Promise<string> {
-  const image = await lireImage(fichier);
-  const L = 360, H = 450;
-  const echelle = Math.max(L / image.width, H / image.height);
-  const w = image.width * echelle, h = image.height * echelle;
-  const canvas = document.createElement("canvas");
-  canvas.width = L;
-  canvas.height = H;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, L, H);
-  ctx.drawImage(image, (L - w) / 2, (H - h) / 2, w, h);
-  return canvas.toDataURL("image/jpeg", 0.82);
-}
+import { reduirePhoto as reduire } from "@/lib/photo";
 
 export function PhotoMembre({ membre, id }: { membre: { prenom: string; nom: string; photo?: string | null }; id: string }) {
   const [etat, action, envoi] = useActionState(enregistrerPhoto, undefined);

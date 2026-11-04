@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Archive, Inbox, UserPlus } from "lucide-react";
+import { Archive, Inbox, Link2, UserPlus } from "lucide-react";
 import { Bouton } from "@/components/ui/Bouton";
 import { EnTete } from "@/components/ui/Carte";
 import { exigerAcces } from "@/lib/auth/session";
 import { peutGererMembres } from "@/lib/auth/roles";
 import { listerMembres, lireDemandes } from "@/lib/membres/depot";
+import { compterEnAttente } from "@/lib/inscriptions/depot";
 import { membres as membresDemo, paroisses as paroissesDemo } from "@/lib/demo-data";
 import { supabaseActif } from "@/lib/supabase/config";
 import { TableMembres } from "./TableMembres";
@@ -25,7 +26,7 @@ export default async function PageMembres({ searchParams }: { searchParams: Prom
   const moi = await exigerAcces("/staff/membres");
   const { vue, q } = await searchParams;
   const archives = vue === "archives";
-  const [membres, demandes] = await Promise.all([listerMembres({ archives }), lireDemandes({ enAttente: true })]);
+  const [membres, demandes, inscriptions] = await Promise.all([listerMembres({ archives }), lireDemandes({ enAttente: true }), compterEnAttente()]);
   const paroisses = [...new Set(membres.map((m) => m.paroisse))].sort();
   const gestion = peutGererMembres(moi?.role);
 
@@ -40,11 +41,21 @@ export default async function PageMembres({ searchParams }: { searchParams: Prom
               <Archive className="size-4" aria-hidden /> {archives ? "Membres actuels" : "Archives"}
             </Bouton>
             {gestion && !archives && (
+              <Bouton variante="secondaire" href="/staff/inscriptions"><Link2 className="size-4" aria-hidden /> Lien d&apos;inscription</Bouton>
+            )}
+            {gestion && !archives && (
               <Bouton href="/staff/membres/nouveau"><UserPlus className="size-4" aria-hidden /> Nouveau membre</Bouton>
             )}
           </div>
         }
       />
+      {gestion && inscriptions > 0 && (
+        <Link href="/staff/inscriptions"
+          className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">
+          <UserPlus className="size-4" aria-hidden />
+          {inscriptions} nouvelle{inscriptions > 1 ? "s" : ""} inscription{inscriptions > 1 ? "s" : ""} à valider
+        </Link>
+      )}
       {gestion && demandes.length > 0 && (
         <section className="mb-5 rounded-2xl border border-or-400/40 bg-or-100/40 p-4">
           <p className="flex items-center gap-2 text-sm font-semibold text-marine-900">

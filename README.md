@@ -61,6 +61,12 @@ d'affichage dans un autre site, HTTPS obligatoire) et blocage d'un compte pendan
 Sauvegardes (Étape 8) : copie chiffrée de toute la base chaque nuit, gardée 30 jours
 par GitHub. À activer en suivant [docs/SAUVEGARDE.md](docs/SAUVEGARDE.md).
 
+Inscription par lien : dans « Inscriptions par lien », le staff envoie un lien (bouton
+WhatsApp). La personne remplit elle-même ses informations et met sa photo, sans compte. Sa
+demande attend la validation de l'administration ou du responsable de sa paroisse ou de sa
+chorale ; « Accepter » crée sa fiche (active, avec matricule et photo, prête pour la carte).
+L'administration peut fermer le lien ou en créer un nouveau (l'ancien ne marche plus).
+
 Les notifications sont internes à l'application (cloche et page « Notifications ») :
 aucun message WhatsApp, SMS ou e-mail n'est envoyé automatiquement. Le bouton
 « Partager sur WhatsApp » ouvre WhatsApp avec un message prêt ; c'est l'utilisateur
