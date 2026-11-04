@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Camera, CheckCircle2, Send } from "lucide-react";
+import Link from "next/link";
+import { Camera, CheckCircle2, Globe, Image as ImageIcon, Send } from "lucide-react";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
 import { VOIX } from "@/lib/membres/libelles";
 import { reduirePhoto } from "@/lib/photo";
@@ -13,6 +14,8 @@ export type Choix = {
 };
 
 const classe = `${classeChamp} min-h-12 text-base`;
+const boutonPhoto =
+  "flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-3 text-center text-sm font-semibold text-marine-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50";
 
 function Champ({ libelle, children, aide }: { libelle: string; children: React.ReactNode; aide?: string }) {
   return (
@@ -34,6 +37,15 @@ export function FormulaireInscription({ code, choix }: { code: string; choix: Ch
     ? choix.chorales.filter((c) => c.paroisseId === paroisse).concat(choix.chorales.filter((c) => c.paroisseId === null))
     : [];
 
+  async function choisir(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    setErreurPhoto(null);
+    if (!f) return;
+    if (f.size > 15_000_000) return setErreurPhoto("Photo trop lourde (15 Mo au plus).");
+    try { setPhoto(await reduirePhoto(f)); } catch { setErreurPhoto("Cette photo ne peut pas être lue. Essayez une autre photo."); }
+  }
+
   if (etat?.succes) {
     return (
       <div className="rounded-2xl bg-emerald-50 p-6 text-center">
@@ -42,6 +54,10 @@ export function FormulaireInscription({ code, choix }: { code: string; choix: Ch
         <p className="mt-2 text-sm text-emerald-800">
           Le responsable va vérifier vos informations. Une fois validé, vous serez membre et vous pourrez recevoir votre carte.
         </p>
+        <Link href="/"
+          className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-marine-900 px-4 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-marine-800">
+          <Globe className="size-5" aria-hidden /> Aller sur le site de la PGM
+        </Link>
       </div>
     );
   }
@@ -60,17 +76,17 @@ export function FormulaireInscription({ code, choix }: { code: string; choix: Ch
             <Camera className="size-10" aria-hidden />
           </span>
         )}
-        <label className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-base font-semibold text-marine-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
-          <Camera className="size-5" aria-hidden /> {photo ? "Changer la photo" : "Ajouter ma photo *"}
-          <input type="file" accept="image/*" className="sr-only" aria-label="Votre photo"
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              setErreurPhoto(null);
-              if (!f) return;
-              if (f.size > 15_000_000) return setErreurPhoto("Photo trop lourde (15 Mo au plus).");
-              try { setPhoto(await reduirePhoto(f)); } catch { setErreurPhoto("Cette photo ne peut pas être lue. Essayez une autre photo."); }
-            }} />
-        </label>
+        <p className="text-sm font-semibold text-marine-900">{photo ? "Changer la photo :" : "Ajouter ma photo * :"}</p>
+        <div className="grid w-full grid-cols-2 gap-3">
+          <label className={boutonPhoto}>
+            <Camera className="size-6" aria-hidden /> Prendre une photo
+            <input type="file" accept="image/*" capture="user" className="sr-only" aria-label="Prendre une photo" onChange={choisir} />
+          </label>
+          <label className={boutonPhoto}>
+            <ImageIcon className="size-6" aria-hidden /> Choisir dans la galerie
+            <input type="file" accept="image/*" className="sr-only" aria-label="Choisir dans la galerie" onChange={choisir} />
+          </label>
+        </div>
         {erreurPhoto && <p role="alert" className="text-sm text-red-700">{erreurPhoto}</p>}
         <p className="text-center text-xs text-slate-500">Photo de face, visage bien visible, fond clair. Elle servira pour votre carte de membre.</p>
       </div>

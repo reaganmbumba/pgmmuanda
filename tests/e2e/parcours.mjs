@@ -1209,7 +1209,9 @@ try {
   ok((await texte(vis)).includes("Lien non valable"), "un mauvais lien affiche « Lien non valable »");
   await vis.goto(`${APP}${cheminLien}`);
   if (process.env.CAPTURES) await vis.screenshot({ path: `${process.env.CAPTURES}/inscription-1-formulaire.png`, fullPage: true });
-  await vis.setInputFiles("input[type=file]", "tests/e2e/photo-test.jpg");
+  ok((await vis.locator("input[type=file][capture]").count()) === 1 && (await vis.locator("input[type=file]:not([capture])").count()) === 1,
+    "deux choix pour la photo : appareil photo ou galerie");
+  await vis.setInputFiles("input[aria-label='Choisir dans la galerie']", "tests/e2e/photo-test.jpg");
   await vis.waitForSelector("img[alt='Votre photo']");
   await vis.fill("input[name=nom]", "Ndombasi");
   await vis.fill("input[name=prenom]", "Esther");
@@ -1222,8 +1224,11 @@ try {
   await vis.waitForSelector("text=Votre inscription a bien été envoyée");
   ok(true, "un visiteur sans compte s'inscrit lui-même avec sa photo");
   if (process.env.CAPTURES) await vis.screenshot({ path: `${process.env.CAPTURES}/inscription-3-merci.png`, fullPage: true });
+  await vis.click("text=Aller sur le site de la PGM");
+  await vis.waitForURL(`${APP}/`);
+  ok(true, "après l'inscription, un bouton mène à la page d'accueil du site de la PGM");
   await vis.goto(`${APP}${cheminLien}`);
-  await vis.setInputFiles("input[type=file]", "tests/e2e/photo-test.jpg");
+  await vis.setInputFiles("input[aria-label='Prendre une photo']", "tests/e2e/photo-test.jpg");
   await vis.waitForSelector("img[alt='Votre photo']");
   await vis.fill("input[name=nom]", "Ndombasi");
   await vis.fill("input[name=prenom]", "Esther");
