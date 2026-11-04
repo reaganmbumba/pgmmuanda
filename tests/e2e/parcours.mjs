@@ -1195,6 +1195,75 @@ try {
   await rch.waitForURL(/\/staff\/registre\?chorale=/);
   ok(!(await rch.isVisible("[data-registres]")), "un registre ouvert par erreur se retire");
 
+  console.log("Inscription par lien");
+  await a.goto(`${APP}/staff/inscriptions`);
+  const lienInscription = await a.textContent("p.font-mono");
+  ok(/\/inscription\/[a-z0-9]{12,40}$/.test(lienInscription.trim()), "le staff voit le lien d'inscription à envoyer");
+  ok((await a.getAttribute("a:has-text('Envoyer sur WhatsApp')", "href")).startsWith("https://wa.me/?text=Paix"),
+    "le bouton WhatsApp prépare un message qui commence par « Paix »");
+  const cheminLien = new URL(lienInscription.trim()).pathname;
+  const vis = await (await navigateur.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+  vis.on("pageerror", (e) => erreursPage.push(e.message));
+  pages.push(vis);
+  await vis.goto(`${APP}/inscription/mauvaislien12345`);
+  ok((await texte(vis)).includes("Lien non valable"), "un mauvais lien affiche « Lien non valable »");
+  await vis.goto(`${APP}${cheminLien}`);
+  if (process.env.CAPTURES) await vis.screenshot({ path: `${process.env.CAPTURES}/inscription-1-formulaire.png`, fullPage: true });
+  await vis.setInputFiles("input[type=file]", "tests/e2e/photo-test.jpg");
+  await vis.waitForSelector("img[alt='Votre photo']");
+  await vis.fill("input[name=nom]", "Ndombasi");
+  await vis.fill("input[name=prenom]", "Esther");
+  await vis.click("label:has-text('Femme')");
+  await vis.fill("input[name=telephone]", "+243 85 555 0101");
+  await vis.selectOption("select[name=paroisseId]", { label: "Paroisse Beta" });
+  await vis.selectOption("select[name=voix]", "alto");
+  if (process.env.CAPTURES) await vis.screenshot({ path: `${process.env.CAPTURES}/inscription-2-rempli.png`, fullPage: true });
+  await vis.click("text=Envoyer mon inscription");
+  await vis.waitForSelector("text=Votre inscription a bien été envoyée");
+  ok(true, "un visiteur sans compte s'inscrit lui-même avec sa photo");
+  if (process.env.CAPTURES) await vis.screenshot({ path: `${process.env.CAPTURES}/inscription-3-merci.png`, fullPage: true });
+  await vis.goto(`${APP}${cheminLien}`);
+  await vis.setInputFiles("input[type=file]", "tests/e2e/photo-test.jpg");
+  await vis.waitForSelector("img[alt='Votre photo']");
+  await vis.fill("input[name=nom]", "Ndombasi");
+  await vis.fill("input[name=prenom]", "Esther");
+  await vis.click("label:has-text('Femme')");
+  await vis.fill("input[name=telephone]", "085 555 0101");
+  await vis.selectOption("select[name=paroisseId]", { label: "Paroisse Beta" });
+  await vis.click("text=Envoyer mon inscription");
+  await vis.waitForSelector("text=attend déjà la validation");
+  ok(true, "la même personne ne peut pas s'inscrire deux fois");
+
+  await r.goto(`${APP}/staff/membres`);
+  ok((await texte(r)).includes("1 nouvelle inscription à valider"), "le responsable de la paroisse voit qu'une inscription attend");
+  await r.goto(`${APP}/staff/inscriptions`);
+  t = await texte(r);
+  ok(t.includes("Ndombasi") && t.includes("À valider (1)"), "il voit l'inscription de sa paroisse avec la photo");
+  if (process.env.CAPTURES) {
+    await r.setViewportSize({ width: 390, height: 844 });
+    await r.screenshot({ path: `${process.env.CAPTURES}/inscription-4-staff.png`, fullPage: true });
+    await r.setViewportSize({ width: 1280, height: 720 });
+  }
+  ok((await r.getByRole("button", { name: "Créer un nouveau lien" }).count()) === 0, "seule l'administration peut changer le lien");
+  await confirmer(r, "Accepter");
+  await r.waitForURL(/\/staff\/membres\/[0-9a-f-]{36}\?enregistre=1/);
+  t = await texte(r);
+  ok(t.includes("Ndombasi") && /PGM-MUA-\d{4}/.test(t) && t.includes("Actif"), "accepter crée la fiche active avec son matricule");
+  ok((await r.locator("main img[src^='data:image/jpeg']").count()) > 0, "la photo envoyée est sur la fiche (prête pour la carte)");
+
+  await a.goto(`${APP}/staff/inscriptions`);
+  await confirmer(a, "Fermer le lien");
+  await a.waitForSelector("text=Le lien est fermé");
+  await vis.goto(`${APP}${cheminLien}`);
+  ok((await texte(vis)).includes("Lien non valable"), "un lien fermé par l'administration ne marche plus");
+  await a.reload();
+  await confirmer(a, "Ouvrir le lien");
+  await a.waitForSelector("text=Envoyer sur WhatsApp");
+  await confirmer(a, "Créer un nouveau lien");
+  await a.waitForSelector("text=L'ancien lien ne marche plus");
+  await vis.goto(`${APP}${cheminLien}`);
+  ok((await texte(vis)).includes("Lien non valable"), "après un nouveau lien, l'ancien ne marche plus");
+
   console.log("Installer l'application");
   const inst = await navigateur.newPage();
   const sw = await inst.request.get(`${APP}/sw.js`, { maxRedirects: 0 });

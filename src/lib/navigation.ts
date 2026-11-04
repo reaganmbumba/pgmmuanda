@@ -1,4 +1,5 @@
 import {
+  UserPlus,
   BarChart3,
   BedDouble,
   BookOpen,
@@ -47,6 +48,7 @@ export type EntreeMenu = {
 export const menuStaff: EntreeMenu[] = [
   { href: "/staff", label: "Tableau de bord", icone: LayoutDashboard, etape: 5, description: "Vue d'ensemble de la PGM." },
   { href: "/staff/membres", label: "Membres", icone: Users, etape: 3, description: "Fiches des choristes, recherche, filtres et export.", groupe: "Membres" },
+  { href: "/staff/inscriptions", label: "Inscriptions par lien", icone: UserPlus, etape: 9, description: "Envoyer le lien d'inscription et valider les nouveaux membres.", groupe: "Membres" },
   { href: "/staff/cartes", label: "Cartes et QR codes", icone: IdCard, etape: 4, description: "Génération, réédition et révocation des cartes.", groupe: "Membres" },
   { href: "/staff/scanner", label: "Scanner", icone: ScanLine, etape: 4, description: "Vérifier une carte par QR code ou matricule.", groupe: "Membres" },
   { href: "/staff/presences", label: "Présences", icone: ClipboardCheck, etape: 6, description: "Présences aux répétitions, réunions et manifestations.", groupe: "Membres" },
