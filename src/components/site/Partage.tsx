@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { Image as ImageIcon, MessageCircle } from "lucide-react";
 
 /** Le « f » de Facebook (lucide n'a plus de logos de marques). */
 function Facebook() {
@@ -29,17 +29,28 @@ async function fichierImage(image: string): Promise<File | null> {
 /**
  * Partager une page sur WhatsApp ou Facebook. L'image de la page (photo de la
  * publication, miniature de la vidéo ou logo) s'affiche dans l'aperçu du partage.
- * Sur téléphone, WhatsApp reçoit en plus l'image elle-même, avec le texte et le lien.
+ * « Image seule » envoie l'image en fichier (le texte est alors copié, à coller).
  */
 export function Partage({ texte, chemin, image, compact = false }: { texte: string; chemin?: string; image?: string | null; compact?: boolean }) {
   const adresse = () => (chemin ? new URL(chemin, window.location.origin).toString() : window.location.href.split("#")[0]);
   const ouvrir = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
-  const message = () => `${texte}\n\n${adresse()}`;
+  // le lien juste après le titre : WhatsApp en tire l'aperçu avec l'image
+  const message = () => {
+    const [titre, ...suite] = texte.split("\n\n");
+    return [titre, adresse(), ...suite].join("\n\n");
+  };
   const [copie, setCopie] = useState(false);
 
-  async function whatsapp() {
-    // Certains téléphones n'envoient que l'image quand on partage image + texte :
-    // le texte est donc aussi copié, prêt à être collé sous l'image.
+  // WhatsApp reçoit toujours le texte complet ; le lien en fin de message
+  // fait apparaître l'image de la publication (aperçu) dans le même message.
+  function whatsapp() {
+    setCopie(false);
+    ouvrir(`https://wa.me/?text=${encodeURIComponent(message())}`);
+  }
+
+  // Envoyer l'image elle-même en fichier : certains téléphones ne gardent alors
+  // que l'image, donc le texte est aussi copié, prêt à être collé dessous.
+  async function imageJointe() {
     const texteComplet = message();
     let copieOk = false;
     try {
@@ -47,17 +58,13 @@ export function Partage({ texte, chemin, image, compact = false }: { texte: stri
       copieOk = true;
     } catch { /* presse-papiers refusé : on partage quand même */ }
     const fichier = image ? await fichierImage(image) : null;
-    if (fichier) {
-      try {
-        if (copieOk) setCopie(true);
-        await navigator.share({ files: [fichier], text: texteComplet, title: texte.split("\n")[0] });
-        return;
-      } catch (e) {
-        if ((e as Error).name === "AbortError") return; // partage annulé par la personne
-      }
+    if (!fichier) return whatsapp();
+    if (copieOk) setCopie(true);
+    try {
+      await navigator.share({ files: [fichier], text: texteComplet, title: texte.split("\n")[0] });
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") whatsapp();
     }
-    setCopie(false);
-    ouvrir(`https://wa.me/?text=${encodeURIComponent(texteComplet)}`);
   }
 
   return (
@@ -69,7 +76,12 @@ export function Partage({ texte, chemin, image, compact = false }: { texte: stri
       <button type="button" className="p-fb" onClick={() => ouvrir(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(adresse())}`)}>
         <Facebook />Facebook
       </button>
-      {copie && <span className="partage-note">Le texte est copié. Si WhatsApp n&apos;envoie que l&apos;image, appuyez longtemps dans la zone de message puis « Coller ».</span>}
+      {image && (
+        <button type="button" className="p-autre" onClick={imageJointe}>
+          <ImageIcon className="i" aria-hidden />Image seule
+        </button>
+      )}
+      {copie && <span className="partage-note">Le texte est copié : après avoir choisi la personne, appuyez longtemps dans la zone de message puis « Coller ».</span>}
     </div>
   );
 }
