@@ -8,6 +8,7 @@ import { motDePasseProvisoire } from "@/lib/auth/comptes";
 import { VOIX } from "@/lib/membres/libelles";
 import { reduirePhoto } from "@/lib/photo";
 import { deposerInscription } from "./actions";
+import { ExemplesPhoto } from "./ExemplesPhoto";
 
 export type Choix = {
   paroisses: { id: string; nom: string }[];
@@ -99,6 +100,7 @@ export function FormulaireInscription({ code, choix, motDePassePropose }: { code
             <Camera className="size-10" aria-hidden />
           </span>
         )}
+        <ExemplesPhoto />
         <p className="text-sm font-semibold text-marine-900">{photo ? "Changer la photo :" : "Ajouter ma photo * :"}</p>
         <div className="grid w-full grid-cols-2 gap-3">
           <label className={boutonPhoto}>
@@ -111,7 +113,7 @@ export function FormulaireInscription({ code, choix, motDePassePropose }: { code
           </label>
         </div>
         {erreurPhoto && <p role="alert" className="text-sm text-red-700">{erreurPhoto}</p>}
-        <p className="text-center text-xs text-slate-500">Photo de face, visage bien visible, fond clair. Elle servira pour votre carte de membre.</p>
+        <p className="text-center text-xs text-slate-500">Cette photo servira pour votre carte de membre.</p>
       </div>
 
       <Champ libelle="Nom *"><input name="nom" required maxLength={80} autoComplete="family-name" className={classe} /></Champ>
