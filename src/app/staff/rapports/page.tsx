@@ -60,6 +60,7 @@ export default async function PageRapports({ searchParams }: { searchParams: Pro
                 </Link>
               ))}
             </div>
+            <Bouton variante="secondaire" href="/staff/rapports/inscrits">Rapport des inscrits</Bouton>
             <Bouton variante="secondaire" href={`/staff/rapports/presences?jours=${jours}`}>
               <Download className="size-4" aria-hidden /> Exporter les présences (Excel)
             </Bouton>
