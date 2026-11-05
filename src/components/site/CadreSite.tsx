@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { BandeauConnecte } from "./BandeauConnecte";
 import { BoutonEspace } from "./BoutonEspace";
 import { NavigationSite } from "./NavigationSite";
 import "./site-public.css";
@@ -54,6 +55,7 @@ export function CadreSite({ children }: { children: React.ReactNode }) {
           <BoutonEspace />
         </div>
       </header>
+      <BandeauConnecte />
       {children}
       <footer className="pied cadre">
         <div className="col large">

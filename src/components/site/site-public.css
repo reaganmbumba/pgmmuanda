@@ -584,3 +584,10 @@ html:has(.site-pgm){scroll-behavior:smooth;scroll-padding-top:76px}
   .site-pgm .accueil .chiffres b{font-size:1.7rem}
   .site-pgm .accueil .chiffres span{font-size:.72rem;line-height:1.2}
 }
+
+/* Membre connecté : bandeau sous l'en-tête */
+.site-pgm .bandeau-connecte{background:var(--vert);color:#fff}
+.site-pgm .bandeau-connecte .col{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:8px;font-weight:600;font-size:.95rem}
+.site-pgm .bandeau-connecte span{display:flex;align-items:center;gap:7px}
+.site-pgm .bandeau-connecte svg.i{width:18px;height:18px;flex:none}
+.site-pgm .bandeau-connecte a{flex:none;background:#fff;color:var(--marine);font-weight:700;text-decoration:none;padding:7px 12px;border-radius:999px;font-size:.9rem}

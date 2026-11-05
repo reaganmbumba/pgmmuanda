@@ -1232,6 +1232,14 @@ try {
   await vis.click("text=Ouvrir mon espace");
   await vis.waitForURL(`${APP}/choriste`);
   ok((await texte(vis)).includes("le responsable doit encore valider"), "elle est connectée à son espace, en attente de validation");
+  await vis.goto(`${APP}/`);
+  await vis.waitForSelector("[data-connecte]");
+  ok((await vis.textContent("[data-connecte]")).includes("Paix Esther, vous êtes connecté"),
+    "sur la page d'accueil du site, elle reste connectée et le voit");
+  if (process.env.CAPTURES) await vis.screenshot({ path: `${process.env.CAPTURES}/accueil-connecte.png` });
+  await vis.click("[data-connecte] >> text=Ouvrir mon espace");
+  await vis.waitForURL(`${APP}/choriste`);
+  ok(true, "le bandeau la ramène directement à son espace");
   await vis.goto(`${APP}${cheminLien}`);
   await vis.setInputFiles("input[aria-label='Prendre une photo']", "tests/e2e/photo-test.jpg");
   await vis.waitForSelector("img[alt='Votre photo']");
