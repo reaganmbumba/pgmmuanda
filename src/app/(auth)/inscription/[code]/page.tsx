@@ -1,4 +1,3 @@
-import { motDePasseProvisoire } from "@/lib/auth/comptes";
 import { supabaseActif } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
 import { FormulaireInscription, type Choix } from "./FormulaireInscription";
@@ -31,7 +30,7 @@ export default async function PageInscription({ params }: { params: Promise<{ co
       <p className="mt-1 text-slate-600">
         Paix ! Remplissez vos informations et ajoutez votre photo. Votre compte est créé tout de suite ; le responsable validera ensuite votre fiche de membre.
       </p>
-      <div className="mt-6"><FormulaireInscription code={code} choix={choix} motDePassePropose={motDePasseProvisoire()} /></div>
+      <div className="mt-6"><FormulaireInscription code={code} choix={choix} /></div>
     </>
   );
 }

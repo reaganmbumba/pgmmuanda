@@ -2,9 +2,9 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { Camera, CheckCircle2, Globe, Image as ImageIcon, KeyRound, RefreshCw, Send, UserRound } from "lucide-react";
+import { Camera, CheckCircle2, Globe, Image as ImageIcon, KeyRound, Send, UserRound } from "lucide-react";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
-import { motDePasseProvisoire } from "@/lib/auth/comptes";
+import { motDePasseDuNom } from "@/lib/auth/comptes";
 import { VOIX } from "@/lib/membres/libelles";
 import { reduirePhoto } from "@/lib/photo";
 import { deposerInscription } from "./actions";
@@ -29,12 +29,14 @@ function Champ({ libelle, children, aide }: { libelle: string; children: React.R
   );
 }
 
-export function FormulaireInscription({ code, choix, motDePassePropose }: { code: string; choix: Choix; motDePassePropose: string }) {
+export function FormulaireInscription({ code, choix }: { code: string; choix: Choix }) {
   const [etat, action] = useActionState(deposerInscription, undefined);
   const [paroisse, setParoisse] = useState(choix.paroisses.length === 1 ? choix.paroisses[0].id : "");
   const [photo, setPhoto] = useState("");
   const [erreurPhoto, setErreurPhoto] = useState<string | null>(null);
-  const [motDePasse, setMotDePasse] = useState(motDePassePropose);
+  const [motDePasse, setMotDePasse] = useState("");
+  // Tant que la personne n'a pas écrit son propre mot de passe, on propose « nom + 123456 »
+  const [motDePasseChoisi, setMotDePasseChoisi] = useState(false);
   // Les chorales de la paroisse, puis les chorales urbaines (ouvertes à toutes les paroisses)
   const chorales = paroisse
     ? choix.chorales.filter((c) => c.paroisseId === paroisse).concat(choix.chorales.filter((c) => c.paroisseId === null))
@@ -116,7 +118,10 @@ export function FormulaireInscription({ code, choix, motDePassePropose }: { code
         <p className="text-center text-xs text-slate-500">Cette photo servira pour votre carte de membre.</p>
       </div>
 
-      <Champ libelle="Nom *"><input name="nom" required maxLength={80} autoComplete="family-name" className={classe} /></Champ>
+      <Champ libelle="Nom *">
+        <input name="nom" required maxLength={80} autoComplete="family-name" className={classe}
+          onChange={(e) => { if (!motDePasseChoisi) setMotDePasse(motDePasseDuNom(e.target.value)); }} />
+      </Champ>
       <Champ libelle="Postnom"><input name="postnom" maxLength={80} className={classe} /></Champ>
       <Champ libelle="Prénom *"><input name="prenom" required maxLength={80} autoComplete="given-name" className={classe} /></Champ>
 
@@ -159,18 +164,17 @@ export function FormulaireInscription({ code, choix, motDePassePropose }: { code
 
       <fieldset className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
         <legend className="px-1 text-sm font-semibold text-marine-900">Votre mot de passe *</legend>
-        <p className="text-xs text-slate-500">
-          Votre compte sera créé tout de suite. Gardez ce mot de passe proposé, ou écrivez le vôtre
-          (10 caractères au moins, avec une majuscule, une minuscule et un chiffre).
+        <p className="text-sm text-slate-700">
+          Nous vous proposons : <strong>votre nom + 123456</strong> (exemple : <span className="font-mono">Mbumba123456</span>).
+          Vous pouvez aussi écrire le vôtre (10 caractères au moins, avec une majuscule, une minuscule et un chiffre).
         </p>
-        <div className="mt-2 flex gap-2">
-          <input name="motDePasse" required minLength={10} maxLength={72} value={motDePasse} onChange={(e) => setMotDePasse(e.target.value)}
-            autoComplete="new-password" spellCheck={false} aria-label="Mot de passe" className={`${classe} mt-0 font-mono`} />
-          <button type="button" onClick={() => setMotDePasse(motDePasseProvisoire())} aria-label="Proposer un autre mot de passe"
-            className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-white px-3 text-marine-900 ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
-            <RefreshCw className="size-5" aria-hidden />
-          </button>
-        </div>
+        <input name="motDePasse" required minLength={10} maxLength={72} value={motDePasse}
+          onChange={(e) => { setMotDePasse(e.target.value); setMotDePasseChoisi(true); }}
+          placeholder="Écrivez d'abord votre nom plus haut" autoComplete="new-password" spellCheck={false}
+          aria-label="Mot de passe" className={`${classe} font-mono`} />
+        <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+          Notez bien ce mot de passe : vous en aurez besoin pour vous connecter.
+        </p>
       </fieldset>
 
       <MessageFormulaire etat={etat} />
