@@ -4,12 +4,12 @@ import { Check, X } from "lucide-react";
 /* Exemples montrés avant d'ajouter la photo d'inscription (photos fournies par la PGM). */
 const exemples = [
   { src: "/exemples-photo/homme-1.jpg", alt: "Bon exemple : homme de face, fond blanc", bon: true },
-  { src: "/exemples-photo/homme-2.jpg", alt: "Bon exemple : homme de face, fond blanc", bon: true },
+  { src: "/exemples-photo/homme-2-fond-bleu.jpg", alt: "Bon exemple : homme de face, fond bleu uni", bon: true },
   { src: "/exemples-photo/femme-1.jpg", alt: "Bon exemple : femme de face avec foulard, fond clair", bon: true },
   { src: "/exemples-photo/mauvais-1.jpg", alt: "Mauvais exemple : photo de loin, avec lunettes, fond sombre", bon: false },
 ];
 
-const consignes = ["Visage de face, de près, bien visible", "Fond clair (mur blanc)", "Sans lunettes ni chapeau"];
+const consignes = ["Visage de face, de près, bien visible", "Fond simple, d'une seule couleur", "Sans lunettes ni chapeau"];
 
 export function ExemplesPhoto() {
   return (
