@@ -26,15 +26,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <p className="relative text-xs text-marine-100/50">PGM ANTENNE DE MUANDA — EBNM KCC</p>
       </aside>
       <main className="flex flex-col lg:items-center lg:justify-center lg:px-4 lg:py-10">
-        {/* Téléphone : bandeau avec le logo */}
-        <div className="relative overflow-hidden bg-marine-900 px-4 pb-14 pt-10 text-center lg:hidden">
-          <div className="absolute -right-16 -top-16 size-56 rounded-full border-[18px] border-or-500/10" />
-          <Image src="/logo-pgm.png" alt="Logo PGM Muanda — EBNM KCC" width={112} height={112} priority unoptimized
-            className="relative mx-auto drop-shadow-[0_8px_24px_rgba(0,0,0,0.35)]" />
-          <p className="relative mt-4 text-lg font-bold tracking-wide text-white">PGM ANTENNE DE MUANDA</p>
-          <p className="relative text-xs font-medium tracking-[0.25em] text-or-400">EBNM KCC</p>
+        {/* Téléphone : petit bandeau avec le logo, pour voir le formulaire tout de suite */}
+        <div className="relative flex items-center justify-center gap-3 overflow-hidden bg-marine-900 px-4 pb-9 pt-4 lg:hidden">
+          <Image src="/logo-pgm.png" alt="Logo PGM Muanda — EBNM KCC" width={52} height={52} priority unoptimized
+            className="relative drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]" />
+          <div className="relative text-left">
+            <p className="text-base font-bold leading-tight tracking-wide text-white">PGM ANTENNE DE MUANDA</p>
+            <p className="text-[11px] font-medium tracking-[0.25em] text-or-400">EBNM KCC</p>
+          </div>
         </div>
-        <div className="relative -mt-8 w-full flex-1 rounded-t-3xl bg-marine-50 px-5 pb-10 pt-8 lg:mt-0 lg:max-w-sm lg:flex-none lg:rounded-none lg:bg-transparent lg:p-0">
+        <div className="relative -mt-6 w-full flex-1 rounded-t-3xl bg-marine-50 px-5 pb-10 pt-6 lg:mt-0 lg:max-w-sm lg:flex-none lg:rounded-none lg:bg-transparent lg:p-0">
           {children}
           <div className="mt-8"><InstallerApp /></div>
         </div>

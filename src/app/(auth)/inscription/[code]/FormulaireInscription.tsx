@@ -96,8 +96,8 @@ export function FormulaireInscription({ code, choix, motDePassePropose }: { code
           // eslint-disable-next-line @next/next/no-img-element -- image intégrée (data:)
           <img src={photo} alt="Votre photo" className="h-40 w-32 rounded-2xl object-cover ring-4 ring-white shadow" />
         ) : (
-          <span className="flex h-40 w-32 items-center justify-center rounded-2xl bg-white text-slate-400 ring-1 ring-slate-200">
-            <Camera className="size-10" aria-hidden />
+          <span className="flex h-28 w-24 items-center justify-center rounded-2xl bg-white text-slate-400 ring-1 ring-slate-200">
+            <Camera className="size-8" aria-hidden />
           </span>
         )}
         <ExemplesPhoto />
