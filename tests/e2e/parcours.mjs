@@ -1224,9 +1224,14 @@ try {
   await vis.waitForSelector("text=Votre inscription a bien été envoyée");
   ok(true, "un visiteur sans compte s'inscrit lui-même avec sa photo");
   if (process.env.CAPTURES) await vis.screenshot({ path: `${process.env.CAPTURES}/inscription-3-merci.png`, fullPage: true });
-  await vis.click("text=Aller sur le site de la PGM");
-  await vis.waitForURL(`${APP}/`);
-  ok(true, "après l'inscription, un bouton mène à la page d'accueil du site de la PGM");
+  const idInscrit = (await vis.textContent("[data-acces] dd >> nth=0")).trim();
+  const mdpInscrit = (await vis.textContent("[data-acces] dd >> nth=1")).trim();
+  ok(idInscrit === "esther.ndombasi" && mdpInscrit.length >= 10,
+    "son compte est créé tout de suite : identifiant et mot de passe affichés");
+  ok(await vis.isVisible("a:has-text('Aller sur le site de la PGM')"), "un bouton mène à la page d'accueil du site de la PGM");
+  await vis.click("text=Ouvrir mon espace");
+  await vis.waitForURL(`${APP}/choriste`);
+  ok((await texte(vis)).includes("le responsable doit encore valider"), "elle est connectée à son espace, en attente de validation");
   await vis.goto(`${APP}${cheminLien}`);
   await vis.setInputFiles("input[aria-label='Prendre une photo']", "tests/e2e/photo-test.jpg");
   await vis.waitForSelector("img[alt='Votre photo']");
@@ -1255,6 +1260,10 @@ try {
   t = await texte(r);
   ok(t.includes("Ndombasi") && /PGM-MUA-\d{4}/.test(t) && t.includes("Actif"), "accepter crée la fiche active avec son matricule");
   ok((await r.locator("main img[src^='data:image/jpeg']").count()) > 0, "la photo envoyée est sur la fiche (prête pour la carte)");
+  await vis.goto(`${APP}/choriste/profil`);
+  ok((await texte(vis)).includes("Ndombasi") && /PGM-MUA-\d{4}/.test(await texte(vis)), "après la validation, son compte est relié à sa fiche");
+  const visMdp = await session(idInscrit, mdpInscrit);
+  ok(new URL(visMdp.url()).pathname === "/choriste", "elle se reconnecte avec son identifiant et son mot de passe");
 
   await a.goto(`${APP}/staff/inscriptions`);
   await confirmer(a, "Fermer le lien");

@@ -62,8 +62,8 @@ Sauvegardes (Étape 8) : copie chiffrée de toute la base chaque nuit, gardée 3
 par GitHub. À activer en suivant [docs/SAUVEGARDE.md](docs/SAUVEGARDE.md).
 
 Inscription par lien : dans « Inscriptions par lien », le staff envoie un lien (bouton
-WhatsApp). La personne remplit elle-même ses informations et met sa photo, sans compte. Sa
-demande attend la validation de l'administration ou du responsable de sa paroisse ou de sa
+WhatsApp). La personne remplit elle-même ses informations, met sa photo et reçoit tout de
+suite son compte (identifiant + mot de passe proposé ou choisi). Sa fiche de membre attend la validation de l'administration ou du responsable de sa paroisse ou de sa
 chorale ; « Accepter » crée sa fiche (active, avec matricule et photo, prête pour la carte).
 L'administration peut fermer le lien ou en créer un nouveau (l'ancien ne marche plus).
 
