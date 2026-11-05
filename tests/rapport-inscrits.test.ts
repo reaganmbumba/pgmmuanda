@@ -14,16 +14,18 @@ describe("rapport des inscrits par chorale", () => {
     expect(r.groupes[0].inscrits[0].nom).toBe("Bayiza");
     expect(r.vides).toEqual(["Echo Homme", "Oracle Junior (Filles et Garçons)"]);
     expect(r.familles).toEqual([{ nom: "Echo", total: 0 }, { nom: "Oracle", total: 2 }, { nom: "Vision", total: 1 }]);
-    expect(r.total).toBe(4);
+    expect(r.total).toBe(3);
   });
   it("écrit un texte prêt pour WhatsApp", () => {
-    const t = texteRapport(r, "5 novembre 2026");
+    const t = texteRapport(r, "5 novembre 2026", "https://www.pgmmuanda.com/inscription/abc");
     expect(t.startsWith("Paix à tous,")).toBe(true);
     expect(t).toContain("*ORACLE HOMME* — 2 inscrits\n1. BAYIZA Blaise (alto)\n2. NKASA Joel (basse)");
     expect(t).toContain("*VISION FEMME* — 1 inscrite");
     expect(t).toContain("Echo Homme, Oracle Junior.");
-    expect(t).toContain("- Encadrement : 1");
-    expect(t).toContain("*TOTAL GÉNÉRAL : 4 inscrits*");
+    expect(t).not.toContain("MBUMBA");
+    expect(t).not.toContain("Encadrement");
+    expect(t).toContain("*TOTAL GÉNÉRAL : 3 inscrits*");
+    expect(t).toContain("avec ce lien :\nhttps://www.pgmmuanda.com/inscription/abc");
     expect(t).toContain("1 inscription par lien en attente");
   });
 });
