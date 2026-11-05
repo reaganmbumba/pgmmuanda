@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 
 /** Le « f » de Facebook (lucide n'a plus de logos de marques). */
@@ -33,19 +34,30 @@ async function fichierImage(image: string): Promise<File | null> {
 export function Partage({ texte, chemin, image, compact = false }: { texte: string; chemin?: string; image?: string | null; compact?: boolean }) {
   const adresse = () => (chemin ? new URL(chemin, window.location.origin).toString() : window.location.href.split("#")[0]);
   const ouvrir = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
-  const message = () => `${texte}\n${adresse()}`;
+  const message = () => `${texte}\n\n${adresse()}`;
+  const [copie, setCopie] = useState(false);
 
   async function whatsapp() {
+    // Certains téléphones n'envoient que l'image quand on partage image + texte :
+    // le texte est donc aussi copié, prêt à être collé sous l'image.
+    const texteComplet = message();
+    let copieOk = false;
+    try {
+      await navigator.clipboard?.writeText(texteComplet);
+      copieOk = true;
+    } catch { /* presse-papiers refusé : on partage quand même */ }
     const fichier = image ? await fichierImage(image) : null;
     if (fichier) {
       try {
-        await navigator.share({ files: [fichier], text: message() });
+        if (copieOk) setCopie(true);
+        await navigator.share({ files: [fichier], text: texteComplet, title: texte.split("\n")[0] });
         return;
       } catch (e) {
         if ((e as Error).name === "AbortError") return; // partage annulé par la personne
       }
     }
-    ouvrir(`https://wa.me/?text=${encodeURIComponent(message())}`);
+    setCopie(false);
+    ouvrir(`https://wa.me/?text=${encodeURIComponent(texteComplet)}`);
   }
 
   return (
@@ -57,6 +69,7 @@ export function Partage({ texte, chemin, image, compact = false }: { texte: stri
       <button type="button" className="p-fb" onClick={() => ouvrir(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(adresse())}`)}>
         <Facebook />Facebook
       </button>
+      {copie && <span className="partage-note">Le texte est copié. Si WhatsApp n&apos;envoie que l&apos;image, appuyez longtemps dans la zone de message puis « Coller ».</span>}
     </div>
   );
 }

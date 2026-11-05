@@ -115,7 +115,7 @@ function CarteArticle({ a }: { a: ElementSite }) {
           <span className="lire">Lire l&apos;article<ArrowRight className="i" aria-hidden /></span>
         </div>
       </Link>
-      <Partage compact texte={a.titre} chemin={`/actualites/${a.id}`} image={a.image ? urlFichier(a.image) : null} />
+      <Partage compact texte={annonce(a)} chemin={`/actualites/${a.id}`} image={a.image ? urlFichier(a.image) : null} />
     </div>
   );
 }
@@ -863,6 +863,8 @@ export const lienPublication = (e: ElementSite) => `${PUBLICATIONS[e.rubrique as
 export function annonce(e: ElementSite) {
   if (e.rubrique === "soiree") return [`Soirée musicale de la PGM Antenne de Muanda : ${e.titre}`, e.date && `le ${dateLongue(e.date)}`, e.sousTitre].filter(Boolean).join(", ") + ". Venez nombreux !";
   if (e.rubrique === "pionnier") return `Nos pionniers : ${e.titre}`;
+  // une actualité se partage en entier : titre, résumé et texte
+  if (e.rubrique === "actualite") return [`*${e.titre}*`, e.sousTitre, e.texte].filter(Boolean).join("\n\n");
   return e.titre;
 }
 
