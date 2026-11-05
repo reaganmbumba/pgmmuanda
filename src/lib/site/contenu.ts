@@ -83,17 +83,17 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
 const ACTUALITES_FIXES: ElementSite[] = [
   {
     id: "deuil-papa-jolie-maman-mvondi", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
-    image: "/actualites/deuil-jolie-malonda.jpg", affiche: true,
+    image: "/actualites/deuil-jolie-malonda-v2.jpg", affiche: true,
     titre: "Avis de deuil : Papa Jolie et Maman Ruth MALONDA MVUMBI",
-    sousTitre: "Deux deuils dont les inhumations tombent le même jour, le samedi 14 novembre 2026. Avant le départ de la maman diaconesse Georgine DINASIA pour Boma, la PGM Antenne de Muanda se rendra à la résidence de la famille SIELO MVONDI le lundi 9 novembre 2026 à 16h30.",
+    sousTitre: "Deux deuils dont les inhumations tombent le même jour, le samedi 14 novembre 2026. Avant le départ de la maman diaconesse Georgine DINASIA pour Boma, la PGM Antenne de Muanda se rendra à la résidence de la famille du Révérend Apôtre MVONDI MVONDI Jean Bruno le lundi 9 novembre 2026 à 16h30.",
     texte: [
       "Paix à tous les choristes et à tous les membres de la PGM Antenne de Muanda.",
       "Notre famille de la PGM traverse en ce moment deux deuils.",
       "Le premier, déjà connu de tous, est celui de Papa Jolie, époux de la maman diaconesse Chouchouna.",
-      "Entre-temps, nous avons appris un second deuil : le décès, survenu à Boma, de Maman Ruth MALONDA MVUMBI, mère biologique de la maman diaconesse SIELO Georgine DINASIA, épouse du Révérend Apôtre MVONDI MVONDI Jean Bruno.",
+      "Entre-temps, nous avons appris un second deuil : le décès, survenu à Boma, de Maman Ruth MALONDA MVUMBI, mère biologique de la maman diaconesse Georgine DINASIA, épouse du Révérend Apôtre MVONDI MVONDI Jean Bruno.",
       "Les deux inhumations ont lieu le même jour : veillée le vendredi 13 novembre 2026 et inhumation le samedi 14 novembre 2026.",
-      "Comme ces deux deuils coïncident, le chef d'antenne, le Prédicateur NKASA LUSALA Joel, a pris l'initiative que la PGM Antenne de Muanda passe à la résidence de la famille SIELO MVONDI avant le départ de la maman diaconesse Georgine pour Boma, afin de la consoler et de l'assurer de notre soutien.",
-      "Rendez-vous de tous les choristes : le lundi 9 novembre 2026, à 16h30, à la résidence de la famille SIELO MVONDI.",
+      "Comme ces deux deuils coïncident, le chef d'antenne, le Prédicateur NKASA LUSALA Joel, a pris l'initiative que la PGM Antenne de Muanda passe à la résidence de la famille du Révérend Apôtre MVONDI MVONDI Jean Bruno avant le départ de la maman diaconesse Georgine pour Boma, afin de la consoler et de l'assurer de notre soutien.",
+      "Rendez-vous de tous les choristes : le lundi 9 novembre 2026, à 16h30, à la résidence de la famille du Révérend Apôtre MVONDI MVONDI Jean Bruno.",
       "Pour votre participation, veuillez contacter le chargé social de la PGM Antenne de Muanda, le Prédicateur Fabien BALENDA.",
       "Tous les choristes sont priés d'être présents et ponctuels. Nul ne porte seul ses épreuves : la grande famille de la PGM se tient aux côtés de chacun de ses membres, dans la joie comme dans la peine.",
       "Que Dieu console et fortifie la maman diaconesse Chouchouna, la maman diaconesse Georgine DINASIA, le Révérend Apôtre MVONDI MVONDI Jean Bruno et toutes les familles éplorées.",
