@@ -82,6 +82,23 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
  */
 const ACTUALITES_FIXES: ElementSite[] = [
   {
+    id: "deuil-papa-jolie-maman-mvondi", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
+    image: "/actualites/deuil-jolie-mvondi.jpg", affiche: true,
+    titre: "Avis de deuil : Papa Jolie et la maman diaconesse MVONDI",
+    sousTitre: "Les choristes de la PGM Antenne de Muanda sont convoqués le lundi 9 novembre 2026 à 16h30 à la résidence de Papa SIELO MVONDI. Veillée le vendredi 13 novembre, inhumation le samedi 14 novembre 2026.",
+    texte: [
+      "Paix à tous les choristes et à tous les membres de la PGM Antenne de Muanda.",
+      "C'est avec une profonde tristesse que la Présidence générale de la musique (PGM), Antenne de Muanda, porte à votre connaissance le deuil qui frappe Papa Jolie, et qui coïncide avec le deuil de la maman diaconesse MVONDI.",
+      "La veillée aura lieu le vendredi 13 novembre 2026, et l'inhumation le samedi 14 novembre 2026.",
+      "Pour manifester notre soutien et notre présence aux familles éprouvées, le Président de l'antenne PGM Muanda, le Prédicateur NKASA LUSALA Joel, convoque tous les choristes de la PGM Muanda le lundi 9 novembre 2026, à 16h30, à la résidence de Papa SIELO MVONDI.",
+      "Pour votre participation, veuillez contacter le chargé social de la PGM Antenne de Muanda, le Prédicateur Fabien BALENDA.",
+      "Tous les choristes sont priés d'être présents et ponctuels. Nul ne porte seul ses épreuves : la grande famille de la PGM se tient aux côtés de chacun de ses membres, dans la joie comme dans la peine.",
+      "Que Dieu console et fortifie les familles éplorées.",
+      "La Présidence de la PGM Antenne de Muanda.",
+    ].join("\n\n"),
+    date: "2026-11-05",
+  },
+  {
     id: "communique-programme-assistance", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
     image: "/actualites/programme-assistance.jpg", affiche: true,
     titre: "Communiqué : programme d'assistance aux cas sociaux de premier degré",
