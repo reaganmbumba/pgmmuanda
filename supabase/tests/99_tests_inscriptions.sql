@@ -90,6 +90,29 @@ select pg_temp.refuse('select public.inscription_accepter(''' || :'kiese' || '''
   'pas le droit', 'un choriste ne valide aucune inscription');
 commit;
 
+-- Compte créé à l'inscription : relié à la fiche si acceptée, désactivé si refusée
+update public.inscription_lien set ouvert = true;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-000000000ab1', 'insc1@sans-email.test'), ('00000000-0000-0000-0000-000000000ab2', 'insc2@sans-email.test');
+select public.inscription_deposer(:'code', 'Mbuku', '', 'Rose', 'F', '+243 89 000 3333', '', '10000000-0000-0000-0000-00000000000a', null, null, '') as i1 \gset
+select public.inscription_deposer(:'code', 'Nzuzi', '', 'Marc', 'M', '+243 89 000 4444', '', '10000000-0000-0000-0000-00000000000a', null, null, '') as i2 \gset
+update public.inscriptions set profil_id = '00000000-0000-0000-0000-000000000ab1' where id = :'i1';
+update public.inscriptions set profil_id = '00000000-0000-0000-0000-000000000ab2' where id = :'i2';
+begin;
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-00000000000b';  -- responsable de la paroisse A
+select public.inscription_accepter(:'i1') as m1 \gset
+select public.inscription_refuser(:'i2');
+commit;
+select pg_temp.affirmer((select profil_id = '00000000-0000-0000-0000-000000000ab1' from public.membres where id = :'m1'),
+  'accepter relie le compte créé à l''inscription à la nouvelle fiche');
+select pg_temp.affirmer((select count(*) = 1 from public.notifications where profil_id = '00000000-0000-0000-0000-000000000ab1'),
+  'la personne est prévenue que son inscription est validée');
+select pg_temp.affirmer((select not actif from public.profils where id = '00000000-0000-0000-0000-000000000ab2'),
+  'refuser désactive le compte créé à l''inscription');
+select pg_temp.affirmer((select statut = 'refusee' from public.inscriptions where id = :'i2'), 'l''inscription refusée est close');
+delete from public.membres where id = :'m1';
+
 -- Remise en état pour les tests suivants
 update public.inscription_lien set ouvert = true;
 delete from public.inscriptions;

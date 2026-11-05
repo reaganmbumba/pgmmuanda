@@ -86,7 +86,7 @@ export default async function PageInscriptions() {
                       icone={<Check className="size-3.5" aria-hidden />}
                       question="Créer sa fiche de membre ?" />
                     <ActionConfirmee action={refuserInscription} champs={{ id: i.id }} danger libelle="Refuser"
-                      icone={<X className="size-3.5" aria-hidden />} question="Refuser cette inscription ?" />
+                      icone={<X className="size-3.5" aria-hidden />} question="Refuser ? Son compte sera désactivé." />
                   </div>
                 )}
               </li>

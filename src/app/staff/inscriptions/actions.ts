@@ -29,15 +29,13 @@ export async function accepterInscription(_: Etat, form: FormData): Promise<Etat
   redirect(`/staff/membres/${data}?enregistre=1`);
 }
 
+/** Refuser : l'inscription est close et le compte créé avec elle est désactivé. */
 export async function refuserInscription(_: Etat, form: FormData): Promise<Etat> {
   const refus = await autoriser();
   if (refus) return refus;
-  const moi = await utilisateurCourant();
   const supabase = await creerClientServeur();
-  const { data, error } = await supabase.from("inscriptions")
-    .update({ statut: "refusee", photo_url: null, traitee_par: moi!.id, traitee_le: new Date().toISOString() })
-    .eq("id", String(form.get("id"))).eq("statut", "en_attente").select("id");
-  if (error || !data?.length) return { erreur: messageErreur(error, "Cette inscription a déjà été traitée.") };
+  const { error } = await supabase.rpc("inscription_refuser", { p_inscription: String(form.get("id")) });
+  if (error) return { erreur: messageErreur(error, "Vous n'avez pas le droit de traiter cette inscription.") };
   revalidatePath("/staff/inscriptions");
   return { succes: "Inscription refusée." };
 }
