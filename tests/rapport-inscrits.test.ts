@@ -25,6 +25,7 @@ describe("rapport des inscrits par chorale", () => {
     expect(t).not.toContain("MBUMBA");
     expect(t).not.toContain("Encadrement");
     expect(t).toContain("*TOTAL GÉNÉRAL : 3 inscrits*");
+    expect(t.endsWith("*Le Président de l'antenne*\n*Prédicateur NKASA LUSALA Joel*")).toBe(true);
     expect(t).toContain("avec ce lien :\nhttps://www.pgmmuanda.com/inscription/abc");
     expect(t).toContain("1 inscription par lien en attente");
   });
