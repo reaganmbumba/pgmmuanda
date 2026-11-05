@@ -19,10 +19,17 @@ export function NavigationSite() {
   const [haut, setHaut] = useState(false);
 
   useEffect(() => {
-    const suivre = () => setHaut(window.scrollY > 600);
+    const suivre = () => {
+      setHaut(window.scrollY > 600);
+      // En-tête plus marqué (ombre) dès qu'on fait défiler la page.
+      document.documentElement.toggleAttribute("data-defile", window.scrollY > 8);
+    };
     suivre();
     window.addEventListener("scroll", suivre, { passive: true });
-    return () => window.removeEventListener("scroll", suivre);
+    return () => {
+      window.removeEventListener("scroll", suivre);
+      document.documentElement.removeAttribute("data-defile");
+    };
   }, []);
 
   return (
@@ -46,5 +53,18 @@ export function NavigationSite() {
         </div>
       </nav>
     </>
+  );
+}
+
+/** Menu de l'en-tête sur ordinateur, avec la rubrique ouverte soulignée en or. */
+export function MenuHaut({ liens }: { liens: { href: string; nom: string }[] }) {
+  const chemin = usePathname();
+  return (
+    <nav className="menu-haut" aria-label="Menu du site">
+      {liens.map(({ href, nom }) => {
+        const actif = chemin.startsWith(href);
+        return <Link key={href} href={href} className={actif ? "actif" : undefined} aria-current={actif ? "page" : undefined}>{nom}</Link>;
+      })}
+    </nav>
   );
 }

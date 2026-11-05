@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { BandeauConnecte } from "./BandeauConnecte";
 import { BoutonEspace } from "./BoutonEspace";
-import { NavigationSite } from "./NavigationSite";
+import { MenuHaut, NavigationSite } from "./NavigationSite";
 import "./site-public.css";
 
 /* Menu de l'en-tête sur ordinateur (sur téléphone, la barre d'onglets en bas le remplace). */
@@ -49,9 +49,7 @@ export function CadreSite({ children }: { children: React.ReactNode }) {
               <span>EBNM KCC</span>
             </span>
           </Link>
-          <nav className="menu-haut" aria-label="Menu du site">
-            {MENU_HAUT.map(({ href, nom }) => <Link key={href} href={href}>{nom}</Link>)}
-          </nav>
+          <MenuHaut liens={MENU_HAUT} />
           <BoutonEspace />
         </div>
       </header>
