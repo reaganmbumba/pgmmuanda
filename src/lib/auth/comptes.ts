@@ -32,6 +32,20 @@ export function motDePasseProvisoire() {
   return [debut, groupe(), fin].join("-");
 }
 
+/**
+ * Mot de passe facile à retenir, proposé à l'inscription : le nom + 123456
+ * (ex. « DIZOLELE » → « Dizolele123456 »). Pour un nom très court, on complète
+ * les chiffres afin d'avoir au moins 10 caractères. Chaîne vide si le nom n'a pas de lettre.
+ */
+export function motDePasseDuNom(nom: string) {
+  const lettres = nom.normalize("NFD").replace(/[^A-Za-z]/g, "");
+  if (!lettres) return "";
+  const debut = lettres[0].toUpperCase() + lettres.slice(1).toLowerCase();
+  let chiffres = "123456";
+  while (debut.length + chiffres.length < 10) chiffres += String((chiffres.length + 1) % 10);
+  return debut + chiffres;
+}
+
 /** Message prêt à partager sur WhatsApp avec la personne concernée. */
 export function messageAcces(nom: string, identifiant: string, motDePasse: string, site: string) {
   return [
