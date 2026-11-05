@@ -67,3 +67,10 @@ export const schemaChorale = z.object({
   paroisseId: z.union([z.literal("urbaine"), z.string().uuid()], { message: "Choisissez la paroisse." }),
   nom: texte(120).min(2, "Indiquez le nom de la chorale."),
 });
+
+/** Matricule saisi à la main par l'administration : majuscules, chiffres et tirets (3 à 20). */
+export const schemaMatricule = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z0-9][A-Z0-9-]{2,19}$/, "Matricule invalide : lettres, chiffres et tirets seulement (3 à 20), ex. PGM-MUA-0025.");

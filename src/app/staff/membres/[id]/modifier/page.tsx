@@ -1,10 +1,11 @@
 import { notFound, redirect } from "next/navigation";
-import { EnTete } from "@/components/ui/Carte";
+import { Carte, EnTete } from "@/components/ui/Carte";
 import { exigerAcces } from "@/lib/auth/session";
-import { peutGererMembres } from "@/lib/auth/roles";
+import { estAdmin, peutGererMembres } from "@/lib/auth/roles";
 import { lireMembre, lireOrganisation } from "@/lib/membres/depot";
 import { supabaseActif } from "@/lib/supabase/config";
 import { FormulaireMembre } from "../../FormulaireMembre";
+import { ChangerMatricule } from "../ActionsFiche";
 
 export const metadata = { title: "Modifier un membre" };
 
@@ -26,7 +27,13 @@ export default async function ModifierMembre({ params }: { params: Promise<{ id:
   }
   return (
     <>
-      <EnTete titre={`Modifier ${membre.prenom} ${membre.nom}`} description={`Matricule ${membre.matricule} (non modifiable).`} />
+      <EnTete titre={`Modifier ${membre.prenom} ${membre.nom}`}
+        description={estAdmin(moi?.role) ? `Matricule ${membre.matricule}.` : `Matricule ${membre.matricule} (modifiable par l'administration seulement).`} />
+      {estAdmin(moi?.role) && (
+        <Carte titre="Matricule" className="mb-5">
+          <ChangerMatricule id={membre.id} matricule={membre.matricule} />
+        </Carte>
+      )}
       <FormulaireMembre membre={membre} organisation={organisation} />
     </>
   );

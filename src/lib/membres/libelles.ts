@@ -11,6 +11,7 @@ export const STATUTS = {
 export type CodeStatut = keyof typeof STATUTS;
 
 export const CHAMPS_MEMBRE: Record<string, string> = {
+  matricule: "Matricule",
   nom: "Nom",
   postnom: "Postnom",
   prenom: "Prénom",
