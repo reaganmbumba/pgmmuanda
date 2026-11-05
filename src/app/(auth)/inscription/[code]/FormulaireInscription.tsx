@@ -8,6 +8,7 @@ import { motDePasseProvisoire } from "@/lib/auth/comptes";
 import { VOIX } from "@/lib/membres/libelles";
 import { reduirePhoto } from "@/lib/photo";
 import { deposerInscription } from "./actions";
+import { ExemplesPhoto } from "./ExemplesPhoto";
 
 export type Choix = {
   paroisses: { id: string; nom: string }[];
@@ -95,10 +96,11 @@ export function FormulaireInscription({ code, choix, motDePassePropose }: { code
           // eslint-disable-next-line @next/next/no-img-element -- image intégrée (data:)
           <img src={photo} alt="Votre photo" className="h-40 w-32 rounded-2xl object-cover ring-4 ring-white shadow" />
         ) : (
-          <span className="flex h-40 w-32 items-center justify-center rounded-2xl bg-white text-slate-400 ring-1 ring-slate-200">
-            <Camera className="size-10" aria-hidden />
+          <span className="flex h-28 w-24 items-center justify-center rounded-2xl bg-white text-slate-400 ring-1 ring-slate-200">
+            <Camera className="size-8" aria-hidden />
           </span>
         )}
+        <ExemplesPhoto />
         <p className="text-sm font-semibold text-marine-900">{photo ? "Changer la photo :" : "Ajouter ma photo * :"}</p>
         <div className="grid w-full grid-cols-2 gap-3">
           <label className={boutonPhoto}>
@@ -111,7 +113,7 @@ export function FormulaireInscription({ code, choix, motDePassePropose }: { code
           </label>
         </div>
         {erreurPhoto && <p role="alert" className="text-sm text-red-700">{erreurPhoto}</p>}
-        <p className="text-center text-xs text-slate-500">Photo de face, visage bien visible, fond clair. Elle servira pour votre carte de membre.</p>
+        <p className="text-center text-xs text-slate-500">Cette photo servira pour votre carte de membre.</p>
       </div>
 
       <Champ libelle="Nom *"><input name="nom" required maxLength={80} autoComplete="family-name" className={classe} /></Champ>
