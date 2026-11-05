@@ -12,6 +12,7 @@ import { LecteurVideo } from "./LecteurVideo";
 import { Partage } from "./Partage";
 import { GuetteurDirect } from "./GuetteurDirect";
 import { Causerie } from "./Causerie";
+import { Apparition } from "./Apparition";
 import {
   contact, dateLongue, lireElement, lireElements, lireReglages, paragraphes, siteEnBase, urlFichier, type ElementSite,
 } from "@/lib/site/contenu";
@@ -183,6 +184,23 @@ function Ondes() {
   );
 }
 
+/** Portée musicale dorée qui ondule en fond du grand bandeau (cinq lignes, comme une partition). */
+function Portee() {
+  const lignes = [0, 1, 2, 3, 4];
+  return (
+    <svg className="portee" viewBox="0 0 1440 260" aria-hidden preserveAspectRatio="none">
+      {lignes.map((n) => (
+        <path key={n} d={`M0 ${120 + n * 14} C 260 ${40 + n * 14}, 520 ${200 + n * 14}, 760 ${120 + n * 14} S 1200 ${50 + n * 14}, 1440 ${130 + n * 14}`} />
+      ))}
+    </svg>
+  );
+}
+
+/** Petit égaliseur animé (la musique joue). */
+function Egaliseur() {
+  return <span className="egaliseur" aria-hidden><i /><i /><i /><i /></span>;
+}
+
 /** Les rendez-vous de la semaine (dans le bandeau sur ordinateur, sous les rubriques sur téléphone). */
 function Semaine({ semaine, className }: { semaine: { jour: string; seances: ElementSite[] }[]; className: string }) {
   return (
@@ -222,11 +240,14 @@ export async function AccueilSite() {
   return (
     <CadreSite>
       <main className="accueil">
+        <Apparition />
         <section className="hero cadre">
+          <span className="lumiere" aria-hidden />
+          <Portee />
           <Ondes />
           <div className="col large hero-grille">
             <div className="hero-texte">
-              <p className="surtitre"><span className="filet" />PGM · Antenne de Muanda · EBNM KCC</p>
+              <p className="surtitre"><Egaliseur />PGM · Antenne de Muanda · EBNM KCC</p>
               <p className="salut">Paix à vous.</p>
               <h1>{r.accueil_titre}</h1>
               <p className="chapo">{r.accueil_texte}</p>
@@ -235,11 +256,20 @@ export async function AccueilSite() {
                 <Link className="btn btn-ligne" href="/nous-rejoindre"><UserPlus className="i" aria-hidden />Rejoindre une chorale</Link>
               </div>
             </div>
-            {semaine.length > 0 && <Semaine semaine={semaine} className="hero-semaine sur-pc" />}
+            <div className="hero-cote sur-pc">
+              <div className="embleme" aria-hidden>
+                <span className="anneau-tournant" />
+                <img src="/logo-pgm.png" alt="" />
+              </div>
+              {semaine.length > 0 && <Semaine semaine={semaine} className="hero-semaine" />}
+            </div>
           </div>
+          <svg className="vague" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden>
+            <path d="M0 34 C 240 64, 480 4, 720 26 S 1200 58, 1440 22 L1440 60 L0 60 Z" />
+          </svg>
         </section>
 
-        <div className="chiffres-band cadre">
+        <div className="chiffres-band cadre" data-apparait>
           <div className="col large">
             <div className="chiffres">
               <div><span className="med"><Building2 className="i" aria-hidden /></span><b>{paroisses}</b><span>paroisses</span></div>
@@ -252,10 +282,11 @@ export async function AccueilSite() {
 
         <section className="section cadre">
           <div className="col large">
-            <TitreSection etiquette="Découvrir" titre="Que voulez-vous faire ?" />
+            <div data-apparait><TitreSection etiquette="Découvrir" titre="Que voulez-vous faire ?" /></div>
             <nav className="decouvrir" aria-label="Rubriques principales">
-              {PRINCIPALES.map((href) => RUBRIQUES.find((x) => x.href === href)!).map(({ href, nom, Icone }) => (
-                <Link key={href} className="d-carte" href={href}>
+              {PRINCIPALES.map((href) => RUBRIQUES.find((x) => x.href === href)!).map(({ href, nom, Icone }, i) => (
+                <Link key={href} className="d-carte" href={href} data-apparait style={{ "--i": i } as React.CSSProperties}>
+                  <Icone className="i filigrane" aria-hidden />
                   <span className="rond"><Icone className="i" aria-hidden /></span>
                   <span className="d-txt"><b>{nom}</b><small>{DESCRIPTIONS[href]}</small></span>
                   <ArrowRight className="i fl" aria-hidden />
@@ -281,7 +312,7 @@ export async function AccueilSite() {
 
         <section className="section cadre">
           <div className="col large">
-            <div className="tv">
+            <div className="tv" data-apparait>
               <div className="tv-txt">
                 <span className="tv-marque"><TvMinimalPlay className="i" aria-hidden />PGM Muanda TV</span>
                 <h2>Nos cultes et nos louanges, en vidéo</h2>
@@ -307,8 +338,8 @@ export async function AccueilSite() {
         {(actualites[0] || prochaine) && (
           <section className="section cadre">
             <div className="col large">
-              <TitreSection etiquette="À la une" titre="Les nouvelles de l'antenne" lien={{ href: "/actualites", nom: "Toutes les actualités" }} />
-              <div className={prochaine && actualites[0] ? "une-grille" : "une-seule"}>
+              <div data-apparait><TitreSection etiquette="À la une" titre="Les nouvelles de l'antenne" lien={{ href: "/actualites", nom: "Toutes les actualités" }} /></div>
+              <div className={prochaine && actualites[0] ? "une-grille" : "une-seule"} data-apparait>
                 {actualites[0] && <CarteArticle a={actualites[0]} />}
                 {prochaine && (
                   <div className="une-soiree">
@@ -323,7 +354,7 @@ export async function AccueilSite() {
 
         <section className="section cadre">
           <div className="col large apropos">
-            <div className="apropos-txt">
+            <div className="apropos-txt" data-apparait>
               <TitreSection etiquette="Qui sommes-nous" titre="Une seule famille de chantres" />
               <p>
                 La Présidence générale de la musique (PGM) organise la musique de l&apos;Église Bon Nouveau
@@ -333,20 +364,20 @@ export async function AccueilSite() {
               <Link className="btn btn-marine" href="/la-pgm"><BookOpen className="i" aria-hidden />Découvrir la PGM</Link>
             </div>
             <div className="apropos-valeurs">
-              <div className="valeur"><span className="ic"><Music className="i" aria-hidden /></span><div><h3>La louange</h3><p>Chanter pour Dieu au culte du dimanche et aux activités de l&apos;antenne.</p></div></div>
-              <div className="valeur"><span className="ic"><GraduationCap className="i" aria-hidden /></span><div><h3>La formation</h3><p>Solfège, voix et répertoire, du chantre débutant au chef de chœur.</p></div></div>
-              <div className="valeur"><span className="ic"><HeartHandshake className="i" aria-hidden /></span><div><h3>La fraternité</h3><p>S&apos;entraider entre choristes, dans la discipline et le respect.</p></div></div>
+              <div className="valeur" data-apparait style={{ "--i": 0 } as React.CSSProperties}><span className="ic"><Music className="i" aria-hidden /></span><div><h3>La louange</h3><p>Chanter pour Dieu au culte du dimanche et aux activités de l&apos;antenne.</p></div></div>
+              <div className="valeur" data-apparait style={{ "--i": 1 } as React.CSSProperties}><span className="ic"><GraduationCap className="i" aria-hidden /></span><div><h3>La formation</h3><p>Solfège, voix et répertoire, du chantre débutant au chef de chœur.</p></div></div>
+              <div className="valeur" data-apparait style={{ "--i": 2 } as React.CSSProperties}><span className="ic"><HeartHandshake className="i" aria-hidden /></span><div><h3>La fraternité</h3><p>S&apos;entraider entre choristes, dans la discipline et le respect.</p></div></div>
             </div>
           </div>
         </section>
 
         <section className="section cadre">
-          <div className="col large"><EspaceMembres /></div>
+          <div className="col large" data-apparait><EspaceMembres /></div>
         </section>
 
         <section className="section cadre">
           <div className="col large">
-            <div className="contact-band">
+            <div className="contact-band" data-apparait>
               <div>
                 <span className="etiquette">Contact</span>
                 <h2>Une question ? Écrivez-nous.</h2>
