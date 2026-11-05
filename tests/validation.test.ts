@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { schemaConnexion, schemaEmail, schemaNouveauMotDePasse } from "@/lib/validation/auth";
 import { schemaNouveauCompte, schemaModification } from "@/lib/validation/utilisateurs";
+import { schemaMatricule } from "@/lib/validation/membres";
 
 const UUID = "10000000-0000-4000-8000-00000000000a";
 
@@ -61,5 +62,16 @@ describe("gestion des utilisateurs", () => {
   it("convertit le statut actif", () => {
     const r = schemaModification.parse({ id: UUID, role: "controleur", paroisseId: "", commissionId: "", actif: "non" });
     expect(r.actif).toBe(false);
+  });
+});
+
+describe("schemaMatricule", () => {
+  it("met en majuscules et retire les espaces autour", () => {
+    expect(schemaMatricule.parse("  pgm-mua-0025 ")).toBe("PGM-MUA-0025");
+  });
+  it("refuse les espaces, les caractères spéciaux et les matricules trop courts ou trop longs", () => {
+    for (const v of ["PGM MUA 1", "PGM/01", "AB", "-PGM-01", "A".repeat(21)]) {
+      expect(schemaMatricule.safeParse(v).success).toBe(false);
+    }
   });
 });

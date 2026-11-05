@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { Link2 } from "lucide-react";
+import { Hash, Link2 } from "lucide-react";
 import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
 import { STATUTS, type CodeStatut } from "@/lib/membres/libelles";
-import { archiverMembre, changerStatut, relierCompte, traiterDemande } from "../actions";
+import { archiverMembre, changerMatricule, changerStatut, relierCompte, traiterDemande } from "../actions";
 
 const VERBES: Record<CodeStatut, string> = {
   en_attente: "Remettre en attente",
@@ -74,5 +74,26 @@ export function TraiterDemande({ id, enAttente }: { id: string; enAttente: boole
       <ActionConfirmee masquer={!enAttente} action={traiterDemande} champs={{ id, decision: "refusee" }} libelle="Refuser" danger
         question="Refuser cette demande ?" />
     </div>
+  );
+}
+
+/** Changer le matricule à la main (administration seulement). */
+export function ChangerMatricule({ id, matricule }: { id: string; matricule: string }) {
+  const [etat, action] = useActionState(changerMatricule, undefined);
+  return (
+    <form action={action} className="space-y-3">
+      <input type="hidden" name="id" value={id} />
+      <label className="block text-sm font-medium text-slate-700">
+        Nouveau matricule
+        <input name="matricule" required defaultValue={matricule} maxLength={20} autoCapitalize="characters" autoComplete="off"
+          spellCheck={false} className={`${classeChamp} font-mono uppercase`} />
+      </label>
+      <p className="text-xs text-slate-500">
+        Lettres, chiffres et tirets, ex. PGM-MUA-0025. Deux membres ne peuvent pas avoir le même matricule.
+        Le QR code de la carte reste valable ; seule une carte déjà imprimée devra être réimprimée.
+      </p>
+      <MessageFormulaire etat={etat} />
+      <BoutonEnvoi className="sm:w-auto"><Hash className="size-4" aria-hidden /> Enregistrer le matricule</BoutonEnvoi>
+    </form>
   );
 }

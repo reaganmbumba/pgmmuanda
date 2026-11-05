@@ -10,5 +10,5 @@ gpg --batch --quiet --decrypt --passphrase-fd 3 "$SAUVEGARDE" 3<<<"$PHRASE_SECRE
   | psql "$BASE_URL" -q -v ON_ERROR_STOP=1 --single-transaction \
       -c "set session_replication_role = replica" -f - >/dev/null
 # « replica » : les déclencheurs (notifications, historique, matricules) ne sont pas rejoués.
-psql "$BASE_URL" -qtA -c "select setval('public.matricule_seq', greatest(1, coalesce((select max(substring(matricule from 9)::int) from public.membres), 0)))" >/dev/null
+psql "$BASE_URL" -qtA -c "select setval('public.matricule_seq', greatest(1, coalesce((select max(substring(matricule from 9)::int) from public.membres where matricule ~ '^PGM-MUA-[0-9]+\$'), 0)))" >/dev/null
 echo "Restauration terminée : $(psql "$BASE_URL" -qtA -c 'select count(*) from public.membres') membres."

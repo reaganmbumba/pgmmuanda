@@ -8,7 +8,7 @@ import { estAdmin, peutGererMembres } from "@/lib/auth/roles";
 import { CHAMPS_APPLICABLES } from "@/lib/membres/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
-import { schemaMembre, versLigne } from "@/lib/validation/membres";
+import { schemaMatricule, schemaMembre, versLigne } from "@/lib/validation/membres";
 
 export type Etat = { erreur?: string; succes?: string } | undefined;
 
@@ -78,6 +78,25 @@ export async function relierCompte(_: Etat, form: FormData): Promise<Etat> {
   if (!moi || !estAdmin(moi.role)) return { erreur: "Action réservée à l'administration." };
   const profil = String(form.get("profilId") ?? "") || null;
   return modifier(String(form.get("id")), { profil_id: profil });
+}
+
+/** Change le matricule d'un membre à la main. Réservé à l'administration ; la base vérifie aussi. */
+export async function changerMatricule(_: Etat, form: FormData): Promise<Etat> {
+  if (!supabaseActif) return MAQUETTE;
+  const moi = await utilisateurCourant();
+  if (!moi || !estAdmin(moi.role)) return { erreur: "Seule l'administration peut changer un matricule." };
+  const id = String(form.get("id") ?? "");
+  const m = schemaMatricule.safeParse(String(form.get("matricule") ?? ""));
+  if (!m.success) return { erreur: m.error.issues[0].message };
+
+  const supabase = await creerClientServeur();
+  const { data: autre } = await supabase.from("membres").select("prenom, nom").eq("matricule", m.data).neq("id", id).maybeSingle();
+  if (autre) return { erreur: `Le matricule ${m.data} est déjà utilisé par ${autre.prenom} ${autre.nom}.` };
+
+  const etat = await modifier(id, { matricule: m.data });
+  if (etat?.erreur) return etat;
+  revalidatePath("/staff/cartes");
+  return { succes: `Matricule enregistré : ${m.data}. La carte affiche maintenant ce matricule (le QR code reste le même).` };
 }
 
 /** Accepte ou refuse une demande de correction ; une correction acceptée est appliquée à la fiche quand c'est possible. */

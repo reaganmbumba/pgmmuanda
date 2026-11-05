@@ -79,7 +79,7 @@ export function FormulaireMembre({ membre, organisation }: { membre?: FicheMembr
 
       {!membre && (
         <p className="text-sm text-slate-500">
-          Le matricule (PGM-MUA-0001, PGM-MUA-0002…) est attribué automatiquement à l&apos;enregistrement et ne pourra plus être modifié.
+          Le matricule (PGM-MUA-0001, PGM-MUA-0002…) est attribué automatiquement à l&apos;enregistrement. Seule l&apos;administration pourra le changer ensuite.
         </p>
       )}
       <MessageFormulaire etat={etat} />
