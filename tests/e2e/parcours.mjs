@@ -129,11 +129,13 @@ try {
   await inscrire({ nom: "Lukombo", prenom: "Paul", paroisse: "Paroisse Beta" });
   await a.waitForURL(/enregistre=1/);
   ok((await texte(a)).includes("PGM-MUA-0002"), "deuxième membre : PGM-MUA-0002");
+  ok(a.url().includes("compte=ok") && (await a.textContent("[data-identifiant]")) === "paul.lukombo"
+    && (await a.textContent("[data-mot-de-passe]")) === "Lukombo123456", "nouveau membre : son compte est créé tout de suite (paul.lukombo / Lukombo123456)");
   const fiche2 = a.url().split("?")[0];
 
   // Modification + historique
   await a.goto(`${fiche1}/modifier`);
-  ok((await texte(a)).includes("non modifiable"), "le matricule est indiqué comme non modifiable");
+  ok((await a.locator("input[name=matricule]").count()) > 0, "l'administration peut changer le matricule");
   await a.selectOption("select[name=voix]", "tenor");
   await a.click("text=Enregistrer les modifications");
   await a.waitForURL(/enregistre=1/);
@@ -167,6 +169,12 @@ try {
 
   // --- Compte choriste relié à la fiche ----------------------------------
   console.log("Espace choriste");
+  // Grace a reçu un compte automatique à l'enregistrement ; on le retire pour tester « Relier ce compte »
+  {
+    const { data: g } = await admin.from("membres").select("profil_id, profils(identifiant, role)").eq("nom", "Mavungu").single();
+    ok(g.profils?.identifiant === "grace.mavungu" && g.profils?.role === "choriste", "le compte automatique de Grace est relié à sa fiche (grace.mavungu, choriste)");
+    await admin.auth.admin.deleteUser(g.profil_id);
+  }
   await creerCompte("grace@e2e.test", "Grace Mavungu", "choriste", { identifiant: "grace" });
   await a.goto(fiche1);
   await a.selectOption("select[name=profilId]", { label: "Grace Mavungu (grace)" });
@@ -1285,6 +1293,33 @@ try {
   await a.waitForSelector("text=L'ancien lien ne marche plus");
   await vis.goto(`${APP}${cheminLien}`);
   ok((await texte(vis)).includes("Lien non valable"), "après un nouveau lien, l'ancien ne marche plus");
+
+  console.log("Comptes des membres");
+  {
+    // Fiches sans compte : une normale, une archivée, une au même nom qu'un compte existant (« Admin E2E »)
+    const { data: fiches, error: eF } = await admin.from("membres").insert([
+      { prenom: "Jonas", nom: "KIESE", paroisse_id: idBeta, statut: "actif", archive: false },
+      { prenom: "Archi", nom: "Vee", paroisse_id: idBeta, statut: "actif", archive: true },
+      { prenom: "Admin", nom: "E2E", paroisse_id: idBeta, statut: "actif", archive: false },
+    ]).select("id, nom");
+    if (eF) throw eF;
+    await a.goto(`${APP}/staff/utilisateurs`);
+    let tu = await texte(a);
+    ok(tu.includes("Créer les comptes des membres") && tu.includes("Admin E2E"), "la page Utilisateurs propose de créer les comptes et signale le même nom");
+    await a.getByRole("button", { name: /Créer les comptes des membres/ }).click();
+    await a.getByRole("button", { name: /Oui, créer les/ }).click();
+    await a.waitForSelector("[data-acces-membres]", { timeout: 60000 });
+    tu = await a.textContent("[data-acces-membres]");
+    ok(tu.includes("Jonas KIESE") && tu.includes("jonas.kiese") && tu.includes("Kiese123456") && !tu.includes("Archi") && !tu.includes("Admin E2E"),
+      "comptes créés en une fois, sans les fiches archivées ni le même nom qu'un compte existant");
+    const { data: apres } = await admin.from("membres").select("nom, profil_id, profils(role)").in("id", fiches.map((f) => f.id));
+    const de = (nom) => apres.find((f) => f.nom === nom);
+    ok(de("KIESE").profils?.role === "choriste" && !de("Vee").profil_id && !de("E2E").profil_id, "le compte est relié à la fiche avec le rôle Choriste");
+    const j = await session("jonas.kiese", "Kiese123456");
+    ok(new URL(j.url()).pathname === "/choriste", "le membre se connecte avec son identifiant et le mot de passe Nom + 123456");
+    await a.reload();
+    ok(!(await texte(a)).includes("Créer les comptes des membres ("), "plus de membre sans compte à créer");
+  }
 
   console.log("Installer l'application");
   const inst = await navigateur.newPage();

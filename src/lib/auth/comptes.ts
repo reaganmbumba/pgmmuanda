@@ -63,3 +63,19 @@ export function problemeMotDePasse(m: string): string | null {
   if (!/[A-Z]/.test(m) || !/[a-z]/.test(m) || !/[0-9]/.test(m)) return "Le mot de passe doit avoir une majuscule, une minuscule et un chiffre.";
   return null;
 }
+
+/** « Grâce Mavungu » → « grace.mavungu » : lettres sans accents, chiffres et points seulement. */
+export function baseIdentifiant(prenom: string, nom: string) {
+  const propre = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const base = [propre(prenom), propre(nom)].filter(Boolean).join(".").slice(0, 34);
+  return base.length >= 3 ? base : `membre.${base}`.replace(/\.$/, "");
+}
+
+/** Nom ramené à ses lettres, sans accents ni majuscules, mots triés : « Reagan MBUMBA » = « mbumba reagan ». */
+export function cleNom(...parties: (string | null | undefined)[]) {
+  return parties.join(" ").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+    .split(/[^a-z0-9]+/).filter(Boolean).sort().join(" ");
+}
+
+/** Mot de passe donné au compte d'un membre : le nom + 123456, ou un mot de passe tiré au sort si le nom n'a pas de lettre. */
+export const motDePasseMembre = (nom: string) => motDePasseDuNom(nom) || motDePasseProvisoire();
