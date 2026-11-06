@@ -1090,6 +1090,16 @@ const CONFIDENTIALITE = [
       "Pour toute demande, contactez la PGM Antenne de Muanda au +243 825 717 444 (WhatsApp ou appel).",
     ],
   },
+  {
+    id: "supprimer",
+    titre: "Supprimer votre compte PGM Muanda",
+    points: [
+      "Pour supprimer votre compte de l'application PGM Muanda, envoyez « Supprimer mon compte » avec votre nom et votre identifiant par WhatsApp au +243 825 717 444, ou appelez ce numéro.",
+      "La PGM Antenne de Muanda confirme votre identité, puis supprime le compte dans un délai de 30 jours.",
+      "Sont supprimés : votre identifiant, votre mot de passe, votre photo, votre numéro de téléphone et vos préférences.",
+      "Sont conservés : les présences, cotisations et décisions déjà enregistrées, sans votre photo ni votre numéro, car elles font partie des registres de l'antenne. Les copies de sauvegarde sont effacées automatiquement au bout de 30 jours.",
+    ],
+  },
 ];
 
 export function PageConfidentialite() {
@@ -1100,14 +1110,14 @@ export function PageConfidentialite() {
           texte="Comment la PGM Antenne de Muanda protège vos informations, sur le site et dans l'application." />
         <Bloc>
           <div className="faq regles">
-            {CONFIDENTIALITE.map(({ titre, points }) => (
-              <details key={titre} open>
+            {CONFIDENTIALITE.map(({ id, titre, points }: { id?: string; titre: string; points: string[] }) => (
+              <details key={titre} id={id} open>
                 <summary><span>{titre}</span></summary>
                 <ul className="puces">{points.map((p) => <li key={p}>{p}</li>)}</ul>
               </details>
             ))}
           </div>
-          <p className="note">Dernière mise à jour : 31 octobre 2026.</p>
+          <p className="note">Dernière mise à jour : 6 novembre 2026.</p>
         </Bloc>
       </main>
     </CadreSite>
