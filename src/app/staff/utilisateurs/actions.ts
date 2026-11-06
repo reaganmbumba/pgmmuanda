@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { utilisateurCourant } from "@/lib/auth/session";
 import { estAdmin, peutRecevoirAccesFinances, rolesAttribuables, type Role } from "@/lib/auth/roles";
-import { emailTechnique, messageAcces, motDePasseProvisoire } from "@/lib/auth/comptes";
+import { emailTechnique, messageAcces, motDePasseMembre, motDePasseProvisoire } from "@/lib/auth/comptes";
+import { creerCompteDuMembre, memeNomQuUnCompte, nomsDesComptes } from "@/lib/auth/compte-membre";
 import { creerClientAdmin, problemeCleServeur } from "@/lib/supabase/admin";
 import { URL_SITE } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
@@ -161,4 +162,45 @@ export async function renommerUtilisateur(_: Etat, form: FormData): Promise<Etat
   revalidatePath("/staff/utilisateurs");
   revalidatePath("/", "layout");
   return { succes: `Nom corrigé : ${nom}.` };
+}
+
+export type AccesMembre = { nom: string; identifiant: string; motDePasse: string; message: string };
+export type EtatComptesMembres = (NonNullable<Etat> & { acces?: AccesMembre[]; ignores?: string[] }) | undefined;
+
+/**
+ * Donne un compte (rôle choriste) à chaque membre qui n'en a pas encore.
+ * Fiches archivées exclues ; une fiche qui porte le nom d'un compte existant
+ * (ex. l'administrateur) est laissée de côté, à relier à la main.
+ */
+export async function creerComptesMembres(): Promise<EtatComptesMembres> {
+  const moi = await utilisateurCourant();
+  if (!moi || !estAdmin(moi.role)) return { erreur: "Action réservée à l'administration." };
+  const admin = creerClientAdmin();
+  if (!admin) return { erreur: "La clé serveur SUPABASE_SERVICE_ROLE_KEY n'est pas configurée." };
+
+  const { data: membres, error } = await admin.from("membres")
+    .select("id, prenom, nom, postnom, paroisse_id, statut")
+    .eq("archive", false).is("profil_id", null).order("nom");
+  if (error) return { erreur: "Impossible de lire la liste des membres." };
+  if (!membres?.length) return { succes: "Tous les membres ont déjà un compte." };
+
+  const noms = await nomsDesComptes(admin);
+  const acces: AccesMembre[] = [];
+  const ignores: string[] = [];
+  let echecs = 0;
+  for (const m of membres) {
+    const nom = `${m.prenom} ${m.nom}`.trim();
+    if (memeNomQuUnCompte(noms, m)) { ignores.push(nom); continue; }
+    const motDePasse = motDePasseMembre(m.nom);
+    const compte = await creerCompteDuMembre(admin, m, motDePasse);
+    if (!compte) { echecs++; continue; }
+    acces.push({ nom, identifiant: compte.identifiant, motDePasse, message: messageAcces(nom, compte.identifiant, motDePasse, URL_SITE) });
+  }
+  revalidatePath("/staff/utilisateurs");
+  revalidatePath("/staff/membres");
+  const texte = [
+    `${acces.length} compte${acces.length > 1 ? "s" : ""} créé${acces.length > 1 ? "s" : ""}.`,
+    echecs ? `${echecs} n'ont pas pu être créés : réessayez.` : "",
+  ].filter(Boolean).join(" ");
+  return { ...(acces.length || !echecs ? { succes: texte } : { erreur: texte }), acces, ignores };
 }

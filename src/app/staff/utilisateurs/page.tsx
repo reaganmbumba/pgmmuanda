@@ -8,7 +8,11 @@ import { creerClientAdmin } from "@/lib/supabase/admin";
 import { supabaseActif } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
 import { estEmailTechnique } from "@/lib/auth/comptes";
-import { FormulaireCompte, LigneUtilisateur } from "./Formulaires";
+import { memeNomQuUnCompte, nomsDesComptes } from "@/lib/auth/compte-membre";
+import { ComptesMembres, FormulaireCompte, LigneUtilisateur } from "./Formulaires";
+
+// Création des comptes de tous les membres en une fois : peut prendre quelques secondes
+export const maxDuration = 60;
 
 export const metadata = { title: "Utilisateurs et permissions" };
 
@@ -42,6 +46,18 @@ export default async function PageUtilisateurs() {
     data?.users.forEach((u) => u.email && !estEmailTechnique(u.email) && emails.set(u.id, u.email));
   }
 
+  // Membres (fiches non archivées) qui n'ont pas encore de compte
+  let sansCompte = 0;
+  let memeNom: string[] = [];
+  if (admin) {
+    const [{ data: membres }, noms] = await Promise.all([
+      admin.from("membres").select("prenom, nom, postnom").eq("archive", false).is("profil_id", null),
+      nomsDesComptes(admin),
+    ]);
+    sansCompte = membres?.length ?? 0;
+    memeNom = (membres ?? []).filter((m) => memeNomQuUnCompte(noms, m)).map((m) => `${m.prenom} ${m.nom}`);
+  }
+
   const listes = { roles: rolesAttribuables(moi.role), paroisses: paroisses ?? [], commissions: commissions ?? [], chorales };
 
   return (
@@ -60,6 +76,11 @@ export default async function PageUtilisateurs() {
           <p className="rounded-xl bg-or-100 p-3 text-sm text-or-600">
             Pour créer des comptes, ajoutez la clé SUPABASE_SERVICE_ROLE_KEY dans la configuration du serveur.
           </p>
+        )}
+        {admin && (
+          <Carte titre="Comptes des membres">
+            <ComptesMembres sansCompte={sansCompte} memeNom={memeNom} />
+          </Carte>
         )}
         <Carte titre={`Comptes (${profils?.length ?? 0})`}>
           {error && <p className="p-4 text-sm text-red-700">Impossible de charger les comptes.</p>}

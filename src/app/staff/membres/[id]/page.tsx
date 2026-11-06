@@ -10,8 +10,11 @@ import { estAdmin, peutGererMembres, voitTout } from "@/lib/auth/roles";
 import { formatDate, formatDateHeure } from "@/lib/format";
 import { comptesNonRelies, lireDemandes, lireHistorique, lireMembre, lireOrganisation } from "@/lib/membres/depot";
 import { CHAMPS_CORRIGEABLES, CHAMPS_MEMBRE, STATUTS, STATUTS_DEMANDE, TYPES_HISTORIQUE, VOIX } from "@/lib/membres/libelles";
-import { supabaseActif } from "@/lib/supabase/config";
+import { supabaseActif, URL_SITE } from "@/lib/supabase/config";
 import { creerClientServeur } from "@/lib/supabase/server";
+import { creerClientAdmin } from "@/lib/supabase/admin";
+import { messageAcces, motDePasseDuNom } from "@/lib/auth/comptes";
+import { BoiteAcces } from "@/app/staff/utilisateurs/Formulaires";
 import { CarteMembre } from "@/components/carte/CarteMembre";
 import { GestionCarte } from "@/components/carte/GestionCarte";
 import { PhotoMembre } from "@/components/carte/PhotoMembre";
@@ -26,10 +29,11 @@ export const metadata = { title: "Fiche membre" };
 
 export default async function FicheMembrePage({ params, searchParams }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ enregistre?: string }>;
+  searchParams: Promise<{ enregistre?: string; compte?: string }>;
 }) {
   if (!supabaseActif) redirect("/staff/membres");
   const { id } = await params;
+  const recherche = await searchParams;
   const moi = await exigerAcces("/staff/membres");
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const membre = await lireMembre(id);
@@ -52,6 +56,17 @@ export default async function FicheMembrePage({ params, searchParams }: {
     const supabase = await creerClientServeur();
     const { data } = await supabase.from("profils").select("nom_affiche, identifiant").eq("id", membre.profilId).maybeSingle();
     compteActuel = data ? `${data.nom_affiche}${data.identifiant ? ` (${data.identifiant})` : ""}` : null;
+  }
+
+  // Juste après l'enregistrement : accès du compte créé automatiquement, à envoyer sur WhatsApp
+  let accesNouveau: { nom: string; identifiant: string; motDePasse: string; message: string } | null = null;
+  if (recherche.compte === "ok" && membre.profilId) {
+    const { data } = await creerClientAdmin()?.from("profils").select("identifiant").eq("id", membre.profilId).maybeSingle() ?? { data: null };
+    const motDePasse = motDePasseDuNom(membre.nom);
+    if (data?.identifiant && motDePasse) {
+      const nom = `${membre.prenom} ${membre.nom}`;
+      accesNouveau = { nom, identifiant: data.identifiant, motDePasse, message: messageAcces(nom, data.identifiant, motDePasse, URL_SITE) };
+    }
   }
 
   const noms = new Map<string, string>([
@@ -90,8 +105,21 @@ export default async function FicheMembrePage({ params, searchParams }: {
       <Link href="/staff/membres" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-marine-900">
         <ArrowLeft className="size-4" aria-hidden /> Membres
       </Link>
-      {(await searchParams).enregistre && (
-        <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">Fiche enregistrée.</p>
+      {recherche.enregistre && (
+        <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
+          Fiche enregistrée.{accesNouveau ? " Son compte de connexion est créé (rôle Choriste)." : ""}
+        </p>
+      )}
+      {accesNouveau && <BoiteAcces acces={accesNouveau} />}
+      {recherche.compte === "homonyme" && (
+        <p role="status" className="rounded-xl bg-or-100 p-3 text-sm text-or-600">
+          Un compte au même nom existe déjà : aucun nouveau compte n&apos;a été créé. Reliez-le à cette fiche dans « Compte de connexion ».
+        </p>
+      )}
+      {recherche.compte === "echec" && (
+        <p role="status" className="rounded-xl bg-or-100 p-3 text-sm text-or-600">
+          Le compte de connexion n&apos;a pas pu être créé. Créez-le dans « Utilisateurs et permissions ».
+        </p>
       )}
 
       <section className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:flex-row sm:items-center">

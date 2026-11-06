@@ -8,6 +8,7 @@ import { VOIX } from "@/lib/membres/libelles";
 import { photoValable } from "@/lib/photo";
 import { supabaseActif } from "@/lib/supabase/config";
 import { creerClientAdmin } from "@/lib/supabase/admin";
+import { creerCompteChoriste } from "@/lib/auth/compte-membre";
 import { creerClientServeur } from "@/lib/supabase/server";
 
 const texte = (max: number) => z.string().trim().max(max, `${max} caractères maximum.`);
@@ -33,44 +34,6 @@ const schema = z.object({
 /** Accès donnés à la personne à la fin de son inscription (affichés une seule fois). */
 export type EtatInscription = (NonNullable<Etat> & { acces?: { identifiant: string; motDePasse: string; connecte: boolean } }) | undefined;
 
-/** « Grâce Mavungu » → « grace.mavungu » : lettres sans accents, chiffres et points seulement. */
-function baseIdentifiant(prenom: string, nom: string) {
-  const propre = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-  const base = [propre(prenom), propre(nom)].filter(Boolean).join(".").slice(0, 34);
-  return base.length >= 3 ? base : `membre.${base}`.replace(/\.$/, "");
-}
-
-/** Crée le compte (rôle choriste) avec le premier identifiant libre. Renvoie null en cas d'échec. */
-async function creerCompteInscrit(prenom: string, nom: string, motDePasse: string, paroisseId: string) {
-  const admin = creerClientAdmin();
-  if (!admin) return null;
-  const base = baseIdentifiant(prenom, nom);
-  for (let n = 1; n <= 30; n++) {
-    const identifiant = n === 1 ? base : `${base}${n}`;
-    const { data: pris } = await admin.from("profils").select("id").eq("identifiant", identifiant).maybeSingle();
-    if (pris) continue;
-    const { data, error } = await admin.auth.admin.createUser({
-      email: emailTechnique(identifiant), password: motDePasse, email_confirm: true,
-      user_metadata: { nom_affiche: `${prenom} ${nom}` },
-    });
-    if (error?.code === "email_exists") continue;
-    if (error || !data.user) {
-      console.error("Compte d'inscription refusé par Supabase :", error?.code, error?.message);
-      return null;
-    }
-    const { error: e2 } = await admin.from("profils")
-      .update({ identifiant, nom_affiche: `${prenom} ${nom}`, role: "choriste", paroisse_id: paroisseId }).eq("id", data.user.id);
-    if (e2) {
-      await admin.auth.admin.deleteUser(data.user.id);
-      if (e2.code === "23505") continue;
-      console.error("Profil du compte d'inscription refusé :", e2.code, e2.message);
-      return null;
-    }
-    return { id: data.user.id, identifiant };
-  }
-  return null;
-}
-
 export async function deposerInscription(_: EtatInscription, form: FormData): Promise<EtatInscription> {
   if (!supabaseActif) return { erreur: "Mode maquette : l'inscription est désactivée." };
   const d = schema.safeParse(Object.fromEntries(form));
@@ -87,10 +50,11 @@ export async function deposerInscription(_: EtatInscription, form: FormData): Pr
   }
 
   // Le compte est créé tout de suite ; la fiche de membre viendra avec la validation du staff.
-  const compte = await creerCompteInscrit(v.prenom, v.nom, v.motDePasse, v.paroisseId);
+  const admin = creerClientAdmin();
+  const compte = admin ? await creerCompteChoriste(admin, { prenom: v.prenom, nom: v.nom, motDePasse: v.motDePasse, paroisseId: v.paroisseId }) : null;
   const merci = `Merci ${v.prenom} ! Votre inscription a bien été envoyée.`;
   if (!compte) return { succes: `${merci} Votre compte sera créé par le responsable.` };
-  await creerClientAdmin()!.from("inscriptions").update({ profil_id: compte.id }).eq("id", inscriptionId);
+  await admin!.from("inscriptions").update({ profil_id: compte.id }).eq("id", inscriptionId);
 
   // Connexion immédiate, sauf si quelqu'un est déjà connecté sur ce téléphone (ex. un responsable qui aide)
   let connecte = false;

@@ -2,13 +2,13 @@
 
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { Copy, KeyRound, Loader2, MessageCircle, Pencil, RefreshCw, UserPlus } from "lucide-react";
+import { Copy, KeyRound, Loader2, MessageCircle, Pencil, RefreshCw, UserPlus, Users } from "lucide-react";
 import { useLectureSeule } from "@/components/LectureSeule";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
 import { LIBELLES_NIVEAUX, LIBELLES_ROLES, estLecteurGeneral, ROLES_PAR_NIVEAU, niveauDe, peutRecevoirAccesFinances, type Niveau, type Role } from "@/lib/auth/roles";
 import { lienWhatsApp } from "@/lib/programmes/libelles";
 import { motDePasseProvisoire } from "@/lib/auth/comptes";
-import { creerCompte, modifierUtilisateur, nouveauMotDePasse, renommerUtilisateur, type EtatAcces } from "./actions";
+import { creerCompte, creerComptesMembres, modifierUtilisateur, nouveauMotDePasse, renommerUtilisateur, type EtatAcces } from "./actions";
 
 type Option = { id: string; nom: string };
 type Listes = { roles: Role[]; paroisses: Option[]; commissions: Option[]; chorales: Option[] };
@@ -95,7 +95,7 @@ function identifiantPour(nom: string) {
 }
 
 /** Identifiant et mot de passe provisoire, affichés une seule fois, avec partage WhatsApp. */
-function BoiteAcces({ acces }: { acces: NonNullable<NonNullable<EtatAcces>["acces"]> }) {
+export function BoiteAcces({ acces }: { acces: NonNullable<NonNullable<EtatAcces>["acces"]> }) {
   const [copie, setCopie] = useState(false);
   return (
     <div className="rounded-2xl border-2 border-or-500/60 bg-or-100/50 p-4" data-acces>
@@ -284,5 +284,76 @@ function ChampMotDePasse() {
       </span>
       <span className="text-xs font-normal text-slate-500">Notez-le ou envoyez-le sur WhatsApp après la création. La personne le changera dans « Paramètres ».</span>
     </label>
+  );
+}
+
+/**
+ * Un bouton pour donner un compte (rôle Choriste) à tous les membres qui n'en ont pas,
+ * puis la liste des accès à envoyer un par un sur WhatsApp.
+ */
+export function ComptesMembres({ sansCompte, memeNom }: { sansCompte: number; memeNom: string[] }) {
+  const [etat, action, enCours] = useActionState(creerComptesMembres, undefined);
+  const [confirmer, setConfirmer] = useState(false);
+  const aCreer = sansCompte - memeNom.length;
+  if (useLectureSeule()) return null;
+  return (
+    <div className="space-y-4">
+      {!etat?.acces?.length && (
+        aCreer > 0 ? (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-600">
+              <strong className="text-marine-900">{aCreer} membre{aCreer > 1 ? "s" : ""}</strong> n&apos;{aCreer > 1 ? "ont" : "a"} pas encore de compte.
+              Chacun recevra un identifiant (prénom.nom) et le mot de passe « Nom + 123456 », avec le rôle Choriste.
+            </p>
+            {confirmer ? (
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={enCours} onClick={() => startTransition(() => action())}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marine-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-marine-800 disabled:opacity-60">
+                  {enCours ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Users className="size-5" aria-hidden />}
+                  {enCours ? "Création en cours…" : `Oui, créer les ${aCreer} comptes`}
+                </button>
+                <button type="button" disabled={enCours} onClick={() => setConfirmer(false)}
+                  className="inline-flex min-h-12 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-marine-900 hover:bg-slate-50">
+                  Annuler
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setConfirmer(true)}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-marine-900 px-4 text-sm font-semibold text-white shadow-sm hover:bg-marine-800 sm:w-auto">
+                <Users className="size-5" aria-hidden /> Créer les comptes des membres ({aCreer})
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-600">Tous les membres ont un compte. Chaque nouveau membre enregistré reçoit le sien automatiquement.</p>
+        )
+      )}
+      {memeNom.length > 0 && !etat?.acces?.length && (
+        <p className="rounded-xl bg-or-100 p-3 text-xs text-or-600">
+          Laissé{memeNom.length > 1 ? "s" : ""} de côté, car un compte au même nom existe déjà : {memeNom.join(", ")}.
+          Reliez le compte à la fiche depuis la fiche du membre.
+        </p>
+      )}
+      <MessageFormulaire etat={etat} />
+      {etat?.acces?.length ? (
+        <div className="space-y-2">
+          <p className="text-xs text-slate-600">Notez ces accès maintenant : ils ne seront plus affichés. Envoyez-les un par un sur WhatsApp.</p>
+          <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white" data-acces-membres>
+            {etat.acces.map((a) => (
+              <li key={a.identifiant} className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm">
+                <div className="min-w-0">
+                  <p className="font-medium text-marine-900">{a.nom}</p>
+                  <p className="font-mono text-xs text-slate-600">{a.identifiant} · {a.motDePasse}</p>
+                </div>
+                <a href={lienWhatsApp(a.message)} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700">
+                  <MessageCircle className="size-4" aria-hidden /> WhatsApp
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }

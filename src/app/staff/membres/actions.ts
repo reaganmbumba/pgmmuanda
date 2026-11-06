@@ -7,7 +7,10 @@ import { utilisateurCourant } from "@/lib/auth/session";
 import { estAdmin, peutGererMembres } from "@/lib/auth/roles";
 import { CHAMPS_APPLICABLES } from "@/lib/membres/libelles";
 import { supabaseActif } from "@/lib/supabase/config";
+import { creerClientAdmin } from "@/lib/supabase/admin";
 import { creerClientServeur } from "@/lib/supabase/server";
+import { motDePasseDuNom } from "@/lib/auth/comptes";
+import { creerCompteDuMembre, memeNomQuUnCompte, nomsDesComptes } from "@/lib/auth/compte-membre";
 import { schemaMatricule, schemaMembre, versLigne } from "@/lib/validation/membres";
 
 export type Etat = { erreur?: string; succes?: string } | undefined;
@@ -44,8 +47,27 @@ export async function enregistrerMembre(_: Etat, form: FormData): Promise<Etat> 
     : await supabase.from("membres").insert(ligne).select("id");
   if (error || !data?.length) return { erreur: messageErreur(error) };
 
+  // Nouveau membre : son compte de connexion (rôle choriste) est créé tout de suite.
+  const compte = d.data.id ? "" : `&compte=${await compteAutomatique(data[0].id)}`;
   revalidatePath("/staff/membres");
-  redirect(`/staff/membres/${data[0].id}?enregistre=1`);
+  revalidatePath("/staff/utilisateurs");
+  redirect(`/staff/membres/${data[0].id}?enregistre=1${compte}`);
+}
+
+/**
+ * Donne un compte à la fiche qui vient d'être enregistrée. Mot de passe de départ :
+ * le nom + 123456 (comme à l'inscription par lien), à changer dans « Paramètres ».
+ * Renvoie « ok », « homonyme » (un compte au même nom existe déjà) ou « echec ».
+ */
+async function compteAutomatique(id: string): Promise<"ok" | "homonyme" | "echec"> {
+  const admin = creerClientAdmin();
+  if (!admin) return "echec";
+  const { data: m } = await admin.from("membres").select("id, prenom, nom, postnom, paroisse_id, statut, profil_id").eq("id", id).maybeSingle();
+  if (!m || m.profil_id) return m ? "ok" : "echec";
+  const motDePasse = motDePasseDuNom(m.nom);
+  if (!motDePasse) return "echec";
+  if (memeNomQuUnCompte(await nomsDesComptes(admin), m)) return "homonyme";
+  return (await creerCompteDuMembre(admin, m, motDePasse)) ? "ok" : "echec";
 }
 
 async function modifier(id: string, champs: Record<string, unknown>): Promise<Etat> {
