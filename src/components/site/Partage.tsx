@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Image as ImageIcon, MessageCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { MessageCircle } from "lucide-react";
 
 /** Le « f » de Facebook (lucide n'a plus de logos de marques). */
 function Facebook() {
@@ -28,8 +28,8 @@ async function fichierImage(image: string): Promise<File | null> {
 
 /**
  * Partager une page sur WhatsApp ou Facebook. L'image de la page (photo de la
- * publication, miniature de la vidéo ou logo) s'affiche dans l'aperçu du partage.
- * « Image seule » envoie l'image en fichier (le texte est alors copié, à coller).
+ * publication, miniature de la vidéo ou logo) est jointe au message WhatsApp
+ * avec le texte complet ; sur Facebook, elle s'affiche dans l'aperçu du lien.
  */
 export function Partage({ texte, chemin, image, compact = false }: { texte: string; chemin?: string; image?: string | null; compact?: boolean }) {
   const adresse = () => (chemin ? new URL(chemin, window.location.origin).toString() : window.location.href.split("#")[0]);
@@ -40,30 +40,36 @@ export function Partage({ texte, chemin, image, compact = false }: { texte: stri
     return [titre, adresse(), ...suite].join("\n\n");
   };
   const [copie, setCopie] = useState(false);
+  // l'image est préparée à l'avance : le partage s'ouvre tout de suite au toucher
+  const imagePrete = useRef<Promise<File | null> | null>(null);
+  useEffect(() => {
+    imagePrete.current = image ? fichierImage(image) : null;
+  }, [image]);
 
-  // WhatsApp reçoit toujours le texte complet ; le lien en fin de message
-  // fait apparaître l'image de la publication (aperçu) dans le même message.
-  function whatsapp() {
+  // Lien wa.me : le texte complet ; le lien fait apparaître l'aperçu de l'image.
+  function whatsappTexte() {
     setCopie(false);
     ouvrir(`https://wa.me/?text=${encodeURIComponent(message())}`);
   }
 
-  // Envoyer l'image elle-même en fichier : certains téléphones ne gardent alors
-  // que l'image, donc le texte est aussi copié, prêt à être collé dessous.
-  async function imageJointe() {
+  // WhatsApp : l'image de la publication part en pièce jointe, avec le texte
+  // complet en légende. Certains téléphones ne gardent que l'image : le texte
+  // est donc aussi copié, prêt à être collé. Sans image ou si le téléphone ne
+  // sait pas partager de fichier, on envoie le texte avec le lien.
+  async function whatsapp() {
     const texteComplet = message();
+    const fichier = image ? await (imagePrete.current ?? fichierImage(image)) : null;
+    if (!fichier) return whatsappTexte();
     let copieOk = false;
     try {
       await navigator.clipboard?.writeText(texteComplet);
       copieOk = true;
     } catch { /* presse-papiers refusé : on partage quand même */ }
-    const fichier = image ? await fichierImage(image) : null;
-    if (!fichier) return whatsapp();
-    if (copieOk) setCopie(true);
+    setCopie(copieOk);
     try {
       await navigator.share({ files: [fichier], text: texteComplet, title: texte.split("\n")[0] });
     } catch (e) {
-      if ((e as Error).name !== "AbortError") whatsapp();
+      if ((e as Error).name !== "AbortError") whatsappTexte();
     }
   }
 
@@ -76,12 +82,7 @@ export function Partage({ texte, chemin, image, compact = false }: { texte: stri
       <button type="button" className="p-fb" onClick={() => ouvrir(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(adresse())}`)}>
         <Facebook />Facebook
       </button>
-      {image && (
-        <button type="button" className="p-autre" onClick={imageJointe}>
-          <ImageIcon className="i" aria-hidden />Image seule
-        </button>
-      )}
-      {copie && <span className="partage-note">Le texte est copié : après avoir choisi la personne, appuyez longtemps dans la zone de message puis « Coller ».</span>}
+      {copie && <span className="partage-note">L’image part avec le texte. Si le texte n’apparaît pas sous l’image, appuyez longtemps dans la zone de message puis « Coller » : il est déjà copié.</span>}
     </div>
   );
 }
