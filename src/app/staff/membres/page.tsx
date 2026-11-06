@@ -12,7 +12,7 @@ import { TableMembres } from "./TableMembres";
 
 export const metadata = { title: "Membres" };
 
-export default async function PageMembres({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string }> }) {
+export default async function PageMembres({ searchParams }: { searchParams: Promise<{ vue?: string; q?: string; supprime?: string }> }) {
   if (!supabaseActif) {
     return (
       <>
@@ -24,7 +24,7 @@ export default async function PageMembres({ searchParams }: { searchParams: Prom
   }
 
   const moi = await exigerAcces("/staff/membres");
-  const { vue, q } = await searchParams;
+  const { vue, q, supprime } = await searchParams;
   const archives = vue === "archives";
   const [membres, demandes, inscriptions] = await Promise.all([listerMembres({ archives }), lireDemandes({ enAttente: true }), compterEnAttente()]);
   const paroisses = [...new Set(membres.map((m) => m.paroisse))].sort();
@@ -49,6 +49,11 @@ export default async function PageMembres({ searchParams }: { searchParams: Prom
           </div>
         }
       />
+      {supprime && (
+        <p role="status" className="mb-5 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
+          La fiche a été supprimée définitivement.
+        </p>
+      )}
       {gestion && inscriptions > 0 && (
         <Link href="/staff/inscriptions"
           className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 hover:bg-emerald-100">

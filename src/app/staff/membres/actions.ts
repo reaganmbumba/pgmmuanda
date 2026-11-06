@@ -71,6 +71,26 @@ export async function archiverMembre(_: Etat, form: FormData): Promise<Etat> {
   return etat?.erreur ? etat : { succes: archive ? "Membre archivé." : "Membre restauré." };
 }
 
+/**
+ * Supprime définitivement une fiche déjà archivée (super administrateur seulement ;
+ * la base le vérifie aussi). Ses cartes, présences et son historique partent avec elle.
+ */
+export async function supprimerMembre(_: Etat, form: FormData): Promise<Etat> {
+  if (!supabaseActif) return MAQUETTE;
+  const moi = await utilisateurCourant();
+  if (!moi || moi.role !== "super_admin") return { erreur: "Seul le super administrateur peut supprimer une fiche." };
+  const id = String(form.get("id") ?? "");
+  const supabase = await creerClientServeur();
+  const { data: fiche } = await supabase.from("membres").select("archive").eq("id", id).maybeSingle();
+  if (!fiche) return { erreur: "Fiche introuvable." };
+  if (!fiche.archive) return { erreur: "Archivez d'abord la fiche avant de la supprimer." };
+  const { data, error } = await supabase.from("membres").delete().eq("id", id).select("id");
+  if (error || !data?.length) return { erreur: error ? "La suppression a échoué. Réessayez." : "Vous n'avez pas le droit de supprimer cette fiche." };
+  revalidatePath("/staff/membres");
+  revalidatePath("/staff/cartes");
+  redirect("/staff/membres?vue=archives&supprime=1");
+}
+
 /** Relie (ou détache) le compte de connexion d'un choriste à sa fiche. Réservé à l'administration. */
 export async function relierCompte(_: Etat, form: FormData): Promise<Etat> {
   const moi = supabaseActif ? await utilisateurCourant() : null;

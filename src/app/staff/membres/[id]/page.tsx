@@ -227,7 +227,7 @@ export default async function FicheMembrePage({ params, searchParams }: {
           )}
           {gestion && (
             <Carte titre="Statut">
-              <ActionsStatut id={id} statut={membre.statutCode} archive={membre.archive} />
+              <ActionsStatut id={id} statut={membre.statutCode} archive={membre.archive} peutSupprimer={moi?.role === "super_admin"} />
             </Carte>
           )}
           {admin && (
