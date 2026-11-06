@@ -23,6 +23,7 @@ const CREME = rgb(0xfb / 255, 0xf8 / 255, 0xf0 / 255);
 const BLANC = rgb(1, 1, 1);
 const GRIS = rgb(0.35, 0.39, 0.45);
 const SITE = "www.pgmmuanda.com";
+const PRESIDENT_ANTENNE = "Joel NKASA Lusala";
 
 type Ressources = { normal: PDFFont; gras: PDFFont; logo: PDFImage; kcc: PDFImage };
 
@@ -209,9 +210,10 @@ function verso(page: PDFPage, c: CarteImprimable, r: Ressources) {
     ly -= 2.5;
   }
 
-  // Signature
-  page.drawLine({ start: { x: W - 92, y: 27 }, end: { x: W - 13, y: 27 }, thickness: 0.4, color: GRIS });
-  centrer(page, "Le Président de l'antenne", W - 52.5, 21, r.normal, 4.4, GRIS);
+  // Nom du président de l'antenne (à la place d'une signature)
+  page.drawLine({ start: { x: W - 92, y: 33 }, end: { x: W - 13, y: 33 }, thickness: 0.6, color: OR });
+  centrer(page, PRESIDENT_ANTENNE, W - 52.5, 25.5, r.gras, 6, MARINE);
+  centrer(page, "Président de l'antenne", W - 52.5, 19.5, r.normal, 4.4, GRIS);
   ecrire(page, "Carte trouvée ? Merci de la remettre", 13, 26, r.normal, 4.2, GRIS);
   ecrire(page, "à la PGM Muanda.", 13, 20.5, r.normal, 4.2, GRIS);
 
