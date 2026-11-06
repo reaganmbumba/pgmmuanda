@@ -5,7 +5,7 @@ import { Hash, Link2 } from "lucide-react";
 import { ActionConfirmee } from "@/components/ui/ActionConfirmee";
 import { BoutonEnvoi, classeChamp, MessageFormulaire } from "@/components/ui/Formulaire";
 import { STATUTS, type CodeStatut } from "@/lib/membres/libelles";
-import { archiverMembre, changerMatricule, changerStatut, relierCompte, traiterDemande } from "../actions";
+import { archiverMembre, changerMatricule, changerStatut, relierCompte, supprimerMembre, traiterDemande } from "../actions";
 
 const VERBES: Record<CodeStatut, string> = {
   en_attente: "Remettre en attente",
@@ -14,7 +14,9 @@ const VERBES: Record<CodeStatut, string> = {
   suspendu: "Suspendre",
 };
 
-export function ActionsStatut({ id, statut, archive }: { id: string; statut: CodeStatut; archive: boolean }) {
+export function ActionsStatut({ id, statut, archive, peutSupprimer = false }: {
+  id: string; statut: CodeStatut; archive: boolean; peutSupprimer?: boolean;
+}) {
   return (
     <div className="flex flex-wrap gap-2">
       {(Object.keys(STATUTS) as CodeStatut[]).map((s) => (
@@ -24,6 +26,8 @@ export function ActionsStatut({ id, statut, archive }: { id: string; statut: Cod
       <ActionConfirmee action={archiverMembre} champs={{ id, archive: archive ? "non" : "oui" }}
         libelle={archive ? "Restaurer" : "Archiver"} danger={!archive}
         question={archive ? "Restaurer cette fiche ?" : "Archiver cette fiche ? Elle restera consultable dans les archives."} />
+      <ActionConfirmee masquer={!archive || !peutSupprimer} action={supprimerMembre} champs={{ id }} libelle="Supprimer" danger
+        question="Supprimer définitivement cette fiche ? Sa carte, ses présences et son historique seront effacés. On ne pourra pas la récupérer." />
     </div>
   );
 }
