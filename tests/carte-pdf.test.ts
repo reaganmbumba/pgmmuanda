@@ -19,3 +19,16 @@ describe("carte PDF", () => {
     expect(images(avec)).toBe(images(sans) + 1);
   });
 });
+
+describe("photo de la carte", () => {
+  it("garde la photo même quand Node renvoie une portion de mémoire partagée (Node 24)", async () => {
+    const { octetsBase64 } = await import("@/lib/cartes/pdf");
+    const base64 = fs.readFileSync("tests/e2e/photo-test.jpg").toString("base64");
+    // Simule Node 24 : plusieurs décodages partagent la même mémoire
+    Buffer.from(base64, "base64");
+    const octets = octetsBase64(base64);
+    expect(octets.byteOffset).toBe(0);
+    expect(octets.buffer.byteLength).toBe(octets.length);
+    expect([octets[0], octets[1]]).toEqual([0xff, 0xd8]);
+  });
+});

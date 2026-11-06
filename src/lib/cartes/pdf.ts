@@ -100,10 +100,19 @@ function dessinerQr(page: PDFPage, texte: string, x: number, y: number, cote: nu
         page.drawRectangle({ x: x + (c + marge) * m, y: y + cote - (r + 1 + marge) * m, width: m + 0.05, height: m + 0.05, color: MARINE });
 }
 
+/**
+ * Décode du base64 dans un tableau d'octets qui commence au début de sa propre mémoire.
+ * Depuis Node 24, Buffer.from(…, "base64") peut renvoyer une portion d'une mémoire partagée ;
+ * pdf-lib lit alors l'image au mauvais endroit (« SOI not found ») et la photo disparaît du PDF.
+ */
+export function octetsBase64(base64: string): Uint8Array {
+  return new Uint8Array(Buffer.from(base64, "base64"));
+}
+
 async function photoPdf(doc: PDFDocument, photo: string | null): Promise<PDFImage | null> {
   const m = photo?.match(/^data:image\/(jpeg|png);base64,(.+)$/);
   if (!m) return null;
-  const octets = Buffer.from(m[2], "base64");
+  const octets = octetsBase64(m[2]);
   try {
     return m[1] === "png" ? await doc.embedPng(octets) : await doc.embedJpg(octets);
   } catch (e) {
@@ -231,8 +240,8 @@ async function preparer() {
   const r: Ressources = {
     normal: await doc.embedFont(StandardFonts.Helvetica),
     gras: await doc.embedFont(StandardFonts.HelveticaBold),
-    logo: await doc.embedPng(Buffer.from(LOGO_PNG_BASE64, "base64")),
-    kcc: await doc.embedPng(Buffer.from(LOGO_KCC_PNG_BASE64, "base64")),
+    logo: await doc.embedPng(octetsBase64(LOGO_PNG_BASE64)),
+    kcc: await doc.embedPng(octetsBase64(LOGO_KCC_PNG_BASE64)),
   };
   return { doc, r };
 }
