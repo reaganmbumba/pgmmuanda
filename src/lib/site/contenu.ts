@@ -82,6 +82,24 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
  */
 const ACTUALITES_FIXES: ElementSite[] = [
   {
+    id: "programme-deuil-16-19-novembre", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
+    image: "/actualites/programme-deuil-16-19-nov.jpg", affiche: true,
+    titre: "Programme de deuil : lundi 16 et jeudi 19 novembre 2026",
+    sousTitre: "Visites de consolation de la PGM Antenne de Muanda : lundi 16/11 chez la maman diaconesse Belinda MALEMBOSO, jeudi 19/11 à la paroisse Kitsiaku. Participation : 15 000 FC par cas pour chaque chorale, 5 000 FC par cas pour chaque membre du staff.",
+    texte: [
+      "Paix à tous les membres de la PGM Antenne de Muanda.",
+      "Comme annoncé, notre antenne traverse plusieurs deuils. La Présidence de la PGM Antenne de Muanda porte à la connaissance de tous les prédicateurs, disciples, D.A, diaconesses, papas et mamans le programme des visites de consolation pour les deux cas suivants.",
+      "1. Lundi 16 novembre 2026 : nous serons à la maison de la maman diaconesse Belinda MALEMBOSO, pour le deuil de son père, Papa MALEMBOSO PIERRE.",
+      "2. Jeudi 19 novembre 2026 : nous serons à la paroisse Kitsiaku, pour le deuil de Maman NTOTO THAMBA GERMAIN, mère de la maman diaconesse Charlotte.",
+      "Participation demandée : chaque chorale participe à hauteur de 15 000 FC par cas, soit 30 000 FC pour les deux cas. Chaque membre du staff contribue à hauteur de 5 000 FC par cas, soit 10 000 FC pour les deux cas.",
+      "Nous invitons tous les prédicateurs, disciples, D.A, diaconesses, papas et mamans à être présents et ponctuels, et à remettre leur participation à temps, afin que notre antenne entoure dignement les familles éprouvées.",
+      "Que l'Éternel Dieu console et fortifie la maman diaconesse Belinda MALEMBOSO, la maman diaconesse Charlotte et tous les membres de leurs familles.",
+      "La fraternité se manifeste aussi dans les moments de douleur.",
+      "Pour la PGM Antenne de Muanda, le Président, Prédicateur NKASA LUSALA Joel.",
+    ].join("\n\n"),
+    date: "2026-11-11",
+  },
+  {
     id: "deuil-ntoto-thamba-malemboso", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
     image: "/actualites/deuil-ntoto-malemboso.jpg", affiche: true,
     titre: "Avis de deuil : Maman NTOTO THAMBA GERMAIN et Papa MALEMBOSO PIERRE",
