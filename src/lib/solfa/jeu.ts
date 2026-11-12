@@ -2,6 +2,7 @@
  * Jeu du tonic sol-fa : notes, niveaux et fabrication des questions.
  * Module pur (sans navigateur) : testé dans tests/solfa.test.ts.
  */
+import { ecrireLigne, lireRythme } from "./rythme";
 
 export type NoteId = "s1" | "l1" | "t1" | "d" | "r" | "m" | "f" | "s" | "l" | "t" | "d1" | "r1";
 
@@ -44,6 +45,8 @@ export type Question =
       avecDo?: boolean;
       choix: Choix[];
       bonne: number;
+      /** Ligne sol-fa dont on écoute le rythme (avec le battement des temps). */
+      rythme?: string;
       /** Notes jouées pour aider après la réponse. */
       sonReponse?: NoteId[];
       explication: string;
@@ -76,6 +79,10 @@ export type Niveau = {
   fabriquer: (hasard: () => number) => Question;
   /** Niveau de chant (micro) : il ne bloque jamais les niveaux suivants. */
   chant?: boolean;
+  /** Lignes de rythme à écouter dans la leçon. */
+  lignesLecon?: string[];
+  /** Niveau de rythme (lié au cours). */
+  rythme?: boolean;
 };
 
 export const QUESTIONS_PAR_PARTIE = 10;
@@ -109,6 +116,29 @@ function avecChoix(
 
 const ordreNote = (texte: string) => NOTES.findIndex((n) => n.texte === texte);
 const choixNote = (id: NoteId): Choix => ({ texte: note(id).texte, sous: note(id).nom });
+
+/** Question de rythme : on écoute un rythme et on choisit comment il s'écrit. */
+function rythmeQ(cellules: string[], hasard: () => number): Question {
+  const debuts = cellules.filter((c) => c.trim().startsWith("d"));
+  const fabriquer = () => [tirer(debuts, hasard), tirer(cellules, hasard), tirer(cellules, hasard), tirer(cellules, hasard)];
+  const bonne = fabriquer();
+  const son = (c: string[]) => JSON.stringify(lireRythme(ecrireLigne(c)));
+  const vus = new Set([son(bonne)]);
+  const autres: Choix[] = [];
+  let essais = 0;
+  while (autres.length < 2 && essais++ < 100) {
+    const copie = [...bonne];
+    const pos = 1 + Math.floor(hasard() * 3);
+    copie[pos] = tirer(cellules.filter((c) => c !== bonne[pos]), hasard);
+    if (!vus.has(son(copie))) { vus.add(son(copie)); autres.push({ texte: ecrireLigne(copie) }); }
+  }
+  const ligne = ecrireLigne(bonne);
+  return avecChoix({ texte: ligne }, autres, hasard, {
+    consigne: "Écoutez le rythme (le tic-tac marque les temps). Comment s'écrit-il ?",
+    rythme: ligne,
+    explication: `Le rythme était « ${ligne} ».`,
+  });
+}
 
 /** Question de chant : le choriste chante la note demandée, le micro vérifie. */
 function chant(notes: NoteId[], hasard: () => number): Question {
@@ -215,6 +245,20 @@ const LISTE: Omit<Niveau, "numero">[] = [
     chant: true,
   },
   {
+    titre: "Le rythme : temps et demi-temps",
+    resume: "Lire « d », « - » et « d . d » à l'oreille.",
+    lecon: [
+      "Chaque temps est entre deux « : ». Une note seule dure un temps.",
+      "« - » tient la note d'avant. « d . d » met deux notes dans un seul temps.",
+      "Écoutez le tic-tac : il marque chaque temps. Puis choisissez la bonne écriture.",
+      "Toutes les explications sont dans « Le cours » (bouton en haut du jeu).",
+    ],
+    notesLecon: [],
+    lignesLecon: [": d : d : d : d :", ": d : - : d . d : d :", ": d . d : - . d : d : - :"],
+    fabriquer: (hasard) => rythmeQ(["d", "d", "-", "d . d", "- . d"], hasard),
+    rythme: true,
+  },
+  {
     titre: "Écouter de d à s",
     resume: "Reconnaître d, r, m, f, s à l'oreille.",
     lecon: [
@@ -233,6 +277,18 @@ const LISTE: Omit<Niveau, "numero">[] = [
     ],
     notesLecon: ECHELLE,
     fabriquer: (hasard) => ecoute(ECHELLE, hasard),
+  },
+  {
+    titre: "Le temps pointé",
+    resume: "Reconnaître « d .,d » : une note longue et une très courte.",
+    lecon: [
+      "« d .,d » : la première note est longue (¾ du temps), la seconde très courte (¼).",
+      "Comparez avec « d . d » : deux moitiés égales.",
+    ],
+    notesLecon: [],
+    lignesLecon: [": d . d : d . d : d .,d : d .,d :", ": d .,d : d : d .,d : d :"],
+    fabriquer: (hasard) => rythmeQ(["d", "d . d", "d .,d", "-", "- .,d"], hasard),
+    rythme: true,
   },
   {
     titre: "Grave ou aigu",
@@ -286,6 +342,18 @@ const LISTE: Omit<Niveau, "numero">[] = [
     },
   },
   {
+    titre: "Trois et quatre notes dans un temps",
+    resume: "Lire « d . d ,d », « d ,d . d » et « d ,d . d ,d ».",
+    lecon: [
+      "La virgule « , » coupe en quarts de temps.",
+      "« d . d ,d » : ½ + ¼ + ¼. « d ,d . d » : ¼ + ¼ + ½. « d ,d . d ,d » : quatre notes égales.",
+    ],
+    notesLecon: [],
+    lignesLecon: [": d . d ,d : d : d ,d . d : d :", ": d ,d . d ,d : d : d ,d . d ,d : d :"],
+    fabriquer: (hasard) => rythmeQ(["d", "d . d", "d . d ,d", "d ,d . d", "d ,d . d ,d"], hasard),
+    rythme: true,
+  },
+  {
     titre: "La dictée musicale",
     resume: "Écouter 3 notes et les taper dans l'ordre.",
     lecon: [
@@ -305,6 +373,18 @@ const LISTE: Omit<Niveau, "numero">[] = [
         explication: `La dictée était « ${sons.map((n) => note(n).texte).join(" ")} ».`,
       };
     },
+  },
+  {
+    titre: "Les silences",
+    resume: "Entendre où l'on se tait : « :   : », « . d », « d . ».",
+    lecon: [
+      "Une place vide = un silence. On compte quand même le temps.",
+      "« . d » : silence puis d. « d . » : d puis silence.",
+    ],
+    notesLecon: [],
+    lignesLecon: [": d : d :   : d :", ": . d : d . : d : d :"],
+    fabriquer: (hasard) => rythmeQ(["d", "d . d", " . d", "d . ", " "], hasard),
+    rythme: true,
   },
   {
     titre: "Chantez toute l'échelle",

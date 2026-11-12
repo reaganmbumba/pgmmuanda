@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowLeft, AudioLines, Check, Copy, Delete, Lock, Mic, MicOff, Music, Play, RotateCcw, Star, Trophy, Volume2, X } from "lucide-react";
+import { ArrowLeft, AudioLines, BookOpen, Check, ChevronRight, Copy, Delete, Lock, Mic, MicOff, Music, Play, RotateCcw, Star, Trophy, Volume2, X } from "lucide-react";
 import {
   NIVEAUX, POINTS_BONNE_REPONSE, QUESTIONS_PAR_PARTIE, SEUIL_REUSSITE,
   dicteeJuste, enregistrerPartie, etoiles, lireProgression, niveauOuvert, note, preparerPartie, rang, totalEtoiles,
   type Niveau, type NoteId, type Progression, type Question,
 } from "@/lib/solfa/jeu";
-import { doActuel, jouerMelodie, jouerNotes, jouerSignal, ouvrirMicro, reglerDo, sonEnCours, type Micro } from "@/lib/solfa/son";
+import { doActuel, jouerMelodie, jouerNotes, jouerRythme, jouerSignal, ouvrirMicro, reglerDo, sonEnCours, type Micro } from "@/lib/solfa/son";
 import {
   TONALITES, chanteJuste, detecterFrequence, doDe, ecartAvec, lireReglages, noteChantee,
   type NoteChantee, type Reglages,
 } from "@/lib/solfa/hauteur";
 import { texteDemiTons, transcrire, type Mesure } from "@/lib/solfa/transcrire";
+import { lireRythme } from "@/lib/solfa/rythme";
+import { COURS, type LeconCours } from "@/lib/solfa/cours";
 
 const CLE = "pgm-solfa-progression";
 
@@ -61,14 +63,15 @@ type Ecran =
   | { nom: "fin"; niveau: Niveau; bonnes: number; avant: number }
   | { nom: "modulateur" }
   | { nom: "chanter" }
-  | { nom: "melodie" };
+  | { nom: "melodie" }
+  | { nom: "cours"; lecon?: LeconCours };
 
 export function JeuSolfa() {
   const brut = useSyncExternalStore(abonner, lireBrut, () => null);
   const progression = useMemo(() => lireProgression(brut), [brut]);
   const [ecran, setEcran] = useState<Ecran>({ nom: "accueil" });
   const reglages = useReglages();
-  useEffect(() => { window.scrollTo({ top: 0 }); }, [ecran.nom]);
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [ecran]);
 
   const terminer = (niveau: Niveau, bonnes: number) => {
     const avant = progression.meilleurs[niveau.numero] ?? 0;
@@ -88,16 +91,29 @@ export function JeuSolfa() {
     );
   }
   if (ecran.nom === "modulateur") return <ModulateurLibre retour={() => setEcran({ nom: "accueil" })} />;
+  if (ecran.nom === "cours") {
+    const ouvrirNiveau = (titre: string) => {
+      const n = NIVEAUX.find((x) => x.titre === titre);
+      if (n && niveauOuvert(progression, n.numero)) setEcran({ nom: "lecon", niveau: n });
+    };
+    return ecran.lecon
+      ? <LeconDuCours lecon={ecran.lecon} retour={() => setEcran({ nom: "cours" })}
+          suivante={() => { const i = COURS.indexOf(ecran.lecon!); setEcran({ nom: "cours", lecon: COURS[i + 1] }); }}
+          niveauOuvert={(t) => { const n = NIVEAUX.find((x) => x.titre === t); return !!n && niveauOuvert(progression, n.numero); }}
+          jouerNiveau={ouvrirNiveau} />
+      : <SommaireCours retour={() => setEcran({ nom: "accueil" })} ouvrir={(l) => setEcran({ nom: "cours", lecon: l })} />;
+  }
   if (ecran.nom === "melodie") return <MelodieChantee reglages={reglages} retour={() => setEcran({ nom: "accueil" })} />;
   if (ecran.nom === "chanter") return <ChanterLibre reglages={reglages} retour={() => setEcran({ nom: "accueil" })} />;
   return <Accueil progression={progression} reglages={reglages} ouvrir={(n) => setEcran({ nom: "lecon", niveau: n })}
-    modulateur={() => setEcran({ nom: "modulateur" })} chanter={() => setEcran({ nom: "chanter" })} melodie={() => setEcran({ nom: "melodie" })} />;
+    modulateur={() => setEcran({ nom: "modulateur" })} chanter={() => setEcran({ nom: "chanter" })} melodie={() => setEcran({ nom: "melodie" })}
+    cours={() => setEcran({ nom: "cours" })} />;
 }
 
 /* ───────────── Accueil du jeu ───────────── */
 
-function Accueil({ progression, reglages, ouvrir, modulateur, chanter, melodie }: {
-  progression: Progression; reglages: Reglages; ouvrir: (n: Niveau) => void; modulateur: () => void; chanter: () => void; melodie: () => void;
+function Accueil({ progression, reglages, ouvrir, modulateur, chanter, melodie, cours }: {
+  progression: Progression; reglages: Reglages; ouvrir: (n: Niveau) => void; modulateur: () => void; chanter: () => void; melodie: () => void; cours: () => void;
 }) {
   const r = rang(progression.points);
   const etoilesTotal = totalEtoiles(progression);
@@ -126,6 +142,16 @@ function Accueil({ progression, reglages, ouvrir, modulateur, chanter, melodie }
           {r.suivant && <p className="mt-0.5 pl-6 text-marine-100/70">Encore {r.manque} points pour devenir « {r.suivant} »</p>}
         </div>
       </section>
+
+      <button type="button" onClick={cours} data-ouvrir-cours
+        className="flex min-h-20 w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-2 ring-or-400 active:bg-slate-50">
+        <span className="rounded-xl bg-or-100 p-3 text-or-600"><BookOpen className="size-6" aria-hidden /></span>
+        <span className="flex-1">
+          <span className="block text-base font-bold text-marine-900">Le cours de tonic sol-fa</span>
+          <span className="block text-xs text-slate-500">7 leçons : les notes, le temps, le demi-temps, le temps pointé, les silences… avec les exercices à écouter.</span>
+        </span>
+        <ChevronRight className="size-5 text-slate-300" aria-hidden />
+      </button>
 
       <button type="button" onClick={chanter} data-ouvrir-chanter
         className="flex min-h-20 w-full items-center gap-3 rounded-2xl bg-or-500 p-4 text-left shadow-sm active:bg-or-400">
@@ -276,6 +302,9 @@ function Lecon({ niveau, retour, jouer }: { niveau: Niveau; retour: () => void; 
         <p className="text-xs font-semibold uppercase tracking-wide text-or-600">La leçon</p>
         {niveau.lecon.map((p) => <p key={p} className="text-base leading-relaxed text-slate-700">{p}</p>)}
       </section>
+      {niveau.lignesLecon && (
+        <div className="space-y-2">{niveau.lignesLecon.map((l) => <LigneAEcouter key={l} solfa={l} />)}</div>
+      )}
       <div className="flex flex-wrap justify-center gap-2">
         {niveau.notesLecon.map((id) => (
           <button key={id} type="button" onClick={() => toucher(id)}
@@ -351,7 +380,7 @@ function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => 
         <p className="text-base font-medium text-marine-900">{q.consigne}</p>
         {q.type === "choix" && q.grand && <p className="mt-4 font-serif text-5xl font-bold tracking-wide text-marine-900">{q.grand}</p>}
         {q.type === "chant" && <p className="mt-3 font-serif text-6xl font-bold text-marine-900">{note(q.cible).texte}</p>}
-        {(q.type === "chant" || q.sons) && (
+        {(q.type === "chant" || q.sons || (q.type === "choix" && q.rythme)) && (
           <button type="button" onClick={() => ecouter()} data-ecouter
             className="mx-auto mt-4 flex min-h-14 items-center gap-2 rounded-full bg-marine-900 px-6 text-base font-semibold text-white active:scale-95">
             <Volume2 className="size-5" aria-hidden /> {i === 0 && !reponse ? "Écouter" : "Réécouter"}
@@ -372,7 +401,7 @@ function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => 
           </p>
           <p className="text-sm">{q.explication}</p>
           <div className="flex gap-2">
-            <button type="button" onClick={() => (q.type === "choix" ? jouerNotes(q.sonReponse ?? []) : jouerQuestion(q))}
+            <button type="button" onClick={() => (q.type === "choix" && !q.rythme ? jouerNotes(q.sonReponse ?? []) : jouerQuestion(q))}
               className="flex min-h-12 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-marine-900 shadow-sm">
               <Volume2 className="size-4" aria-hidden /> Entendre
             </button>
@@ -389,7 +418,7 @@ function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => 
 
 function Choix({ q, reponse, repondre }: { q: Extract<Question, { type: "choix" }>; reponse: { juste: boolean } | null; repondre: (k: number) => void }) {
   const [choisi, setChoisi] = useState<number | null>(null);
-  const colonnes = q.choix.length > 4 ? "grid-cols-4" : q.choix.length === 4 ? "grid-cols-2" : q.choix.length === 2 ? "grid-cols-2" : "grid-cols-3";
+  const colonnes = q.rythme ? "grid-cols-1" : q.choix.length > 4 ? "grid-cols-4" : q.choix.length === 4 ? "grid-cols-2" : q.choix.length === 2 ? "grid-cols-2" : "grid-cols-3";
   return (
     <div className={`grid gap-2 ${colonnes}`} data-choix>
       {q.choix.map((c, k) => {
@@ -397,7 +426,7 @@ function Choix({ q, reponse, repondre }: { q: Extract<Question, { type: "choix" 
         return (
           <button key={c.texte + k} type="button" disabled={!!reponse} onClick={() => { setChoisi(k); repondre(k); }} data-reponse={k === q.bonne ? "bonne" : "autre"}
             className={`flex min-h-20 flex-col items-center justify-center rounded-2xl px-2 py-3 shadow-sm active:scale-95 ${etat || "bg-white text-marine-900"}`}>
-            <span className={`font-serif font-bold ${c.texte.length > 3 ? "text-xl" : "text-3xl"}`}>{c.texte}</span>
+            <span className={`font-serif font-bold ${c.texte.length > 12 ? "whitespace-pre text-lg" : c.texte.length > 3 ? "text-xl" : "text-3xl"}`}>{c.texte}</span>
             {c.sous && <span className={`mt-1 text-[11px] leading-tight ${etat ? "" : "text-slate-500"}`}>{c.sous}</span>}
           </button>
         );
@@ -482,7 +511,8 @@ function Fin({ niveau, bonnes, avant, rejouer, suivant, accueil }: {
 
 /** Fait entendre une question : le Do de départ si besoin, puis les notes. */
 function jouerQuestion(q: Question) {
-  if (q.type === "chant") jouerNotes([q.cible], { avecDo: true });
+  if (q.type === "choix" && q.rythme) jouerRythme(lireRythme(q.rythme));
+  else if (q.type === "chant") jouerNotes([q.cible], { avecDo: true });
   else if (q.sons) jouerNotes(q.sons, { avecDo: !!q.avecDo });
 }
 
@@ -832,6 +862,127 @@ function MelodieChantee({ reglages, retour }: { reglages: Reglages; retour: () =
         )
       )}
       <ChoixReglages reglages={reglages} />
+    </div>
+  );
+}
+
+/* ───────────── Le cours de tonic sol-fa ───────────── */
+
+const VITESSES = [{ nom: "Lent", parMinute: 56 }, { nom: "Moyen", parMinute: 72 }, { nom: "Rapide", parMinute: 92 }];
+let vitesseChoisie = 72;
+
+/** Une ligne de sol-fa avec un bouton pour l'écouter (avec le tic-tac des temps). */
+function LigneAEcouter({ solfa, aide }: { solfa: string; aide?: string }) {
+  const [joue, setJoue] = useState(false);
+  const ecouter = () => {
+    const ms = jouerRythme(lireRythme(solfa), { parMinute: vitesseChoisie });
+    setJoue(true);
+    setTimeout(() => setJoue(false), ms);
+  };
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
+      <button type="button" onClick={ecouter} aria-label={`Écouter ${solfa}`} data-ecouter-ligne
+        className={`flex size-12 shrink-0 items-center justify-center rounded-full ${joue ? "bg-or-500 text-marine-950" : "bg-marine-900 text-white"}`}>
+        <Volume2 className="size-5" aria-hidden />
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className="break-words font-serif text-lg font-bold leading-snug text-marine-900">{solfa}</p>
+        {aide && <p className="text-xs text-slate-500">{aide}</p>}
+      </div>
+    </div>
+  );
+}
+
+function ChoixVitesse() {
+  const [v, setV] = useState(vitesseChoisie);
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="text-slate-500">Vitesse :</span>
+      {VITESSES.map((x) => (
+        <button key={x.nom} type="button" onClick={() => { vitesseChoisie = x.parMinute; setV(x.parMinute); }}
+          className={`min-h-10 flex-1 rounded-xl font-semibold ${v === x.parMinute ? "bg-marine-900 text-white" : "bg-white text-marine-900 shadow-sm"}`}>
+          {x.nom}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function SommaireCours({ retour, ouvrir }: { retour: () => void; ouvrir: (l: LeconCours) => void }) {
+  return (
+    <div className="space-y-4" data-jeu-solfa="cours">
+      <BarreRetour titre="Le cours de tonic sol-fa" retour={retour} />
+      <p className="rounded-2xl bg-white p-4 text-sm text-slate-600 shadow-sm">
+        Paix ! Ce cours apprend à lire les notes et le rythme en tonic sol-fa. Chaque leçon a des exemples et des exercices :
+        touchez <Volume2 className="inline size-4" aria-label="le haut-parleur" /> pour les écouter, puis chantez-les.
+      </p>
+      <ol className="space-y-2">
+        {COURS.map((l) => (
+          <li key={l.id}>
+            <button type="button" onClick={() => ouvrir(l)} data-lecon-cours={l.id}
+              className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm active:bg-slate-50">
+              <span className="flex-1">
+                <span className="block text-base font-semibold text-marine-900">{l.titre}</span>
+                <span className="block text-xs text-slate-500">{l.resume}</span>
+              </span>
+              <ChevronRight className="size-5 text-slate-300" aria-hidden />
+            </button>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function LeconDuCours({ lecon, retour, suivante, niveauOuvert: ouvert, jouerNiveau }: {
+  lecon: LeconCours; retour: () => void; suivante: () => void; niveauOuvert: (titre: string) => boolean; jouerNiveau: (titre: string) => void;
+}) {
+  const derniere = COURS[COURS.length - 1] === lecon;
+  return (
+    <div className="space-y-4" data-jeu-solfa="lecon-cours" data-lecon={lecon.id}>
+      <BarreRetour titre={lecon.titre} retour={retour} />
+      <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
+        {lecon.explication.map((p) => <p key={p} className="text-base leading-relaxed text-slate-700">{p}</p>)}
+      </section>
+      {lecon.regles && (
+        <table className="w-full overflow-hidden rounded-2xl bg-white text-left text-sm shadow-sm">
+          <tbody className="divide-y divide-slate-100">
+            {lecon.regles.map((r) => (
+              <tr key={r.signe}>
+                <td className="whitespace-pre px-4 py-3 font-serif text-lg font-bold text-marine-900">{r.signe}</td>
+                <td className="px-4 py-3 text-slate-600">{r.sens}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <ChoixVitesse />
+      <section className="space-y-2">
+        <h2 className="font-semibold text-marine-900">Exemples</h2>
+        {lecon.exemples.map((l) => <LigneAEcouter key={l.solfa} {...l} />)}
+      </section>
+      <section className="space-y-2">
+        <h2 className="font-semibold text-marine-900">Exercices à chanter</h2>
+        <p className="text-xs text-slate-500">Écoutez une fois, puis chantez en suivant le tic-tac. Battez le temps avec la main.</p>
+        {lecon.exercices.map((l) => <LigneAEcouter key={l.solfa} {...l} />)}
+      </section>
+      {lecon.niveauJeu && (
+        ouvert(lecon.niveauJeu) ? (
+          <button type="button" onClick={() => jouerNiveau(lecon.niveauJeu!)}
+            className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-or-500 text-base font-bold text-marine-950">
+            <Play className="size-5" aria-hidden /> S&apos;entraîner dans le jeu : {lecon.niveauJeu}
+          </button>
+        ) : (
+          <p className="rounded-2xl bg-slate-100 p-3 text-center text-sm text-slate-500">
+            Le niveau « {lecon.niveauJeu} » s&apos;ouvrira dans le jeu quand vous aurez réussi les niveaux d&apos;avant.
+          </p>
+        )
+      )}
+      {!derniere && (
+        <button type="button" onClick={suivante} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-marine-900 text-base font-semibold text-white">
+          Leçon suivante <ChevronRight className="size-5" aria-hidden />
+        </button>
+      )}
     </div>
   );
 }

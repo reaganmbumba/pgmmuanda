@@ -142,3 +142,48 @@ describe("transcrire une mélodie chantée", () => {
     expect(ecrireSolfa([{ demiTons: 0, demiTemps: 3 }, { demiTons: 2, demiTemps: 1 }], 2)).toBe("d : -.r ||");
   });
 });
+
+import { COURS } from "@/lib/solfa/cours";
+import { lireNote, lireRythme, notesInconnues } from "@/lib/solfa/rythme";
+
+describe("le rythme en sol-fa", () => {
+  const duree = (l: string) => lireRythme(l).map((e) => [e.demiTons, e.temps]);
+
+  it("lit les temps, les demi-temps, les quarts et le temps pointé", () => {
+    expect(duree(": d : r : m :")).toEqual([[0, 1], [2, 1], [4, 1]]);
+    expect(duree(": d : - : r . m :")).toEqual([[0, 2], [2, 0.5], [4, 0.5]]);
+    expect(duree(": d .,r :")).toEqual([[0, 0.75], [2, 0.25]]);
+    expect(duree(": d . r ,m : d ,r . m : d ,r . m ,f :")).toEqual([
+      [0, 0.5], [2, 0.25], [4, 0.25], [0, 0.25], [2, 0.25], [4, 0.5], [0, 0.25], [2, 0.25], [4, 0.25], [5, 0.25],
+    ]);
+    expect(duree(": - . r : s :")).toEqual([[null, 0.5], [2, 0.5], [7, 1]]);
+  });
+
+  it("lit les silences, les mesures et les octaves", () => {
+    expect(duree(": d :   : . d : d . :")).toEqual([[0, 1], [null, 1.5], [0, 0.5], [0, 0.5], [null, 0.5]]);
+    expect(duree(": d : r | m : - ||")).toEqual([[0, 1], [2, 1], [4, 2]]);
+    expect([lireNote("s₁"), lireNote("d¹"), lireNote("d'"), lireNote("fe"), lireNote("x")]).toEqual([-5, 12, 12, 6, null]);
+  });
+
+  it("toutes les lignes du cours se lisent sans erreur", () => {
+    for (const l of COURS) {
+      for (const ligne of [...l.exemples, ...l.exercices]) {
+        expect(notesInconnues(ligne.solfa), ligne.solfa).toEqual([]);
+        expect(lireRythme(ligne.solfa).length).toBeGreaterThan(0);
+      }
+      if (l.niveauJeu) expect(NIVEAUX.some((n) => n.titre === l.niveauJeu), l.niveauJeu).toBe(true);
+    }
+  });
+
+  it("les niveaux de rythme proposent des écritures qui sonnent différemment", () => {
+    for (const niveau of NIVEAUX.filter((n) => n.rythme)) {
+      for (let s = 1; s <= 20; s++) {
+        const q = niveau.fabriquer(graine(s * 13));
+        if (q.type !== "choix" || !q.rythme) throw new Error("question de rythme attendue");
+        expect(q.choix[q.bonne].texte).toBe(q.rythme);
+        const sons = new Set(q.choix.map((c) => JSON.stringify(lireRythme(c.texte))));
+        expect(sons.size).toBe(q.choix.length);
+      }
+    }
+  });
+});
