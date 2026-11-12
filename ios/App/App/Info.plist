@@ -45,5 +45,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Le jeu du sol-fa écoute votre voix pour vous dire quelle note vous chantez.</string>
 </dict>
 </plist>
