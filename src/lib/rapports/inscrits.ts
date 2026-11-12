@@ -15,6 +15,9 @@ export type RapportInscrits = {
   total: number;
 };
 
+/** Signature du rapport (demande de la Présidence, 2026-11-05). */
+export const SIGNATAIRE = "Prédicateur NKASA LUSALA Joel";
+
 const nomAffiche = (i: Inscrit) =>
   [i.nom.toUpperCase(), i.postnom.toUpperCase(), i.prenom].filter(Boolean).join(" ");
 
@@ -63,5 +66,6 @@ export function texteRapport(r: RapportInscrits, date: string, lienInscription?:
   l.push("", lienInscription
     ? `Chaque choriste qui ne s'est pas encore enregistré est invité à le faire dès aujourd'hui avec ce lien :\n${lienInscription}`
     : "Chaque choriste qui ne s'est pas encore enregistré est invité à le faire dès aujourd'hui sur www.pgmmuanda.com.");
+  l.push("", "Pour la PGM Antenne de Muanda,", "*Le Président de l'antenne*", `*${SIGNATAIRE}*`);
   return l.join("\n");
 }
