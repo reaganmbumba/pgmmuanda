@@ -82,6 +82,24 @@ const ELEMENTS_DEFAUT: ElementSite[] = [
  */
 const ACTUALITES_FIXES: ElementSite[] = [
   {
+    id: "participation-activites-provinciales", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
+    image: "/actualites/activites-provinciales-dec-2026.jpg", affiche: true,
+    titre: "Participation aux activités provinciales",
+    sousTitre: "Mission du Président provincial à Mbanza-Ngungu (4 000 FC par chorale) et installation du comité provincial PGM Kongo-Central à Matadi le 19/12/2026 (50 000 FC par chorale). Total : 54 000 FC par chorale, au plus tard le mardi 15/12/2026.",
+    texte: [
+      "Paix à tous les membres de la PGM Antenne de Muanda.",
+      "La Présidence de la PGM Antenne de Muanda informe toutes les chorales que deux contributions ont été demandées à notre antenne par la hiérarchie provinciale.",
+      "1. Mission du Président provincial à Mbanza-Ngungu : pour soutenir la mission que le Président provincial effectuera à Mbanza-Ngungu, notre antenne doit contribuer à hauteur de 40 000 FC, soit 4 000 FC par chorale.",
+      "2. Installation du comité provincial PGM Kongo-Central : le comité provincial sera installé à Matadi le samedi 19/12/2026, sous le haut patronage du Président général, Révérend Apôtre NDANGI MAKUALA Etienne. Pour couvrir ces activités, notre antenne doit réunir 500 000 FC, soit 50 000 FC par chorale.",
+      "Récapitulatif par chorale : mission de Mbanza-Ngungu, 4 000 FC ; installation à Matadi, 50 000 FC ; total, 54 000 FC.",
+      "Date limite : les contributions doivent être remises au plus tard le mardi 15/12/2026.",
+      "Nous comptons sur le sens de responsabilité et la fidélité de chaque chorale pour que notre antenne honore ses engagements à temps.",
+      "Que l'Éternel bénisse chacun de vous.",
+      "Pour la PGM Antenne de Muanda, le Président, Prédicateur NKASA LUSALA Joel.",
+    ].join("\n\n"),
+    date: "2026-11-11",
+  },
+  {
     id: "programme-deuil-16-19-novembre", rubrique: "actualite", ordre: 0, publie: true, fichier: null,
     image: "/actualites/programme-deuil-16-19-nov.jpg", affiche: true,
     titre: "Programme de deuil : lundi 16 et jeudi 19 novembre 2026",
