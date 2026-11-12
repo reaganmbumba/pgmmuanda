@@ -1,0 +1,420 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { ArrowLeft, Check, Delete, Lock, Music, Play, RotateCcw, Star, Trophy, Volume2, X } from "lucide-react";
+import {
+  NIVEAUX, POINTS_BONNE_REPONSE, QUESTIONS_PAR_PARTIE, SEUIL_REUSSITE,
+  dicteeJuste, enregistrerPartie, etoiles, lireProgression, niveauOuvert, note, preparerPartie, rang, totalEtoiles,
+  type Niveau, type NoteId, type Progression, type Question,
+} from "@/lib/solfa/jeu";
+import { jouerNotes, jouerSignal } from "@/lib/solfa/son";
+
+const CLE = "pgm-solfa-progression";
+
+// Les points restent sur le téléphone (stockage du navigateur) ; en secours, en mémoire.
+let enMemoire: string | null = null;
+const abonnes = new Set<() => void>();
+const abonner = (f: () => void) => { abonnes.add(f); return () => { abonnes.delete(f); }; };
+function lireBrut(): string | null {
+  try { return window.localStorage.getItem(CLE) ?? enMemoire; } catch { return enMemoire; }
+}
+function sauver(p: Progression) {
+  enMemoire = JSON.stringify(p);
+  try { window.localStorage.setItem(CLE, enMemoire); } catch { /* stockage indisponible : on garde en mémoire */ }
+  abonnes.forEach((f) => f());
+}
+
+type Ecran =
+  | { nom: "accueil" }
+  | { nom: "lecon"; niveau: Niveau }
+  | { nom: "jeu"; niveau: Niveau }
+  | { nom: "fin"; niveau: Niveau; bonnes: number; avant: number }
+  | { nom: "modulateur" };
+
+export function JeuSolfa() {
+  const brut = useSyncExternalStore(abonner, lireBrut, () => null);
+  const progression = useMemo(() => lireProgression(brut), [brut]);
+  const [ecran, setEcran] = useState<Ecran>({ nom: "accueil" });
+  useEffect(() => { window.scrollTo({ top: 0 }); }, [ecran.nom]);
+
+  const terminer = (niveau: Niveau, bonnes: number) => {
+    const avant = progression.meilleurs[niveau.numero] ?? 0;
+    sauver(enregistrerPartie(progression, niveau.numero, bonnes));
+    setEcran({ nom: "fin", niveau, bonnes, avant });
+  };
+
+  if (ecran.nom === "lecon") return <Lecon niveau={ecran.niveau} retour={() => setEcran({ nom: "accueil" })} jouer={() => setEcran({ nom: "jeu", niveau: ecran.niveau })} />;
+  if (ecran.nom === "jeu") return <Partie key={`${ecran.niveau.numero}-${progression.parties}`} niveau={ecran.niveau} quitter={() => setEcran({ nom: "accueil" })} terminer={(b) => terminer(ecran.niveau, b)} />;
+  if (ecran.nom === "fin") {
+    const suivant = NIVEAUX.find((n) => n.numero === ecran.niveau.numero + 1);
+    return (
+      <Fin bonnes={ecran.bonnes} avant={ecran.avant} niveau={ecran.niveau}
+        rejouer={() => setEcran({ nom: "jeu", niveau: ecran.niveau })}
+        suivant={suivant && ecran.bonnes >= SEUIL_REUSSITE ? () => setEcran({ nom: "lecon", niveau: suivant }) : undefined}
+        accueil={() => setEcran({ nom: "accueil" })} />
+    );
+  }
+  if (ecran.nom === "modulateur") return <ModulateurLibre retour={() => setEcran({ nom: "accueil" })} />;
+  return <Accueil progression={progression} ouvrir={(n) => setEcran({ nom: "lecon", niveau: n })} modulateur={() => setEcran({ nom: "modulateur" })} />;
+}
+
+/* ───────────── Accueil du jeu ───────────── */
+
+function Accueil({ progression, ouvrir, modulateur }: { progression: Progression; ouvrir: (n: Niveau) => void; modulateur: () => void }) {
+  const r = rang(progression.points);
+  const etoilesTotal = totalEtoiles(progression);
+  return (
+    <div className="space-y-5" data-jeu-solfa="accueil">
+      <section className="relative overflow-hidden rounded-3xl bg-marine-900 p-5 text-white shadow-lg">
+        <div className="absolute -right-8 -top-8 size-32 rounded-full border-8 border-or-500/20" aria-hidden />
+        <p className="text-sm text-marine-100/80">Paix ! Apprenez le tonic sol-fa en jouant.</p>
+        <h1 className="mt-1 text-2xl font-bold">Jeu du sol-fa</h1>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-2xl bg-white/10 p-2">
+            <p className="text-2xl font-bold text-or-400" data-points={progression.points}>{progression.points}</p>
+            <p className="text-[11px] text-marine-100/80">points</p>
+          </div>
+          <div className="rounded-2xl bg-white/10 p-2">
+            <p className="text-2xl font-bold text-or-400">{etoilesTotal}<span className="text-sm text-marine-100/70">/{NIVEAUX.length * 3}</span></p>
+            <p className="text-[11px] text-marine-100/80">étoiles</p>
+          </div>
+          <div className="rounded-2xl bg-white/10 p-2">
+            <p className="text-2xl font-bold text-or-400">{progression.parties}</p>
+            <p className="text-[11px] text-marine-100/80">parties</p>
+          </div>
+        </div>
+        <div className="mt-4 text-sm">
+          <p className="flex items-center gap-2 font-semibold"><Trophy className="size-4 shrink-0 text-or-400" aria-hidden /> Votre titre : {r.titre}</p>
+          {r.suivant && <p className="mt-0.5 pl-6 text-marine-100/70">Encore {r.manque} points pour devenir « {r.suivant} »</p>}
+        </div>
+      </section>
+
+      <button type="button" onClick={modulateur}
+        className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm active:bg-slate-50">
+        <span className="rounded-xl bg-or-100 p-2.5 text-or-600"><Music className="size-6" aria-hidden /></span>
+        <span className="flex-1">
+          <span className="block text-base font-semibold text-marine-900">Le modulateur</span>
+          <span className="block text-xs text-slate-500">Touchez les notes pour les écouter librement.</span>
+        </span>
+      </button>
+
+      <section className="space-y-3">
+        <h2 className="font-semibold text-marine-900">Les niveaux</h2>
+        <ol className="space-y-3">
+          {NIVEAUX.map((n) => {
+            const ouvert = niveauOuvert(progression, n.numero);
+            const meilleur = progression.meilleurs[n.numero];
+            return (
+              <li key={n.numero}>
+                <button type="button" disabled={!ouvert} onClick={() => ouvrir(n)} data-niveau={n.numero}
+                  className={`flex min-h-20 w-full items-center gap-3 rounded-2xl p-4 text-left shadow-sm ${ouvert ? "bg-white active:bg-slate-50" : "bg-slate-100"}`}>
+                  <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold ${ouvert ? "bg-marine-900 text-white" : "bg-slate-200 text-slate-400"}`}>
+                    {ouvert ? n.numero : <Lock className="size-5" aria-label="Fermé" />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block text-base font-semibold ${ouvert ? "text-marine-900" : "text-slate-400"}`}>{n.titre}</span>
+                    <span className="block text-xs text-slate-500">
+                      {ouvert ? n.resume : `Réussissez le niveau ${n.numero - 1} (${SEUIL_REUSSITE}/10) pour l'ouvrir.`}
+                    </span>
+                    {meilleur !== undefined && <span className="mt-1 block text-xs text-slate-400">Meilleur score : {meilleur}/10</span>}
+                  </span>
+                  {ouvert && <Etoiles n={etoiles(meilleur ?? 0)} petite />}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+      <p className="text-center text-xs text-slate-400">Pensez à monter le volume du téléphone. Vos points restent enregistrés sur ce téléphone.</p>
+    </div>
+  );
+}
+
+function Etoiles({ n, petite = false }: { n: number; petite?: boolean }) {
+  return (
+    <span className="flex shrink-0 gap-0.5" aria-label={`${n} étoile${n > 1 ? "s" : ""} sur 3`}>
+      {[1, 2, 3].map((i) => (
+        <Star key={i} className={`${petite ? "size-5" : "size-12"} ${i <= n ? "fill-or-400 text-or-500" : "text-slate-300"}`} aria-hidden />
+      ))}
+    </span>
+  );
+}
+
+function BarreRetour({ titre, retour }: { titre: string; retour: () => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <button type="button" onClick={retour} className="rounded-xl bg-white p-3 text-marine-900 shadow-sm" aria-label="Retour">
+        <ArrowLeft className="size-5" aria-hidden />
+      </button>
+      <h1 className="text-lg font-bold text-marine-900">{titre}</h1>
+    </div>
+  );
+}
+
+/* ───────────── Le modulateur (échelle verticale de notes) ───────────── */
+
+function Modulateur({ notes, onNote, allumee }: { notes: NoteId[]; onNote: (n: NoteId) => void; allumee?: NoteId | null }) {
+  // Comme le modulateur affiché dans les salles de répétition : les notes aiguës en haut.
+  const ordre = [...notes].reverse();
+  return (
+    <div className="mx-auto flex max-w-xs flex-col gap-1.5" data-modulateur>
+      {ordre.map((id) => {
+        const n = note(id);
+        const pivot = id === "d" || id === "d1";
+        return (
+          <button key={id} type="button" onClick={() => onNote(id)} data-touche={id}
+            className={`flex min-h-12 items-center justify-between rounded-xl px-4 text-left shadow-sm transition active:scale-[0.98] ${
+              allumee === id ? "bg-or-400 text-marine-950" : pivot ? "bg-marine-900 text-white" : "bg-white text-marine-900"
+            }`}>
+            <span className="font-serif text-2xl font-bold">{n.texte}</span>
+            <span className={`text-sm ${allumee === id ? "text-marine-950" : pivot ? "text-marine-100" : "text-slate-500"}`}>{n.nom}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function useNoteAllumee() {
+  const [allumee, setAllumee] = useState<NoteId | null>(null);
+  const minuterie = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toucher = (n: NoteId) => {
+    jouerNotes([n], { duree: 0.6 });
+    setAllumee(n);
+    if (minuterie.current) clearTimeout(minuterie.current);
+    minuterie.current = setTimeout(() => setAllumee(null), 450);
+  };
+  return { allumee, toucher };
+}
+
+function ModulateurLibre({ retour }: { retour: () => void }) {
+  const { allumee, toucher } = useNoteAllumee();
+  return (
+    <div className="space-y-4" data-jeu-solfa="modulateur">
+      <BarreRetour titre="Le modulateur" retour={retour} />
+      <p className="rounded-2xl bg-white p-4 text-sm text-slate-600 shadow-sm">
+        Touchez une note pour l&apos;entendre. Essayez de chanter <b>d r m f s l t d¹</b> en montant, puis en descendant.
+      </p>
+      <Modulateur notes={["s1", "l1", "t1", ...["d", "r", "m", "f", "s", "l", "t", "d1", "r1"] as NoteId[]]} onNote={toucher} allumee={allumee} />
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={() => jouerNotes(["d", "r", "m", "f", "s", "l", "t", "d1"], { duree: 0.45, pause: 0.05 })}
+          className="min-h-14 rounded-2xl bg-marine-900 font-semibold text-white">Écouter en montant</button>
+        <button type="button" onClick={() => jouerNotes(["d1", "t", "l", "s", "f", "m", "r", "d"], { duree: 0.45, pause: 0.05 })}
+          className="min-h-14 rounded-2xl bg-white font-semibold text-marine-900 shadow-sm">Écouter en descendant</button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────── La leçon avant le niveau ───────────── */
+
+function Lecon({ niveau, retour, jouer }: { niveau: Niveau; retour: () => void; jouer: () => void }) {
+  const { allumee, toucher } = useNoteAllumee();
+  return (
+    <div className="space-y-4" data-jeu-solfa="lecon">
+      <BarreRetour titre={`Niveau ${niveau.numero} · ${niveau.titre}`} retour={retour} />
+      <section className="space-y-3 rounded-2xl bg-white p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-or-600">La leçon</p>
+        {niveau.lecon.map((p) => <p key={p} className="text-base leading-relaxed text-slate-700">{p}</p>)}
+      </section>
+      <div className="flex flex-wrap justify-center gap-2">
+        {niveau.notesLecon.map((id) => (
+          <button key={id} type="button" onClick={() => toucher(id)}
+            className={`flex min-h-16 min-w-16 flex-col items-center justify-center rounded-2xl px-3 shadow-sm ${allumee === id ? "bg-or-400 text-marine-950" : "bg-white text-marine-900"}`}>
+            <span className="font-serif text-2xl font-bold">{note(id).texte}</span>
+            <span className="text-[11px] text-slate-500">{note(id).nom}</span>
+          </button>
+        ))}
+      </div>
+      <button type="button" onClick={jouer} data-commencer
+        className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-or-500 text-lg font-bold text-marine-950 shadow-sm">
+        <Play className="size-5" aria-hidden /> Commencer le jeu
+      </button>
+      <p className="text-center text-xs text-slate-500">{QUESTIONS_PAR_PARTIE} questions · {POINTS_BONNE_REPONSE} points par bonne réponse</p>
+    </div>
+  );
+}
+
+/* ───────────── Une partie de 10 questions ───────────── */
+
+function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => void; terminer: (bonnes: number) => void }) {
+  const [questions] = useState(() => preparerPartie(niveau));
+  const [i, setI] = useState(0);
+  const [bonnes, setBonnes] = useState(0);
+  const [serie, setSerie] = useState(0);
+  const [reponse, setReponse] = useState<{ juste: boolean } | null>(null);
+  const q = questions[i];
+
+  const ecouter = () => {
+    if (q.sons) jouerNotes(q.sons, { avecDo: !!q.avecDo });
+  };
+  // On fait entendre la question dès qu'elle s'affiche.
+  useEffect(() => {
+    const question = questions[i];
+    const t = setTimeout(() => { if (question.sons) jouerNotes(question.sons, { avecDo: !!question.avecDo }); }, 250);
+    return () => clearTimeout(t);
+  }, [i, questions]);
+
+  const repondre = (juste: boolean) => {
+    if (reponse) return;
+    jouerSignal(juste);
+    setReponse({ juste });
+    if (juste) { setBonnes((b) => b + 1); setSerie((s) => s + 1); } else setSerie(0);
+  };
+  const suivante = () => {
+    if (i + 1 >= questions.length) { terminer(bonnes); return; }
+    setReponse(null);
+    setI(i + 1);
+  };
+
+  return (
+    <div className="space-y-4" data-jeu-solfa="partie" data-question={i + 1}>
+      <div className="flex items-center gap-3">
+        <button type="button" onClick={quitter} className="rounded-xl bg-white p-3 text-marine-900 shadow-sm" aria-label="Quitter la partie">
+          <X className="size-5" aria-hidden />
+        </button>
+        <div className="flex-1">
+          <div className="h-3 overflow-hidden rounded-full bg-white shadow-inner">
+            <div className="h-full rounded-full bg-or-500 transition-all" style={{ width: `${((i + (reponse ? 1 : 0)) / questions.length) * 100}%` }} />
+          </div>
+          <p className="mt-1 text-xs text-slate-500">Question {i + 1} sur {questions.length} · Niveau {niveau.numero}</p>
+        </div>
+        <div className="rounded-xl bg-marine-900 px-3 py-2 text-center text-white">
+          <p className="text-lg font-bold leading-none text-or-400">{bonnes * POINTS_BONNE_REPONSE}</p>
+          <p className="text-[10px]">points</p>
+        </div>
+      </div>
+
+      {serie >= 3 && !reponse && (
+        <p className="rounded-full bg-or-100 py-1 text-center text-sm font-semibold text-or-600">🔥 {serie} bonnes réponses de suite !</p>
+      )}
+
+      <section className="rounded-2xl bg-white p-5 text-center shadow-sm">
+        <p className="text-base font-medium text-marine-900">{q.consigne}</p>
+        {q.type === "choix" && q.grand && <p className="mt-4 font-serif text-5xl font-bold tracking-wide text-marine-900">{q.grand}</p>}
+        {q.sons && (
+          <button type="button" onClick={() => ecouter()} data-ecouter
+            className="mx-auto mt-4 flex min-h-14 items-center gap-2 rounded-full bg-marine-900 px-6 text-base font-semibold text-white active:scale-95">
+            <Volume2 className="size-5" aria-hidden /> {i === 0 && !reponse ? "Écouter" : "Réécouter"}
+          </button>
+        )}
+      </section>
+
+      {q.type === "choix"
+        ? <Choix key={i} q={q} reponse={reponse} repondre={(k) => repondre(k === q.bonne)} />
+        : <Dictee key={i} q={q} bloque={!!reponse} valider={(tape) => repondre(dicteeJuste(q.sons, tape))} />}
+
+      {reponse && (
+        <section className={`space-y-3 rounded-2xl p-4 ${reponse.juste ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-900"}`} data-resultat={reponse.juste ? "juste" : "faux"} aria-live="polite">
+          <p className="flex items-center gap-2 text-lg font-bold">
+            {reponse.juste ? <><Check className="size-6" aria-hidden /> Bravo ! +{POINTS_BONNE_REPONSE} points</> : <><X className="size-6" aria-hidden /> Pas tout à fait…</>}
+          </p>
+          <p className="text-sm">{q.explication}</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => jouerNotes(q.type === "choix" ? (q.sonReponse ?? []) : q.sons, { avecDo: q.type === "dictee" })}
+              className="flex min-h-12 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-marine-900 shadow-sm">
+              <Volume2 className="size-4" aria-hidden /> Entendre
+            </button>
+            <button type="button" onClick={suivante} data-suivant
+              className="min-h-12 flex-1 rounded-xl bg-marine-900 text-base font-bold text-white">
+              {i + 1 >= questions.length ? "Voir mon score" : "Suivant"}
+            </button>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function Choix({ q, reponse, repondre }: { q: Extract<Question, { type: "choix" }>; reponse: { juste: boolean } | null; repondre: (k: number) => void }) {
+  const [choisi, setChoisi] = useState<number | null>(null);
+  const colonnes = q.choix.length > 4 ? "grid-cols-4" : q.choix.length === 4 ? "grid-cols-2" : q.choix.length === 2 ? "grid-cols-2" : "grid-cols-3";
+  return (
+    <div className={`grid gap-2 ${colonnes}`} data-choix>
+      {q.choix.map((c, k) => {
+        const etat = !reponse ? "" : k === q.bonne ? "bg-emerald-500 text-white" : k === choisi ? "bg-red-500 text-white" : "bg-white opacity-50";
+        return (
+          <button key={c.texte + k} type="button" disabled={!!reponse} onClick={() => { setChoisi(k); repondre(k); }} data-reponse={k === q.bonne ? "bonne" : "autre"}
+            className={`flex min-h-20 flex-col items-center justify-center rounded-2xl px-2 py-3 shadow-sm active:scale-95 ${etat || "bg-white text-marine-900"}`}>
+            <span className={`font-serif font-bold ${c.texte.length > 3 ? "text-xl" : "text-3xl"}`}>{c.texte}</span>
+            {c.sous && <span className={`mt-1 text-[11px] leading-tight ${etat ? "" : "text-slate-500"}`}>{c.sous}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Dictee({ q, bloque, valider }: { q: Extract<Question, { type: "dictee" }>; bloque: boolean; valider: (tape: NoteId[]) => void }) {
+  const [tape, setTape] = useState<NoteId[]>([]);
+  const { allumee, toucher } = useNoteAllumee();
+  const ajouter = (n: NoteId) => {
+    toucher(n);
+    if (!bloque && tape.length < q.sons.length) setTape([...tape, n]);
+  };
+  return (
+    <div className="space-y-3" data-dictee>
+      <div className="flex justify-center gap-2">
+        {q.sons.map((attendu, k) => {
+          const t = tape[k];
+          const couleur = !bloque ? (t ? "bg-marine-900 text-white" : "border-2 border-dashed border-slate-300 bg-white text-slate-300")
+            : t === attendu ? "bg-emerald-500 text-white" : "bg-red-500 text-white";
+          return (
+            <span key={k} className={`flex size-16 flex-col items-center justify-center rounded-2xl font-serif text-3xl font-bold ${couleur}`}>
+              {t ? note(t).texte : "?"}
+              {bloque && t !== attendu && <span className="font-sans text-[10px]">→ {note(attendu).texte}</span>}
+            </span>
+          );
+        })}
+      </div>
+      {!bloque && (
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => setTape(tape.slice(0, -1))} disabled={!tape.length}
+            className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-marine-900 shadow-sm disabled:opacity-40">
+            <Delete className="size-4" aria-hidden /> Effacer
+          </button>
+          <button type="button" onClick={() => valider(tape)} disabled={tape.length < q.sons.length} data-valider
+            className="min-h-12 rounded-xl bg-or-500 text-base font-bold text-marine-950 disabled:opacity-40">Valider</button>
+        </div>
+      )}
+      <Modulateur notes={q.touches} onNote={ajouter} allumee={allumee} />
+    </div>
+  );
+}
+
+/* ───────────── Fin de partie ───────────── */
+
+function Fin({ niveau, bonnes, avant, rejouer, suivant, accueil }: {
+  niveau: Niveau; bonnes: number; avant: number; rejouer: () => void; suivant?: () => void; accueil: () => void;
+}) {
+  const e = etoiles(bonnes);
+  useEffect(() => {
+    if (bonnes >= SEUIL_REUSSITE) jouerNotes(["d", "m", "s", "d1"], { duree: 0.25, pause: 0.03 });
+  }, [bonnes]);
+  const message = e === 3 ? "Parfait ! Quelle oreille !" : e === 2 ? "Très bien !" : e === 1 ? "Bien joué, niveau réussi !" : "Courage, essayez encore !";
+  return (
+    <div className="space-y-5 text-center" data-jeu-solfa="fin" data-bonnes={bonnes}>
+      <section className="rounded-3xl bg-white p-6 shadow-sm">
+        <p className="text-sm text-slate-500">Niveau {niveau.numero} · {niveau.titre}</p>
+        <div className="mt-4 flex justify-center"><Etoiles n={e} /></div>
+        <p className="mt-4 text-2xl font-bold text-marine-900">{message}</p>
+        <p className="mt-2 text-lg text-slate-700"><b>{bonnes}</b> bonnes réponses sur {QUESTIONS_PAR_PARTIE}</p>
+        <p className="mt-1 text-base font-semibold text-or-600">+{bonnes * POINTS_BONNE_REPONSE} points</p>
+        {bonnes > avant && avant > 0 && <p className="mt-2 text-sm text-emerald-700">Nouveau record pour ce niveau !</p>}
+        {bonnes < SEUIL_REUSSITE && <p className="mt-3 text-sm text-slate-500">Il faut {SEUIL_REUSSITE} bonnes réponses pour ouvrir le niveau suivant.</p>}
+      </section>
+      {suivant && (
+        <button type="button" onClick={suivant} data-niveau-suivant
+          className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-or-500 text-lg font-bold text-marine-950">
+          <Play className="size-5" aria-hidden /> Niveau suivant
+        </button>
+      )}
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={rejouer} className="flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-marine-900 font-semibold text-white">
+          <RotateCcw className="size-4" aria-hidden /> Rejouer
+        </button>
+        <button type="button" onClick={accueil} className="min-h-14 rounded-2xl bg-white font-semibold text-marine-900 shadow-sm">Tous les niveaux</button>
+      </div>
+    </div>
+  );
+}

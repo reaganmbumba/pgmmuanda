@@ -32,6 +32,7 @@ import {
   Landmark,
   Presentation,
   Globe,
+  Gamepad2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -85,6 +86,7 @@ export const menuChoriste: EntreeMenu[] = [
   { href: "/choriste/presences", label: "Mes présences", icone: ClipboardCheck, etape: 6, description: "Votre historique de présence." },
   { href: "/choriste/annonces", label: "Mes annonces", icone: Megaphone, etape: 6, description: "Communications de la PGM." },
   { href: "/choriste/chants", label: "Mes chants et partitions", icone: BookOpen, etape: 7, description: "Répertoire et partitions de votre voix." },
+  { href: "/choriste/solfa", label: "Jeu du sol-fa", icone: Gamepad2, etape: 9, description: "Apprenez le tonic sol-fa en jouant." },
   { href: "/choriste/formations", label: "Mes formations", icone: GraduationCap, etape: 7, description: "Vos formations et évaluations." },
   { href: "/choriste/paroisse", label: "Ma paroisse", icone: Building2, etape: 5, description: "Votre paroisse et votre chorale." },
   { href: "/choriste/chambre", label: "Ma chambre", icone: BedDouble, etape: 7, description: "Votre hébergement, si applicable." },

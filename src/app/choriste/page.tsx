@@ -1,6 +1,6 @@
 import { InstallerApp } from "@/components/InstallerApp";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, Globe, MapPin, QrCode } from "lucide-react";
+import { CalendarDays, ChevronRight, Gamepad2, Globe, MapPin, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { activites, annonces, choristeConnecte as moi, mesPresences } from "@/lib/demo-data";
 import { formatDate, formatDateHeure, libelleParoisse } from "@/lib/format";
@@ -74,6 +74,7 @@ export default async function AccueilChoriste() {
       </Link>
 
       <Raccourcis />
+      <CarteJeuSolfa />
 
       <SiteDeLaPgm actualites={actualites.slice(0, 2)} />
 
@@ -209,6 +210,21 @@ function SiteDeLaPgm({ actualites }: { actualites: ElementSite[] }) {
   );
 }
 
+function CarteJeuSolfa() {
+  return (
+    <Link href="/choriste/solfa" className="flex items-center gap-4 rounded-2xl bg-or-100 p-4 shadow-sm active:bg-or-400/30" data-carte-solfa>
+      <span className="rounded-2xl bg-or-500 p-3 text-marine-950">
+        <Gamepad2 className="size-7" aria-hidden />
+      </span>
+      <span className="flex-1">
+        <span className="block text-base font-bold text-marine-900">Jeu du sol-fa</span>
+        <span className="block text-sm text-marine-800">Apprenez d r m f s l t en jouant : écoutez, répondez, gagnez des étoiles.</span>
+      </span>
+      <ChevronRight className="size-5 text-or-600" aria-hidden />
+    </Link>
+  );
+}
+
 function Raccourcis() {
   // Grandes cases, avec un libellé complet : faciles à toucher et à comprendre
   const raccourcis = ["/choriste/qr", "/choriste/chants", "/choriste/formations", "/choriste/documents", "/choriste/chambre", "/choriste/profil"]
@@ -255,6 +271,7 @@ async function AccueilDemo() {
         </div>
       </div>
       <Raccourcis />
+      <CarteJeuSolfa />
       <SiteDeLaPgm actualites={actualites.slice(0, 2)} />
       <DernieresAnnonces liste={annonces.slice(0, 2)} />
     </div>
