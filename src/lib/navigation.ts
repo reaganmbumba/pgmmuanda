@@ -65,6 +65,7 @@ export const menuStaff: EntreeMenu[] = [
   { href: "/staff/programmes", label: "Programmes", icone: CalendarDays, etape: 6, description: "Calendrier des activités.", groupe: "Activités" },
   { href: "/staff/reunions", label: "Réunions et AG", icone: Presentation, etape: 9, description: "Convocations, ordre du jour, présence et compte rendu.", groupe: "Activités" },
   { href: "/staff/chants", label: "Chants et partitions", icone: BookOpen, etape: 7, description: "Répertoire, partitions et enregistrements.", groupe: "Activités" },
+  { href: "/staff/solfa", label: "Jeu du sol-fa", icone: Gamepad2, etape: 9, description: "Le cours et le jeu de tonic sol-fa des choristes.", groupe: "Activités" },
   { href: "/staff/formations", label: "Formations", icone: GraduationCap, etape: 7, description: "Formations, supports et évaluations.", groupe: "Activités" },
   { href: "/staff/communication", label: "Communication", icone: Megaphone, etape: 6, description: "Annonces, communiqués et invitations.", groupe: "Activités" },
   { href: "/staff/site", label: "Site public", icone: Globe, etape: 9, description: "Ajouter, modifier ou retirer ce qui s'affiche sur le site public.", groupe: "Activités" },
