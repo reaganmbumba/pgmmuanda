@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowLeft, Check, Delete, Lock, Music, Play, RotateCcw, Star, Trophy, Volume2, X } from "lucide-react";
+import { ArrowLeft, AudioLines, Check, Copy, Delete, Lock, Mic, MicOff, Music, Play, RotateCcw, Star, Trophy, Volume2, X } from "lucide-react";
 import {
   NIVEAUX, POINTS_BONNE_REPONSE, QUESTIONS_PAR_PARTIE, SEUIL_REUSSITE,
   dicteeJuste, enregistrerPartie, etoiles, lireProgression, niveauOuvert, note, preparerPartie, rang, totalEtoiles,
   type Niveau, type NoteId, type Progression, type Question,
 } from "@/lib/solfa/jeu";
-import { jouerNotes, jouerSignal } from "@/lib/solfa/son";
+import { doActuel, jouerMelodie, jouerNotes, jouerSignal, ouvrirMicro, reglerDo, sonEnCours, type Micro } from "@/lib/solfa/son";
+import {
+  TONALITES, chanteJuste, detecterFrequence, doDe, ecartAvec, lireReglages, noteChantee,
+  type NoteChantee, type Reglages,
+} from "@/lib/solfa/hauteur";
+import { texteDemiTons, transcrire, type Mesure } from "@/lib/solfa/transcrire";
 
 const CLE = "pgm-solfa-progression";
 
@@ -24,17 +29,45 @@ function sauver(p: Progression) {
   abonnes.forEach((f) => f());
 }
 
+// Réglages de voix (homme ou femme) et de tonalité, gardés sur le téléphone.
+const CLE_REGLAGES = "pgm-solfa-reglages";
+let reglagesEnMemoire: string | null = null;
+function lireReglagesBruts(): string | null {
+  try { return window.localStorage.getItem(CLE_REGLAGES) ?? reglagesEnMemoire; } catch { return reglagesEnMemoire; }
+}
+function sauverReglages(r: Reglages) {
+  reglagesEnMemoire = JSON.stringify(r);
+  try { window.localStorage.setItem(CLE_REGLAGES, reglagesEnMemoire); } catch { /* on garde en mémoire */ }
+  abonnes.forEach((f) => f());
+}
+function useReglages(): Reglages {
+  const brut = useSyncExternalStore(abonner, lireReglagesBruts, () => null);
+  const reglages = useMemo(() => lireReglages(brut), [brut]);
+  useEffect(() => { reglerDo(doDe(reglages)); }, [reglages]);
+  return reglages;
+}
+
+/** Le niveau qu'il faut réussir pour ouvrir celui-ci (les niveaux de chant ne comptent pas). */
+function niveauRequis(numero: number) {
+  let avant = numero - 1;
+  while (avant >= 1 && NIVEAUX[avant - 1]?.chant) avant--;
+  return avant;
+}
+
 type Ecran =
   | { nom: "accueil" }
   | { nom: "lecon"; niveau: Niveau }
   | { nom: "jeu"; niveau: Niveau }
   | { nom: "fin"; niveau: Niveau; bonnes: number; avant: number }
-  | { nom: "modulateur" };
+  | { nom: "modulateur" }
+  | { nom: "chanter" }
+  | { nom: "melodie" };
 
 export function JeuSolfa() {
   const brut = useSyncExternalStore(abonner, lireBrut, () => null);
   const progression = useMemo(() => lireProgression(brut), [brut]);
   const [ecran, setEcran] = useState<Ecran>({ nom: "accueil" });
+  const reglages = useReglages();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [ecran.nom]);
 
   const terminer = (niveau: Niveau, bonnes: number) => {
@@ -50,17 +83,22 @@ export function JeuSolfa() {
     return (
       <Fin bonnes={ecran.bonnes} avant={ecran.avant} niveau={ecran.niveau}
         rejouer={() => setEcran({ nom: "jeu", niveau: ecran.niveau })}
-        suivant={suivant && ecran.bonnes >= SEUIL_REUSSITE ? () => setEcran({ nom: "lecon", niveau: suivant }) : undefined}
+        suivant={suivant && niveauOuvert(progression, suivant.numero) ? () => setEcran({ nom: "lecon", niveau: suivant }) : undefined}
         accueil={() => setEcran({ nom: "accueil" })} />
     );
   }
   if (ecran.nom === "modulateur") return <ModulateurLibre retour={() => setEcran({ nom: "accueil" })} />;
-  return <Accueil progression={progression} ouvrir={(n) => setEcran({ nom: "lecon", niveau: n })} modulateur={() => setEcran({ nom: "modulateur" })} />;
+  if (ecran.nom === "melodie") return <MelodieChantee reglages={reglages} retour={() => setEcran({ nom: "accueil" })} />;
+  if (ecran.nom === "chanter") return <ChanterLibre reglages={reglages} retour={() => setEcran({ nom: "accueil" })} />;
+  return <Accueil progression={progression} reglages={reglages} ouvrir={(n) => setEcran({ nom: "lecon", niveau: n })}
+    modulateur={() => setEcran({ nom: "modulateur" })} chanter={() => setEcran({ nom: "chanter" })} melodie={() => setEcran({ nom: "melodie" })} />;
 }
 
 /* ───────────── Accueil du jeu ───────────── */
 
-function Accueil({ progression, ouvrir, modulateur }: { progression: Progression; ouvrir: (n: Niveau) => void; modulateur: () => void }) {
+function Accueil({ progression, reglages, ouvrir, modulateur, chanter, melodie }: {
+  progression: Progression; reglages: Reglages; ouvrir: (n: Niveau) => void; modulateur: () => void; chanter: () => void; melodie: () => void;
+}) {
   const r = rang(progression.points);
   const etoilesTotal = totalEtoiles(progression);
   return (
@@ -89,6 +127,24 @@ function Accueil({ progression, ouvrir, modulateur }: { progression: Progression
         </div>
       </section>
 
+      <button type="button" onClick={chanter} data-ouvrir-chanter
+        className="flex min-h-20 w-full items-center gap-3 rounded-2xl bg-or-500 p-4 text-left shadow-sm active:bg-or-400">
+        <span className="rounded-xl bg-marine-900 p-3 text-or-400"><Mic className="size-6" aria-hidden /></span>
+        <span className="flex-1">
+          <span className="block text-base font-bold text-marine-950">Je chante, le jeu me dit la note</span>
+          <span className="block text-xs text-marine-900">Chantez dans le micro : la note s&apos;affiche (d, r, m…).</span>
+        </span>
+      </button>
+
+      <button type="button" onClick={melodie} data-ouvrir-melodie
+        className="flex min-h-20 w-full items-center gap-3 rounded-2xl bg-marine-900 p-4 text-left text-white shadow-sm active:bg-marine-800">
+        <span className="rounded-xl bg-or-500 p-3 text-marine-950"><AudioLines className="size-6" aria-hidden /></span>
+        <span className="flex-1">
+          <span className="block text-base font-bold">Chantez un air, je l&apos;écris en sol-fa</span>
+          <span className="block text-xs text-marine-100/80">Les notes et le rythme : d : r | m : - ||</span>
+        </span>
+      </button>
+
       <button type="button" onClick={modulateur}
         className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm active:bg-slate-50">
         <span className="rounded-xl bg-or-100 p-2.5 text-or-600"><Music className="size-6" aria-hidden /></span>
@@ -112,9 +168,11 @@ function Accueil({ progression, ouvrir, modulateur }: { progression: Progression
                     {ouvert ? n.numero : <Lock className="size-5" aria-label="Fermé" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-base font-semibold ${ouvert ? "text-marine-900" : "text-slate-400"}`}>{n.titre}</span>
+                    <span className={`flex items-center gap-1.5 text-base font-semibold ${ouvert ? "text-marine-900" : "text-slate-400"}`}>
+                      {n.titre}{n.chant && <Mic className="size-4 text-or-600" aria-label="avec le micro" />}
+                    </span>
                     <span className="block text-xs text-slate-500">
-                      {ouvert ? n.resume : `Réussissez le niveau ${n.numero - 1} (${SEUIL_REUSSITE}/10) pour l'ouvrir.`}
+                      {ouvert ? n.resume : `Réussissez le niveau ${niveauRequis(n.numero)} (${SEUIL_REUSSITE}/10) pour l'ouvrir.`}
                     </span>
                     {meilleur !== undefined && <span className="mt-1 block text-xs text-slate-400">Meilleur score : {meilleur}/10</span>}
                   </span>
@@ -125,6 +183,7 @@ function Accueil({ progression, ouvrir, modulateur }: { progression: Progression
           })}
         </ol>
       </section>
+      <ChoixReglages reglages={reglages} />
       <p className="text-center text-xs text-slate-400">Pensez à monter le volume du téléphone. Vos points restent enregistrés sur ce téléphone.</p>
     </div>
   );
@@ -244,14 +303,13 @@ function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => 
   const [serie, setSerie] = useState(0);
   const [reponse, setReponse] = useState<{ juste: boolean } | null>(null);
   const q = questions[i];
+  const micro = useMicro();
 
-  const ecouter = () => {
-    if (q.sons) jouerNotes(q.sons, { avecDo: !!q.avecDo });
-  };
+  const ecouter = () => jouerQuestion(q);
   // On fait entendre la question dès qu'elle s'affiche.
   useEffect(() => {
     const question = questions[i];
-    const t = setTimeout(() => { if (question.sons) jouerNotes(question.sons, { avecDo: !!question.avecDo }); }, 250);
+    const t = setTimeout(() => jouerQuestion(question), 250);
     return () => clearTimeout(t);
   }, [i, questions]);
 
@@ -292,7 +350,8 @@ function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => 
       <section className="rounded-2xl bg-white p-5 text-center shadow-sm">
         <p className="text-base font-medium text-marine-900">{q.consigne}</p>
         {q.type === "choix" && q.grand && <p className="mt-4 font-serif text-5xl font-bold tracking-wide text-marine-900">{q.grand}</p>}
-        {q.sons && (
+        {q.type === "chant" && <p className="mt-3 font-serif text-6xl font-bold text-marine-900">{note(q.cible).texte}</p>}
+        {(q.type === "chant" || q.sons) && (
           <button type="button" onClick={() => ecouter()} data-ecouter
             className="mx-auto mt-4 flex min-h-14 items-center gap-2 rounded-full bg-marine-900 px-6 text-base font-semibold text-white active:scale-95">
             <Volume2 className="size-5" aria-hidden /> {i === 0 && !reponse ? "Écouter" : "Réécouter"}
@@ -302,6 +361,8 @@ function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => 
 
       {q.type === "choix"
         ? <Choix key={i} q={q} reponse={reponse} repondre={(k) => repondre(k === q.bonne)} />
+        : q.type === "chant"
+        ? <ChantQuestion key={i} cible={q.cible} micro={micro} bloque={!!reponse} repondre={repondre} />
         : <Dictee key={i} q={q} bloque={!!reponse} valider={(tape) => repondre(dicteeJuste(q.sons, tape))} />}
 
       {reponse && (
@@ -311,7 +372,7 @@ function Partie({ niveau, quitter, terminer }: { niveau: Niveau; quitter: () => 
           </p>
           <p className="text-sm">{q.explication}</p>
           <div className="flex gap-2">
-            <button type="button" onClick={() => jouerNotes(q.type === "choix" ? (q.sonReponse ?? []) : q.sons, { avecDo: q.type === "dictee" })}
+            <button type="button" onClick={() => (q.type === "choix" ? jouerNotes(q.sonReponse ?? []) : jouerQuestion(q))}
               className="flex min-h-12 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-marine-900 shadow-sm">
               <Volume2 className="size-4" aria-hidden /> Entendre
             </button>
@@ -415,6 +476,362 @@ function Fin({ niveau, bonnes, avant, rejouer, suivant, accueil }: {
         </button>
         <button type="button" onClick={accueil} className="min-h-14 rounded-2xl bg-white font-semibold text-marine-900 shadow-sm">Tous les niveaux</button>
       </div>
+    </div>
+  );
+}
+
+/** Fait entendre une question : le Do de départ si besoin, puis les notes. */
+function jouerQuestion(q: Question) {
+  if (q.type === "chant") jouerNotes([q.cible], { avecDo: true });
+  else if (q.sons) jouerNotes(q.sons, { avecDo: !!q.avecDo });
+}
+
+/* ───────────── Le micro : le jeu écoute le choriste chanter ───────────── */
+
+type EtatMicro = "arret" | "demande" | "ecoute" | "refuse";
+
+function useMicro() {
+  const [etat, setEtat] = useState<EtatMicro>("arret");
+  const [chantee, setChantee] = useState<NoteChantee | null>(null);
+  const [hz, setHz] = useState<number | null>(null);
+  const ouvert = useRef<Micro | null>(null);
+  const minuterie = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const arreter = () => {
+    if (minuterie.current) clearInterval(minuterie.current);
+    minuterie.current = null;
+    ouvert.current?.arreter();
+    ouvert.current = null;
+    setEtat("arret");
+    setChantee(null);
+    setHz(null);
+  };
+
+  const demarrer = async () => {
+    if (ouvert.current) return;
+    setEtat("demande");
+    try {
+      ouvert.current = await ouvrirMicro();
+    } catch {
+      setEtat("refuse");
+      return;
+    }
+    setEtat("ecoute");
+    let precedent: number | null = null;
+    let silence = 0;
+    minuterie.current = setInterval(() => {
+      const m = ouvert.current;
+      if (!m) return;
+      // On n'écoute pas pendant que le téléphone joue lui-même une note.
+      if (sonEnCours()) { setHz(null); return; }
+      const { donnees, frequence } = m.lire();
+      const f = detecterFrequence(donnees, frequence);
+      if (f === null) {
+        if (++silence > 3) { setHz(null); precedent = null; }
+        return;
+      }
+      silence = 0;
+      // Lissage : on attend deux mesures proches pour éviter que la note saute.
+      if (precedent !== null && Math.abs(12 * Math.log2(f / precedent)) < 0.6) setHz(f);
+      precedent = f;
+    }, 90);
+  };
+
+  useEffect(() => () => {
+    if (minuterie.current) clearInterval(minuterie.current);
+    ouvert.current?.arreter();
+  }, []);
+
+  return { etat, hz, demarrer, arreter, chantee, setChantee };
+}
+
+type MicroJeu = ReturnType<typeof useMicro>;
+
+/** La note chantée, calculée à partir de la hauteur mesurée et du Do choisi. */
+function useNoteChantee(micro: MicroJeu, reglages?: Reglages) {
+  const doHz = reglages ? doDe(reglages) : null;
+  return useMemo(() => {
+    if (micro.hz === null) return null;
+    return noteChantee(micro.hz, doHz ?? doActuel());
+  }, [micro.hz, doHz]);
+}
+
+function BoutonMicro({ micro, texte = "Je chante" }: { micro: MicroJeu; texte?: string }) {
+  if (micro.etat === "ecoute") {
+    return (
+      <button type="button" onClick={micro.arreter} data-micro="arreter"
+        className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-base font-semibold text-red-600 shadow-sm">
+        <MicOff className="size-5" aria-hidden /> Arrêter le micro
+      </button>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <button type="button" onClick={() => void micro.demarrer()} disabled={micro.etat === "demande"} data-micro="demarrer"
+        className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-or-500 text-lg font-bold text-marine-950 shadow-sm disabled:opacity-60">
+        <Mic className="size-6" aria-hidden /> {micro.etat === "demande" ? "Ouverture du micro…" : texte}
+      </button>
+      {micro.etat === "refuse" && (
+        <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800">
+          Le micro n&apos;a pas pu s&apos;ouvrir. Touchez « Autoriser » quand le téléphone demande le micro, ou autorisez-le dans les réglages du navigateur, puis réessayez.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Aiguille : trop bas, juste, trop haut. `ecart` en demi-tons (-1 à +1 affiché). */
+function Aiguille({ ecart }: { ecart: number | null }) {
+  const pos = ecart === null ? 50 : 50 + Math.max(-1, Math.min(1, ecart)) * 45;
+  const juste = ecart !== null && Math.abs(ecart) <= 0.35;
+  return (
+    <div className="space-y-1" aria-hidden>
+      <div className="relative h-4 rounded-full bg-gradient-to-r from-sky-200 via-emerald-300 to-rose-200">
+        <div className="absolute inset-y-0 left-[41%] w-[18%] rounded-full bg-emerald-400/70" />
+        {ecart !== null && (
+          <div className={`absolute -top-1 h-6 w-2 -translate-x-1/2 rounded-full transition-all ${juste ? "bg-emerald-700" : "bg-marine-900"}`} style={{ left: `${pos}%` }} />
+        )}
+      </div>
+      <div className="flex justify-between text-[11px] text-slate-500"><span>trop bas</span><span>juste</span><span>trop haut</span></div>
+    </div>
+  );
+}
+
+function ChanterLibre({ reglages, retour }: { reglages: Reglages; retour: () => void }) {
+  const micro = useMicro();
+  const chantee = useNoteChantee(micro, reglages);
+  const ecart = chantee ? chantee.cents / 100 : null;
+  return (
+    <div className="space-y-4" data-jeu-solfa="chanter">
+      <BarreRetour titre="Je chante, le jeu me dit la note" retour={() => { micro.arreter(); retour(); }} />
+      <section className="rounded-3xl bg-marine-900 p-5 text-center text-white shadow-lg" aria-live="polite">
+        <p className="text-sm text-marine-100/80">
+          {micro.etat !== "ecoute" ? "Touchez « Je chante », puis chantez une note sur « a » ou « o »." : chantee ? "Vous chantez :" : "J'écoute… chantez une note."}
+        </p>
+        <p className="mt-2 font-serif text-8xl font-bold text-or-400" data-note-chantee={chantee?.texte ?? ""}>{chantee?.texte ?? "…"}</p>
+        <p className="mt-1 h-7 text-lg font-semibold">{chantee?.nom ?? ""}</p>
+        <div className="mt-3 rounded-2xl bg-white/95 p-3 text-left"><Aiguille ecart={ecart} /></div>
+        {chantee && (
+          <p className="mt-2 text-sm text-marine-100">
+            {Math.abs(chantee.cents) <= 15 ? "Bien juste !" : chantee.cents < 0 ? "Un tout petit peu bas : montez légèrement." : "Un tout petit peu haut : descendez légèrement."}
+          </p>
+        )}
+      </section>
+      <BoutonMicro micro={micro} />
+      <button type="button" onClick={() => jouerNotes(["d"], { duree: 1.2 })}
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white text-base font-semibold text-marine-900 shadow-sm">
+        <Volume2 className="size-5" aria-hidden /> Écouter le Do de départ
+      </button>
+      <Modulateur notes={["s1", "l1", "t1", "d", "r", "m", "f", "s", "l", "t", "d1", "r1"]} onNote={(n) => jouerNotes([n], { duree: 0.8 })} allumee={chantee?.id ?? null} />
+      <ChoixReglages reglages={reglages} />
+    </div>
+  );
+}
+
+/** Une question « Chantez la note » : il faut tenir la bonne note un petit moment. */
+function ChantQuestion({ cible, micro, bloque, repondre }: { cible: NoteId; micro: MicroJeu; bloque: boolean; repondre: (juste: boolean) => void }) {
+  const chantee = useNoteChantee(micro);
+  const [tenu, setTenu] = useState(0);
+  const ecart = chantee ? ecartAvec(chantee, cible) : null;
+  const juste = chantee ? chanteJuste(chantee, cible) : false;
+  const TENIR = 6; // environ une demi-seconde de note juste
+
+  // Chaque nouvelle mesure juste remplit la jauge ; elle se vide doucement sinon.
+  const [derniereMesure, setDerniereMesure] = useState<number | null>(null);
+  if (!bloque && micro.hz !== derniereMesure) {
+    setDerniereMesure(micro.hz);
+    if (micro.hz !== null) setTenu((t) => (juste ? t + 1 : Math.max(0, t - 1)));
+  }
+  useEffect(() => {
+    if (!bloque && tenu >= TENIR) repondre(true);
+  }, [tenu, bloque, repondre]);
+
+  return (
+    <div className="space-y-3" data-chant={cible}>
+      {micro.etat === "ecoute" && !bloque && (
+        <section className="space-y-3 rounded-2xl bg-white p-4 text-center shadow-sm" aria-live="polite">
+          <p className="text-sm text-slate-500">Vous chantez :</p>
+          <p className="font-serif text-5xl font-bold text-marine-900" data-note-chantee={chantee?.texte ?? ""}>{chantee?.texte ?? "…"}</p>
+          <Aiguille ecart={ecart === null ? null : Math.max(-1, Math.min(1, ecart))} />
+          <p className={`text-base font-bold ${juste ? "text-emerald-700" : "text-marine-900"}`}>
+            {ecart === null ? "Chantez la note…" : juste ? "C'est juste, tenez la note !" : ecart < 0 ? "Plus haut ⬆" : "Plus bas ⬇"}
+          </p>
+          <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${Math.min(100, (tenu / TENIR) * 100)}%` }} />
+          </div>
+        </section>
+      )}
+      {!bloque && <BoutonMicro micro={micro} />}
+      {!bloque && (
+        <button type="button" onClick={() => repondre(false)} className="w-full py-2 text-sm font-medium text-slate-500 underline">
+          Je n&apos;y arrive pas, passer
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ChoixReglages({ reglages }: { reglages: Reglages }) {
+  const bouton = (actif: boolean) => `min-h-11 rounded-xl px-3 text-sm font-semibold ${actif ? "bg-marine-900 text-white" : "bg-slate-100 text-marine-900"}`;
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm" data-reglages>
+      <h2 className="font-semibold text-marine-900">Ma voix et la tonalité</h2>
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" className={bouton(reglages.voix === "femme")} onClick={() => sauverReglages({ ...reglages, voix: "femme" })}>Femme ou enfant (S, A)</button>
+        <button type="button" className={bouton(reglages.voix === "homme")} onClick={() => sauverReglages({ ...reglages, voix: "homme" })}>Homme (T, B)</button>
+      </div>
+      <label className="block text-sm text-slate-600">
+        Le Do (d) est sur :
+        <select value={reglages.ton} onChange={(e) => sauverReglages({ ...reglages, ton: Number(e.target.value) })}
+          className="mt-1 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-base text-marine-900">
+          {TONALITES.map((t) => <option key={t.ton} value={t.ton}>{t.nom}{t.ton === 0 ? " (conseillé)" : ""}</option>)}
+        </select>
+      </label>
+      <p className="text-xs text-slate-500">Les notes jouées et la note affichée suivent ce réglage.</p>
+    </section>
+  );
+}
+
+/* ───────────── Chanter un air : le jeu l'écrit en sol-fa avec son rythme ───────────── */
+
+const DUREE_MAX_MS = 40000;
+const maintenant = () => performance.now();
+
+function MelodieChantee({ reglages, retour }: { reglages: Reglages; retour: () => void }) {
+  const [etat, setEtat] = useState<"pret" | "demande" | "enregistre" | "fini" | "refuse">("pret");
+  const [mesures, setMesures] = useState<Mesure[]>([]);
+  const [enDirect, setEnDirect] = useState<string | null>(null);
+  const [tempsParMesure, setTempsParMesure] = useState(4);
+  const [copie, setCopie] = useState(false);
+  const micro = useRef<Micro | null>(null);
+  const minuterie = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tampon = useRef<Mesure[]>([]);
+  const doHz = doDe(reglages);
+
+  const arreter = () => {
+    if (minuterie.current) clearInterval(minuterie.current);
+    minuterie.current = null;
+    micro.current?.arreter();
+    micro.current = null;
+  };
+  useEffect(() => arreter, []);
+
+  const commencer = async () => {
+    setEtat("demande");
+    try { micro.current = await ouvrirMicro(); } catch { setEtat("refuse"); return; }
+    tampon.current = [];
+    setCopie(false);
+    setEtat("enregistre");
+    const debut = maintenant();
+    minuterie.current = setInterval(() => {
+      const m = micro.current;
+      if (!m) return;
+      const t = maintenant() - debut;
+      const { donnees, frequence } = m.lire();
+      const f = detecterFrequence(donnees, frequence);
+      const demiTons = f === null ? null : 12 * Math.log2(f / doHz);
+      tampon.current.push({ t, demiTons });
+      setEnDirect(demiTons === null ? null : texteDemiTons(Math.round(demiTons)));
+      if (t > DUREE_MAX_MS) terminer();
+    }, 40);
+  };
+  const terminer = () => {
+    arreter();
+    setMesures([...tampon.current]);
+    setEnDirect(null);
+    setEtat("fini");
+  };
+
+  const resultat = useMemo(() => (mesures.length ? transcrire(mesures, tempsParMesure) : null), [mesures, tempsParMesure]);
+  const total = resultat?.notes.reduce((t, n) => t + n.demiTemps, 0) ?? 0;
+
+  return (
+    <div className="space-y-4" data-jeu-solfa="melodie">
+      <BarreRetour titre="Chantez un air, je l'écris" retour={() => { arreter(); retour(); }} />
+      {etat !== "fini" && (
+        <section className="space-y-2 rounded-2xl bg-white p-4 text-sm text-slate-700 shadow-sm">
+          <p>1. Touchez <b>« Commencer »</b>.</p>
+          <p>2. Chantez un petit air (sur « la » ou « no »), bien en rythme, dans un endroit calme.</p>
+          <p>3. Touchez <b>« J&apos;ai fini »</b> : le jeu écrit vos notes et leur rythme en sol-fa.</p>
+        </section>
+      )}
+
+      {etat === "enregistre" && (
+        <section className="rounded-3xl bg-marine-900 p-5 text-center text-white shadow-lg" aria-live="polite">
+          <p className="flex items-center justify-center gap-2 text-sm text-marine-100/80">
+            <span className="size-3 animate-pulse rounded-full bg-red-500" aria-hidden /> J&apos;écoute… chantez !
+          </p>
+          <p className="mt-2 font-serif text-7xl font-bold text-or-400">{enDirect ?? "…"}</p>
+        </section>
+      )}
+
+      {etat === "enregistre" ? (
+        <button type="button" onClick={terminer} data-melodie="finir"
+          className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-red-600 text-lg font-bold text-white shadow-sm">
+          <Check className="size-6" aria-hidden /> J&apos;ai fini
+        </button>
+      ) : (
+        <button type="button" onClick={() => void commencer()} disabled={etat === "demande"} data-melodie="commencer"
+          className="flex min-h-16 w-full items-center justify-center gap-2 rounded-2xl bg-or-500 text-lg font-bold text-marine-950 shadow-sm disabled:opacity-60">
+          <Mic className="size-6" aria-hidden /> {etat === "demande" ? "Ouverture du micro…" : etat === "fini" ? "Chanter un autre air" : "Commencer"}
+        </button>
+      )}
+      {etat === "refuse" && (
+        <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800">
+          Le micro n&apos;a pas pu s&apos;ouvrir. Touchez « Autoriser » quand le téléphone demande le micro, puis réessayez.
+        </p>
+      )}
+
+      {etat === "fini" && resultat && (
+        resultat.notes.length === 0 ? (
+          <p className="rounded-2xl bg-white p-5 text-center text-sm text-slate-600 shadow-sm">
+            Je n&apos;ai entendu aucune note. Chantez un peu plus fort, plus près du téléphone, puis réessayez.
+          </p>
+        ) : (
+          <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm" data-transcription>
+            <h2 className="font-semibold text-marine-900">Votre air en sol-fa</h2>
+            <p className="break-words rounded-xl bg-or-100 p-4 font-serif text-2xl font-bold leading-relaxed text-marine-900" data-solfa={resultat.solfa}>
+              {resultat.solfa}
+            </p>
+            <div className="flex gap-1" aria-hidden>
+              {resultat.notes.map((n, k) => (
+                <div key={k} style={{ flexGrow: n.demiTemps }}
+                  className={`flex h-10 min-w-0 items-center justify-center rounded-md text-sm font-bold ${n.demiTons === null ? "bg-slate-100 text-slate-300" : "bg-marine-900 text-white"}`}>
+                  {n.demiTons === null ? "" : texteDemiTons(n.demiTons)}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500">
+              {resultat.notes.filter((n) => n.demiTons !== null).length} notes · {Math.ceil(total / 2)} temps · 1 temps ≈ {(resultat.tempsMs / 1000).toFixed(1)} s
+            </p>
+            <div>
+              <p className="mb-1 text-sm text-slate-600">Temps par mesure :</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[2, 3, 4].map((n) => (
+                  <button key={n} type="button" onClick={() => setTempsParMesure(n)}
+                    className={`min-h-11 rounded-xl text-sm font-semibold ${tempsParMesure === n ? "bg-marine-900 text-white" : "bg-slate-100 text-marine-900"}`}>
+                    {n} temps
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => jouerMelodie(resultat.notes, resultat.tempsMs)}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-marine-900 text-sm font-semibold text-white">
+                <Volume2 className="size-4" aria-hidden /> Écouter
+              </button>
+              <button type="button" onClick={() => { void navigator.clipboard?.writeText(resultat.solfa).then(() => setCopie(true)).catch(() => {}); }}
+                className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-100 text-sm font-semibold text-marine-900">
+                <Copy className="size-4" aria-hidden /> {copie ? "Copié !" : "Copier"}
+              </button>
+            </div>
+            <p className="text-xs text-slate-500">
+              Le téléphone fait de son mieux : vérifiez l&apos;écriture avec votre chef de chœur. « : » sépare les temps, « | » les mesures, « - » prolonge la note, « . » coupe un temps en deux.
+            </p>
+          </section>
+        )
+      )}
+      <ChoixReglages reglages={reglages} />
     </div>
   );
 }

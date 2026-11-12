@@ -49,6 +49,13 @@ export type Question =
       explication: string;
     }
   | {
+      type: "chant";
+      consigne: string;
+      /** La note que le choriste doit chanter. */
+      cible: NoteId;
+      explication: string;
+    }
+  | {
       type: "dictee";
       consigne: string;
       sons: NoteId[];
@@ -67,6 +74,8 @@ export type Niveau = {
   /** Notes à montrer (et à écouter) dans la leçon. */
   notesLecon: NoteId[];
   fabriquer: (hasard: () => number) => Question;
+  /** Niveau de chant (micro) : il ne bloque jamais les niveaux suivants. */
+  chant?: boolean;
 };
 
 export const QUESTIONS_PAR_PARTIE = 10;
@@ -101,6 +110,17 @@ function avecChoix(
 const ordreNote = (texte: string) => NOTES.findIndex((n) => n.texte === texte);
 const choixNote = (id: NoteId): Choix => ({ texte: note(id).texte, sous: note(id).nom });
 
+/** Question de chant : le choriste chante la note demandée, le micro vérifie. */
+function chant(notes: NoteId[], hasard: () => number): Question {
+  const cible = tirer(notes, hasard);
+  return {
+    type: "chant",
+    consigne: `Chantez la note « ${note(cible).texte} » (${note(cible).nom}).`,
+    cible,
+    explication: `La note demandée était « ${note(cible).texte} » (${note(cible).nom}).`,
+  };
+}
+
 /** Question d'écoute : on entend le Do, puis une note, et on la reconnaît. */
 function ecoute(notes: NoteId[], hasard: () => number): Question {
   const cible = tirer(notes, hasard);
@@ -113,9 +133,8 @@ function ecoute(notes: NoteId[], hasard: () => number): Question {
   }, true);
 }
 
-export const NIVEAUX: Niveau[] = [
+const LISTE: Omit<Niveau, "numero">[] = [
   {
-    numero: 1,
     titre: "L'échelle du sol-fa",
     resume: "Apprendre l'ordre des notes d r m f s l t d¹.",
     lecon: [
@@ -141,7 +160,6 @@ export const NIVEAUX: Niveau[] = [
     },
   },
   {
-    numero: 2,
     titre: "Écouter d, m, s",
     resume: "Reconnaître à l'oreille Do, Mi et Sol.",
     lecon: [
@@ -153,7 +171,6 @@ export const NIVEAUX: Niveau[] = [
     fabriquer: (hasard) => ecoute(["d", "m", "s"], hasard),
   },
   {
-    numero: 3,
     titre: "Monte ou descend ?",
     resume: "Dire si la 2ᵉ note est plus haute ou plus basse.",
     lecon: [
@@ -186,7 +203,18 @@ export const NIVEAUX: Niveau[] = [
     },
   },
   {
-    numero: 4,
+    titre: "Chantez la note",
+    resume: "Le jeu vous écoute chanter d, r, m, f, s.",
+    lecon: [
+      "Maintenant c'est vous qui chantez ! Le téléphone écoute avec le micro et vous dit quelle note vous chantez.",
+      "Écoutez le Do et la note demandée, puis touchez « Je chante » et tenez la note sur « a » ou « o ».",
+      "Si la flèche dit « plus haut », montez un peu la voix. Si elle dit « plus bas », descendez un peu.",
+    ],
+    notesLecon: ["d", "r", "m", "f", "s"],
+    fabriquer: (hasard) => chant(["d", "r", "m", "f", "s"], hasard),
+    chant: true,
+  },
+  {
     titre: "Écouter de d à s",
     resume: "Reconnaître d, r, m, f, s à l'oreille.",
     lecon: [
@@ -197,7 +225,6 @@ export const NIVEAUX: Niveau[] = [
     fabriquer: (hasard) => ecoute(["d", "r", "m", "f", "s"], hasard),
   },
   {
-    numero: 5,
     titre: "Toute l'échelle",
     resume: "Reconnaître les 8 notes de d à d¹.",
     lecon: [
@@ -208,7 +235,6 @@ export const NIVEAUX: Niveau[] = [
     fabriquer: (hasard) => ecoute(ECHELLE, hasard),
   },
   {
-    numero: 6,
     titre: "Grave ou aigu",
     resume: "Lire s₁, l₁, t₁ (graves) et d¹, r¹ (aigus).",
     lecon: [
@@ -231,7 +257,6 @@ export const NIVEAUX: Niveau[] = [
     },
   },
   {
-    numero: 7,
     titre: "Lire une petite mélodie",
     resume: "Écouter 3 notes et trouver comment elles s'écrivent.",
     lecon: [
@@ -261,7 +286,6 @@ export const NIVEAUX: Niveau[] = [
     },
   },
   {
-    numero: 8,
     titre: "La dictée musicale",
     resume: "Écouter 3 notes et les taper dans l'ordre.",
     lecon: [
@@ -282,7 +306,21 @@ export const NIVEAUX: Niveau[] = [
       };
     },
   },
+  {
+    titre: "Chantez toute l'échelle",
+    resume: "Chanter juste toutes les notes de d à d¹.",
+    lecon: [
+      "Le grand défi : chanter juste n'importe quelle note de l'échelle.",
+      "Pensez à l'échelle depuis le Do : d r m f s l t d¹. Vous pouvez toujours réécouter.",
+    ],
+    notesLecon: ECHELLE,
+    fabriquer: (hasard) => chant(["r", "m", "f", "s", "l", "t", "d1"], hasard),
+    chant: true,
+  },
 ];
+
+/** Les niveaux, numérotés dans l'ordre. */
+export const NIVEAUX: Niveau[] = LISTE.map((n, i) => ({ ...n, numero: i + 1 }));
 
 /** Prépare une partie : des questions sans deux fois la même à la suite. */
 export function preparerPartie(niveau: Niveau, hasard: () => number = Math.random): Question[] {
@@ -320,9 +358,15 @@ export type Progression = {
 
 export const progressionVide = (): Progression => ({ meilleurs: {}, points: 0, parties: 0 });
 
-/** Un niveau est ouvert si c'est le premier, ou si le précédent est réussi. */
-export const niveauOuvert = (p: Progression, numero: number) =>
-  numero === 1 || (p.meilleurs[numero - 1] ?? 0) >= SEUIL_REUSSITE;
+/**
+ * Un niveau est ouvert si c'est le premier, ou si le niveau d'avant est réussi.
+ * Les niveaux de chant ne bloquent pas la suite (téléphone sans micro, voix fatiguée…).
+ */
+export function niveauOuvert(p: Progression, numero: number) {
+  let avant = numero - 1;
+  while (avant >= 1 && NIVEAUX[avant - 1]?.chant) avant--;
+  return avant < 1 || (p.meilleurs[avant] ?? 0) >= SEUIL_REUSSITE;
+}
 
 export function enregistrerPartie(p: Progression, numero: number, bonnes: number): Progression {
   return {
