@@ -332,3 +332,10 @@ export const chantsDemo: Chant[] = [
   { id: "cha-3", titre: "Gloire à Dieu", auteur: "Chorale de Muanda", langue: "Français", categorie: "Noël", paroles: "",
     voixCodes: ["tenor", "basse"], voix: "Ténor, Basse", lienPartition: "https://exemple.org/p2.pdf", lienAudio: null, archive: false },
 ];
+
+/** Cotisations de démonstration du choriste connecté (PGM-MUA-0001) : août pas encore payé. */
+export const mesCotisationsDemo: { id: string; mois: string; montant: number; devise: "CDF" | "USD"; payeLe: string; saisiPar: string }[] = [
+  ["2026-11-01", "2026-11-02"], ["2026-10-01", "2026-10-05"], ["2026-09-01", "2026-09-28"], ["2026-07-01", "2026-07-06"],
+  ["2026-06-01", "2026-06-07"], ["2026-05-01", "2026-05-03"], ["2026-04-01", "2026-04-12"], ["2026-03-01", "2026-03-01"],
+  ["2026-02-01", "2026-02-08"], ["2026-01-01", "2026-01-11"], ["2025-12-01", "2025-12-07"], ["2025-11-01", "2025-11-09"],
+].map(([mois, payeLe], i) => ({ id: `cot-${i}`, mois, montant: 5000, devise: "CDF" as const, payeLe, saisiPar: "Trésorerie PGM" }));
