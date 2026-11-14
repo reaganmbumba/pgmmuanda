@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { idVideo } from "@/lib/site/video";
 
 /* Validation des formulaires de l'espace « Site public ». */
 
@@ -24,4 +25,7 @@ export const schemaReglagesSite = z.object({
   youtube_chaine: z.string().trim().regex(/^@?[\w.-]{3,100}$/, "Nom de chaîne invalide (ex. pgmmuanda)."),
   causerie_ouverte: z.enum(["oui", "non"]),
   youtube_id: z.union([z.literal(""), z.string().trim().regex(/^UC[\w-]{22}$/, "L'identifiant commence par UC et fait 24 caractères.")]),
+  youtube_direct: z.string().trim().max(300).optional().default("")
+    .refine((v) => !v || idVideo(v), "Lien du direct invalide : collez le lien YouTube de la vidéo (ex. https://www.youtube.com/live/…).")
+    .transform((v) => (v ? idVideo(v)! : "")),
 });

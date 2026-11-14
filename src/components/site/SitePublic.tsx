@@ -14,9 +14,9 @@ import { GuetteurDirect } from "./GuetteurDirect";
 import { Causerie } from "./Causerie";
 import { Apparition } from "./Apparition";
 import {
-  contact, dateLongue, lireElement, lireElements, lireReglages, paragraphes, siteEnBase, urlFichier, type ElementSite,
+  contact, dateLongue, lireElement, lireElements, lireReglages, paragraphes, siteEnBase, urlFichier, type ElementSite, type Reglages,
 } from "@/lib/site/contenu";
-import { lireChaine } from "@/lib/site/youtube";
+import { lireChaine, lireVideo, type Chaine, type EtatVideo } from "@/lib/site/youtube";
 
 /*
  * Site public de l'antenne : une page par rubrique. Aucune donnée de membre,
@@ -226,17 +226,88 @@ function Semaine({ semaine, className }: { semaine: { jour: string; seances: Ele
   );
 }
 
+/** Ce que dit le badge selon l'état du direct. */
+const TEXTE_ETAT: Record<EtatVideo, string> = {
+  direct: "En direct maintenant", bientot: "Bientôt en direct", termine: "À revoir", inconnu: "Direct",
+};
+const TITRE_ETAT: Record<EtatVideo, string> = {
+  direct: "En direct maintenant", bientot: "Bientôt en direct", termine: "Revoir le direct", inconnu: "Le direct de la PGM",
+};
+
+function BadgeDirect({ etat }: { etat: EtatVideo }) {
+  if (etat === "direct") return <span className="badge-direct"><span className="point" />En direct</span>;
+  if (etat === "bientot") return <span className="badge-video"><Clock className="i" aria-hidden />Bientôt</span>;
+  if (etat === "termine") return <span className="badge-video"><Play className="i" aria-hidden />Rediffusion</span>;
+  return <span className="badge-video"><Radio className="i" aria-hidden />Direct</span>;
+}
+
+type DirectSite = { id: string; titre: string | null; etat: EtatVideo };
+
+/**
+ * Le direct à montrer : celui que l'administration a choisi (lien collé dans
+ * « Accueil et contact »), sauf si la chaîne de la PGM est en direct pendant
+ * qu'il ne l'est pas. Aucun des deux : null.
+ */
+async function directDuSite(r: Reglages, chaine: Chaine | null): Promise<DirectSite | null> {
+  const choisi = r.youtube_direct ? await lireVideo(r.youtube_direct).catch(() => null) : null;
+  if (chaine?.direct && choisi?.etat !== "direct" && chaine.direct !== choisi?.id) {
+    return { id: chaine.direct, titre: chaine.videos.find((x) => x.id === chaine.direct)?.titre ?? null, etat: "direct" };
+  }
+  if (choisi) return choisi;
+  return chaine?.direct ? { id: chaine.direct, titre: null, etat: "direct" } : null;
+}
+
 export async function AccueilSite() {
   const [r, actualites, chorales, commissions, soirees, programme] = await Promise.all([
     lireReglages(), lireElements("actualite"), lireElements("chorale"), lireElements("commission"), lireElements("soiree"), lireElements("programme"),
   ]);
   const chaine = await lireChaine(r.youtube_chaine, r.youtube_id).catch(() => null);
-  const video = chaine?.direct ?? chaine?.videos[0]?.id ?? null;
-  const titreVideo = chaine?.videos.find((x) => x.id === video)?.titre ?? (chaine?.direct ? "En direct" : null);
+  const direct = await directDuSite(r, chaine);
+  const video = direct?.id ?? chaine?.videos[0]?.id ?? null;
+  const titreVideo = direct?.titre ?? chaine?.videos.find((x) => x.id === video)?.titre ?? null;
   const c = contact(r);
   const prochaine = aVenir(soirees).at(0);
   const paroisses = new Set(chorales.map((ch) => ch.sousTitre).filter((l) => l?.startsWith("Paroisse"))).size;
   const semaine = [...new Set(programme.map((l) => l.titre))].map((jour) => ({ jour, seances: programme.filter((l) => l.titre === jour) }));
+  const blocTv = (
+          <section className="section cadre">
+            <div className="col large">
+              <div className={direct ? "tv tv-en-direct" : "tv"} id="direct" data-apparait>
+                <div className="tv-txt">
+                  <span className="tv-marque"><TvMinimalPlay className="i" aria-hidden />PGM Muanda TV</span>
+                  <h2>{direct ? TITRE_ETAT[direct.etat] : "Nos cultes et nos louanges, en vidéo"}</h2>
+                  <p>{direct ? "Suivez le direct de la PGM Antenne de Muanda ici, sans quitter le site." : "Regardez les directs et les rediffusions de la PGM Antenne de Muanda, sans quitter le site."}</p>
+                  <div className="tv-actions">
+                    <Link className="btn btn-or" href={direct ? `/direct?v=${direct.id}` : "/direct"}><Play className="i" aria-hidden />{direct ? "Ouvrir la page Direct" : "Regarder"}</Link>
+                    {chaine?.lienAbonnement && (
+                      <a className="btn btn-ligne" href={chaine.lienAbonnement} target="_blank" rel="noopener noreferrer"><BellRing className="i" aria-hidden />S&apos;abonner</a>
+                    )}
+                  </div>
+                </div>
+                {direct ? (
+                  <div className="tv-direct">
+                    <div className="tv-ecran tv-lecteur">
+                      <LecteurVideo id={direct.id} titre={direct.titre ?? "Direct PGM Muanda TV"} />
+                    </div>
+                    <div className="tv-legende">
+                      <BadgeDirect etat={direct.etat} />
+                      {direct.titre && <b>{direct.titre}</b>}
+                    </div>
+                    <Partage compact texte={`${TEXTE_ETAT[direct.etat]} sur PGM Muanda TV${direct.titre ? ` : ${direct.titre}` : ""}`} chemin={`/direct?v=${direct.id}`} image={imageVideo(direct.id)} />
+                  </div>
+                ) : (
+                  <Link className="tv-ecran" href={video ? `/direct?v=${video}` : "/direct"} aria-label="Ouvrir PGM Muanda TV">
+                    {video ? <img src={imageVideo(video)} alt="" loading="lazy" /> : <img className="tv-logo" src="/logo-pgm.png" alt="" />}
+                    {video && <span className="tv-play"><Play className="i" aria-hidden /></span>}
+                    {chaine?.direct
+                      ? <span className="badge-direct"><span className="point" />En direct</span>
+                      : titreVideo && <span className="tv-titre">{titreVideo}</span>}
+                  </Link>
+                )}
+              </div>
+            </div>
+          </section>
+  );
   return (
     <CadreSite>
       <main className="accueil">
@@ -252,7 +323,7 @@ export async function AccueilSite() {
               <h1>{r.accueil_titre}</h1>
               <p className="chapo">{r.accueil_texte}</p>
               <div className="hero-actions">
-                <Link className="btn btn-or" href="/direct"><Play className="i" aria-hidden />Regarder PGM Muanda TV</Link>
+                <Link className="btn btn-or" href={direct ? "#direct" : "/direct"}><Play className="i" aria-hidden />{direct ? "Regarder le direct" : "Regarder PGM Muanda TV"}</Link>
                 <Link className="btn btn-ligne" href="/nous-rejoindre"><UserPlus className="i" aria-hidden />Rejoindre une chorale</Link>
               </div>
             </div>
@@ -268,6 +339,8 @@ export async function AccueilSite() {
             <path d="M0 34 C 240 64, 480 4, 720 26 S 1200 58, 1440 22 L1440 60 L0 60 Z" />
           </svg>
         </section>
+
+        {direct && blocTv}
 
         <div className="chiffres-band cadre" data-apparait>
           <div className="col large">
@@ -310,30 +383,7 @@ export async function AccueilSite() {
           </section>
         )}
 
-        <section className="section cadre">
-          <div className="col large">
-            <div className="tv" data-apparait>
-              <div className="tv-txt">
-                <span className="tv-marque"><TvMinimalPlay className="i" aria-hidden />PGM Muanda TV</span>
-                <h2>Nos cultes et nos louanges, en vidéo</h2>
-                <p>Regardez les directs et les rediffusions de la PGM Antenne de Muanda, sans quitter le site.</p>
-                <div className="tv-actions">
-                  <Link className="btn btn-or" href="/direct"><Play className="i" aria-hidden />Regarder</Link>
-                  {chaine?.lienAbonnement && (
-                    <a className="btn btn-ligne" href={chaine.lienAbonnement} target="_blank" rel="noopener noreferrer"><BellRing className="i" aria-hidden />S&apos;abonner</a>
-                  )}
-                </div>
-              </div>
-              <Link className="tv-ecran" href={video ? `/direct?v=${video}` : "/direct"} aria-label="Ouvrir PGM Muanda TV">
-                {video ? <img src={imageVideo(video)} alt="" loading="lazy" /> : <img className="tv-logo" src="/logo-pgm.png" alt="" />}
-                {video && <span className="tv-play"><Play className="i" aria-hidden /></span>}
-                {chaine?.direct
-                  ? <span className="badge-direct"><span className="point" />En direct</span>
-                  : titreVideo && <span className="tv-titre">{titreVideo}</span>}
-              </Link>
-            </div>
-          </div>
-        </section>
+        {!direct && blocTv}
 
         {(actualites[0] || prochaine) && (
           <section className="section cadre">
@@ -725,10 +775,14 @@ const miniature = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
 export async function PageDirect({ v }: { v?: string }) {
   const r = await lireReglages();
   const chaine = await lireChaine(r.youtube_chaine, r.youtube_id);
-  const choisie = (v && (chaine.videos.some((x) => x.id === v) || v === chaine.direct) ? v : null)
-    ?? chaine.direct ?? chaine.videos[0]?.id ?? null;
-  const enDirect = choisie !== null && choisie === chaine.direct;
-  const titre = chaine.videos.find((x) => x.id === choisie)?.titre ?? (enDirect ? "En direct" : "PGM Muanda TV");
+  const direct = await directDuSite(r, chaine);
+  const choisie = (v && (chaine.videos.some((x) => x.id === v) || v === chaine.direct || v === direct?.id) ? v : null)
+    ?? direct?.id ?? chaine.videos[0]?.id ?? null;
+  const leDirect = choisie !== null && choisie === direct?.id ? direct : null;
+  const enDirect = leDirect?.etat === "direct";
+  const titre = chaine.videos.find((x) => x.id === choisie)?.titre ?? leDirect?.titre ?? (leDirect ? TITRE_ETAT[leDirect.etat] : "PGM Muanda TV");
+  // Un direct d'une autre chaîne ne s'enchaîne pas avec les vidéos de la PGM
+  const liste = choisie && !chaine.videos.some((x) => x.id === choisie) && choisie !== chaine.direct ? null : chaine.listeVideos;
   const lecteur = choisie || chaine.listeVideos;
   return (
     <CadreSite>
@@ -752,16 +806,14 @@ export async function PageDirect({ v }: { v?: string }) {
             <div className="ecran" id="lecteur">
               <div className="ecran-bandeau">
                 <span className="tv"><Radio className="i" aria-hidden />PGM Muanda TV</span>
-                {enDirect
-                  ? <span className="badge-direct"><span className="point" />En direct</span>
-                  : <span className="badge-video"><Play className="i" aria-hidden />Rediffusion</span>}
+                <BadgeDirect etat={leDirect?.etat ?? "termine"} />
               </div>
-              <LecteurVideo id={choisie ?? undefined} liste={chaine.listeVideos} titre={titre} auto={!v} />
+              <LecteurVideo id={choisie ?? undefined} liste={liste} titre={titre} auto={!v} />
               <div className="ecran-titre">
                 <b>{titre}</b>
-                {!enDirect && <small>Les vidéos s&apos;enchaînent. Quand un direct commence, il s&apos;affiche ici automatiquement.</small>}
+                {!leDirect && <small>Les vidéos s&apos;enchaînent. Quand un direct commence, il s&apos;affiche ici automatiquement.</small>}
               </div>
-              {choisie && <Partage texte={`${enDirect ? "En direct maintenant" : "À regarder"} sur PGM Muanda TV : ${titre}`} chemin={`/direct?v=${choisie}`} image={imageVideo(choisie)} />}
+              {choisie && <Partage texte={`${leDirect ? TEXTE_ETAT[leDirect.etat] : "À regarder"} sur PGM Muanda TV : ${titre}`} chemin={`/direct?v=${choisie}`} image={imageVideo(choisie)} />}
             </div>
           ) : (
             <div className="carte vide-direct">

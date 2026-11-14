@@ -96,9 +96,16 @@ export async function enregistrerReglages(_: Etat, form: FormData): Promise<Etat
   if (!d.success) return { erreur: d.error.issues[0].message };
   const lignes = Object.entries({ ...d.data, youtube_chaine: d.data.youtube_chaine.replace(/^@/, "") })
     .map(([cle, valeur]) => ({ cle, valeur }));
-  const { error } = await supabase.from("site_reglages").upsert(lignes);
+  const { error } = await supabase.from("site_reglages").upsert(lignes.filter((l) => l.cle !== "youtube_direct"));
   if (error) return { erreur: messageErreur(error, REFUS) };
+  // À part : la case du direct n'existe qu'après la migration 20261114000100_site_direct.sql
+  const direct = await supabase.from("site_reglages").upsert({ cle: "youtube_direct", valeur: d.data.youtube_direct });
   rafraichir();
+  if (direct.error) {
+    return { erreur: direct.error.code === "23514"
+      ? "Réglages enregistrés, sauf le lien du direct : la base doit d'abord être mise à jour (migration « site_direct »)."
+      : messageErreur(direct.error, REFUS) };
+  }
   return { succes: "Réglages enregistrés. Le site est à jour." };
 }
 
