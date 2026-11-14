@@ -82,3 +82,21 @@ export async function lireChaine(nom: string, idManuel: string): Promise<Chaine>
   }
   return chaine;
 }
+
+/** « inconnu » : YouTube n'a pas répondu, on ne dit ni « en direct » ni « terminé ». */
+export type EtatVideo = "direct" | "bientot" | "termine" | "inconnu";
+export type VideoChoisie = { id: string; titre: string | null; etat: EtatVideo };
+
+/**
+ * Une vidéo précise (le direct choisi par l'administration), même d'une autre chaîne :
+ * son titre et si elle est en direct maintenant, programmée ou terminée.
+ * Sans réponse de YouTube, on la montre quand même, sans titre.
+ */
+export async function lireVideo(id: string): Promise<VideoChoisie> {
+  const page = await lire(`https://www.youtube.com/watch?v=${id}`, 120);
+  const titre = page?.match(/<meta property="og:title" content="([^"]*)"/)?.[1]
+    ?? page?.match(/<meta name="title" content="([^"]*)"/)?.[1] ?? null;
+  const etat: EtatVideo = !page ? "inconnu" : /"isLiveNow":true/.test(page) ? "direct"
+    : /"isUpcoming":true/.test(page) ? "bientot" : "termine";
+  return { id, titre: titre ? decoder(titre) : null, etat };
+}

@@ -130,6 +130,7 @@ export default async function PageSite({ searchParams }: { searchParams: Promise
             </Champ>
             <Champ libelle="Nom de la chaîne YouTube *" aide="Ce qui suit youtube.com/@"><input name="youtube_chaine" required maxLength={100} defaultValue={reglages.youtube_chaine} className={classeChamp} /></Champ>
             <Champ libelle="Identifiant de la chaîne (facultatif)" aide="Commence par UC. Seulement si les vidéos ne s'affichent pas."><input name="youtube_id" maxLength={24} defaultValue={reglages.youtube_id} className={classeChamp} /></Champ>
+            <Champ libelle="Lien du direct à montrer sur le site" className="sm:col-span-2" aide="Collez ici le lien YouTube du direct (ex. https://www.youtube.com/live/…). Il s'affiche sur l'accueil et sur la page Direct. Videz la case quand vous ne voulez plus le montrer."><input name="youtube_direct" maxLength={300} inputMode="url" placeholder="https://www.youtube.com/live/…" defaultValue={reglages.youtube_direct ? `https://www.youtube.com/live/${reglages.youtube_direct}` : ""} className={classeChamp} /></Champ>
           </FormulaireRapide>
         </Carte>
       </>

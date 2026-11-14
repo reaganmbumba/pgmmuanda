@@ -28,7 +28,7 @@ export type ElementSite = {
   publie: boolean;
 };
 
-export const CLES_REGLAGES = ["accueil_titre", "accueil_texte", "telephone", "whatsapp_message", "youtube_chaine", "youtube_id", "causerie_ouverte"] as const;
+export const CLES_REGLAGES = ["accueil_titre", "accueil_texte", "telephone", "whatsapp_message", "youtube_chaine", "youtube_id", "causerie_ouverte", "youtube_direct"] as const;
 export type CleReglage = (typeof CLES_REGLAGES)[number];
 export type Reglages = Record<CleReglage, string>;
 
@@ -40,6 +40,8 @@ export const REGLAGES_DEFAUT: Reglages = {
   youtube_chaine: "pgmmuanda",
   youtube_id: "",
   causerie_ouverte: "oui",
+  /** Direct choisi par l'administration (identifiant de la vidéo), vide = aucun. */
+  youtube_direct: "VS1umwf42II",
 };
 
 const el = (rubrique: Rubrique, ordre: number, titre: string, sousTitre: string | null, texte: string | null, date: string | null = null): ElementSite =>

@@ -1,11 +1,12 @@
 import { imageVideo, PageDirect } from "@/components/site/SitePublic";
 import { metaPartage } from "@/lib/site/partage";
+import { lireReglages } from "@/lib/site/contenu";
 
 type Props = { searchParams: Promise<{ v?: string }> };
 const video = (v: unknown) => (typeof v === "string" && /^[\w-]{11}$/.test(v) ? v : undefined);
 
 export async function generateMetadata({ searchParams }: Props) {
-  const v = video((await searchParams).v);
+  const v = video((await searchParams).v) ?? video((await lireReglages()).youtube_direct);
   return metaPartage({
     titre: "PGM Muanda TV · Direct",
     texte: "Les vidéos et les directs de la PGM Antenne de Muanda.",
